@@ -1,0 +1,8 @@
+node_modules
+dist
+build
+.expo
+.turbo
+.next
+supabase/migrations
+pnpm-lock.yaml

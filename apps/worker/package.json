@@ -1,0 +1,24 @@
+{
+  "name": "@lawfirm/worker",
+  "version": "0.0.1",
+  "private": true,
+  "description": "BullMQ processors — invoice runs, reminders, OCR/AV scans, webhooks. Own container, own scaling.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@lawfirm/core": "workspace:*",
+    "@lawfirm/db": "workspace:*",
+    "bullmq": "^6.1.2",
+    "pino": "^10.3.1"
+  },
+  "devDependencies": {
+    "@lawfirm/config": "workspace:*",
+    "@types/node": "^26.2.0",
+    "tsx": "^4.23.12",
+    "typescript": "~6.0.3"
+  }
+}

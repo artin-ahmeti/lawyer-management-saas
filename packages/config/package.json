@@ -1,0 +1,11 @@
+{
+  "name": "@lawfirm/config",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Shared tsconfig / tooling presets",
+  "files": [
+    "tsconfig.base.json",
+    "tsconfig.node.json",
+    "tsconfig.react-native.json"
+  ]
+}

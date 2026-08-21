@@ -1,0 +1,25 @@
+{
+  "name": "@lawfirm/api-client",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Typed API client generated from the NestJS OpenAPI spec",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "generate": "openapi-typescript http://localhost:3000/openapi.json -o src/generated/schema.d.ts"
+  },
+  "devDependencies": {
+    "@lawfirm/config": "workspace:*",
+    "openapi-typescript": "^7.13.0",
+    "typescript": "~6.0.3"
+  }
+}

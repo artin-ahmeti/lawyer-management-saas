@@ -1,0 +1,27 @@
+{
+  "name": "lawyer-management-saas",
+  "private": true,
+  "packageManager": "pnpm@11.10.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @lawfirm/db db:generate",
+    "supabase": "supabase"
+  },
+  "devDependencies": {
+    "eslint": "^10.8.1",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.6",
+    "supabase": "^2.115.0",
+    "turbo": "^2.10.11",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.67.0"
+  }
+}

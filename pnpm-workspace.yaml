@@ -1,0 +1,34 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+allowBuilds:
+  '@scarf/scarf': false # telemetry only
+  '@sentry/cli': true
+  esbuild: true
+  msgpackr-extract: true
+minimumReleaseAgeExclude:
+  - '@supabase/cli-darwin-arm64@2.115.0'
+  - '@supabase/cli-darwin-x64@2.115.0'
+  - '@supabase/cli-linux-arm64-musl@2.115.0'
+  - '@supabase/cli-linux-arm64@2.115.0'
+  - '@supabase/cli-linux-x64-musl@2.115.0'
+  - '@supabase/cli-linux-x64@2.115.0'
+  - '@supabase/cli-windows-arm64@2.115.0'
+  - '@supabase/cli-windows-x64@2.115.0'
+  - '@turbo/darwin-64@2.10.11'
+  - '@turbo/darwin-arm64@2.10.11'
+  - '@turbo/linux-64@2.10.11'
+  - '@turbo/linux-arm64@2.10.11'
+  - '@turbo/windows-64@2.10.11'
+  - '@turbo/windows-arm64@2.10.11'
+  - '@vitest/expect@4.1.11'
+  - '@vitest/mocker@4.1.11'
+  - '@vitest/pretty-format@4.1.11'
+  - '@vitest/runner@4.1.11'
+  - '@vitest/snapshot@4.1.11'
+  - '@vitest/spy@4.1.11'
+  - '@vitest/utils@4.1.11'
+  - react-native-safe-area-context@5.9.1
+  - supabase@2.115.0
+  - turbo@2.10.11
+  - vitest@4.1.11
