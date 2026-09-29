@@ -1,0 +1,27 @@
+<!-- @card dir="TextField" group="Inputs" title="Text field" subtitle="Rest · focus · error · disabled · search · with leading icon" height=520 -->
+<div class="pv">
+  <div class="pv-cols">
+    <div class="pv-pane pv-pane--surface pv-mobile">
+      <div class="cl-form">
+        <div class="cl-field"><label class="cl-field__label">Email</label><div class="cl-input"><input type="email" placeholder="you@firm.com" id="f-email"></div></div>
+        <div class="cl-field"><label class="cl-field__label">Client name</label><div class="cl-input is-focus"><input value="Margaret Bennett" id="f-client"></div><div class="cl-field__help">Conflict check runs as you type.</div></div>
+        <div class="cl-field is-error"><label class="cl-field__label">Matter number</label><div class="cl-input"><input value="2026-0187" id="f-number"></div><div class="cl-field__help">Already used by Estate of Harold Bennett.</div></div>
+        <div class="cl-field"><label class="cl-field__label">Responsible attorney <span class="opt">Optional</span></label><div class="cl-input is-disabled"><input value="L. Tran" disabled id="f-atty"></div></div>
+      </div>
+    </div>
+    <div class="pv-pane pv-pane--surface pv-mobile">
+      <div class="cl-form">
+        <div class="cl-input cl-search"><svg class="cl-ic"><use href="#i-search"/></svg><input placeholder="Search matters, contacts, invoices" id="f-search"></div>
+        <div class="cl-field"><label class="cl-field__label">Phone</label><div class="cl-input"><svg class="cl-ic"><use href="#i-phone"/></svg><input value="(415) 555-0177" id="f-phone"></div></div>
+        <div class="cl-field"><label class="cl-field__label">Hourly rate</label><div class="cl-input cl-input--amount"><span class="cl-input__affix">$</span><input value="325.00" id="f-rate"><span class="cl-input__affix cl-muted" style="font-weight:500">/ hr</span></div></div>
+      </div>
+      <div class="cl-theme-dark pv-pane" style="margin-top:16px;padding:14px">
+        <div class="cl-form">
+          <div class="cl-field"><label class="cl-field__label">Email</label><div class="cl-input"><input type="email" placeholder="you@firm.com" id="f-email-d"></div></div>
+          <div class="cl-input cl-search"><svg class="cl-ic"><use href="#i-search"/></svg><input placeholder="Search" id="f-search-d"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="pv-note">48px tall on mobile, 40 on web. Labels sit above in label style; help and errors below in caption. Focus is the accent border plus a 3px ring; error swaps the border to danger and turns the help text red. Search fields are tonal with no border and become a surface on focus.</p>
+</div>

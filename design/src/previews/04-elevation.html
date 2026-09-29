@@ -1,0 +1,10 @@
+<!-- @card dir="Elevation" group="Foundations" title="Elevation" subtitle="Hairlines first; shadow only for what floats" height=300 -->
+<div class="pv">
+  <div class="pv-row pv-row--start">
+    <div class="pv-shadow" style="box-shadow:none;border:1px solid var(--hairline);background:var(--surface)">level 0 · hairline</div>
+    <div class="pv-shadow" style="box-shadow:var(--shadow-sm)">shadow-sm · thumb, hover</div>
+    <div class="pv-shadow" style="box-shadow:var(--shadow-md)">shadow-md · popover, timer bar</div>
+    <div class="pv-shadow" style="box-shadow:var(--shadow-lg)">shadow-lg · sheet, dialog</div>
+  </div>
+  <p class="pv-note">Content layers (lists, cards, tiles) are separated by <code>line-hairline</code> and a change of surface, never by shadow. Shadows mark the three things that float above the page: popovers, the running-timer bar and sheets/dialogs. In dark mode a 1px <code>line-hairline</code> ring replaces most of the shadow so edges stay visible.</p>
+</div>

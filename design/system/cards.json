@@ -1,0 +1,421 @@
+{
+  "system": "Clepso",
+  "cards": [
+    {
+      "path": "components/Colors/preview.html",
+      "group": "Foundations",
+      "name": "Colors",
+      "subtitle": "Semantic tokens in light and dark (courthouse mode)",
+      "height": 760,
+      "source": "design/src/previews/01-colors.html"
+    },
+    {
+      "path": "components/Typography/preview.html",
+      "group": "Foundations",
+      "name": "Typography",
+      "subtitle": "Geist for everything you read · Geist Mono for identifiers and the timer",
+      "height": 780,
+      "source": "design/src/previews/02-typography.html"
+    },
+    {
+      "path": "components/SpacingRadius/preview.html",
+      "group": "Foundations",
+      "name": "Spacing & radius",
+      "subtitle": "4-pt scale, 20pt mobile gutter, four radii by role",
+      "height": 520,
+      "source": "design/src/previews/03-spacing-radius.html"
+    },
+    {
+      "path": "components/Elevation/preview.html",
+      "group": "Foundations",
+      "name": "Elevation",
+      "subtitle": "Hairlines first; shadow only for what floats",
+      "height": 300,
+      "source": "design/src/previews/04-elevation.html"
+    },
+    {
+      "path": "components/Iconography/preview.html",
+      "group": "Foundations",
+      "name": "Iconography",
+      "subtitle": "1.75px stroke, 20px default, 24px in tab bars · Phosphor Regular in code",
+      "height": 420,
+      "source": "design/src/previews/05-iconography.html"
+    },
+    {
+      "path": "components/Button/preview.html",
+      "group": "Actions",
+      "name": "Button",
+      "subtitle": "Primary · secondary · outline · tertiary · ghost · destructive — 3 sizes, loading, disabled, block",
+      "height": 560,
+      "source": "design/src/previews/10-button.html"
+    },
+    {
+      "path": "components/IconButton/preview.html",
+      "group": "Actions",
+      "name": "Icon button & Capture",
+      "subtitle": "Header actions with badge · the Capture action",
+      "height": 200,
+      "source": "design/src/previews/11-icon-button.html"
+    },
+    {
+      "path": "components/SegmentedControl/preview.html",
+      "group": "Actions",
+      "name": "Segmented control",
+      "subtitle": "In-page tabs on mobile · block and scrolling forms",
+      "height": 240,
+      "source": "design/src/previews/12-segmented.html"
+    },
+    {
+      "path": "components/Chips/preview.html",
+      "group": "Actions",
+      "name": "Filter chips",
+      "subtitle": "Selected = ink fill · counts in tabular figures · scrolls horizontally on mobile",
+      "height": 200,
+      "source": "design/src/previews/13-chips.html"
+    },
+    {
+      "path": "components/Toggles/preview.html",
+      "group": "Actions",
+      "name": "Switch · checkbox · radio",
+      "subtitle": "22px round check for tasks, square for forms, 44×26 switch",
+      "height": 300,
+      "source": "design/src/previews/14-toggles.html"
+    },
+    {
+      "path": "components/TextField/preview.html",
+      "group": "Inputs",
+      "name": "Text field",
+      "subtitle": "Rest · focus · error · disabled · search · with leading icon",
+      "height": 520,
+      "source": "design/src/previews/20-text-field.html"
+    },
+    {
+      "path": "components/AmountDuration/preview.html",
+      "group": "Inputs",
+      "name": "Amount · duration · date",
+      "subtitle": "Currency prefix, h:mm stepper with 0.1h increments, UTBMS code",
+      "height": 380,
+      "source": "design/src/previews/21-amount-duration.html"
+    },
+    {
+      "path": "components/NarrativeField/preview.html",
+      "group": "Inputs",
+      "name": "Narrative field with AI cleanup",
+      "subtitle": "Textarea · opt-in, labelled AI suggestion that never auto-commits",
+      "height": 360,
+      "source": "design/src/previews/22-textarea-ai.html"
+    },
+    {
+      "path": "components/Select/preview.html",
+      "group": "Inputs",
+      "name": "Select & pickers",
+      "subtitle": "Matter picker with recent matters · account picker with balances",
+      "height": 380,
+      "source": "design/src/previews/23-select.html"
+    },
+    {
+      "path": "components/ListRows/preview.html",
+      "group": "Data display",
+      "name": "List rows",
+      "subtitle": "Matter · task · time entry · invoice · contact · event · swipe action",
+      "height": 720,
+      "source": "design/src/previews/30-list-rows.html"
+    },
+    {
+      "path": "components/StatusPill/preview.html",
+      "group": "Data display",
+      "name": "Status pill",
+      "subtitle": "Six tones · dot variant · outline · large · the domain vocabulary",
+      "height": 380,
+      "source": "design/src/previews/31-status-pill.html"
+    },
+    {
+      "path": "components/StageTracker/preview.html",
+      "group": "Data display",
+      "name": "Stage tracker",
+      "subtitle": "Staff (horizontal) and client (vertical, plain language) variants",
+      "height": 460,
+      "source": "design/src/previews/32-stage-tracker.html"
+    },
+    {
+      "path": "components/Avatar/preview.html",
+      "group": "Data display",
+      "name": "Avatar",
+      "subtitle": "People are round, organisations are squared · 5 sizes · stack",
+      "height": 200,
+      "source": "design/src/previews/33-avatar.html"
+    },
+    {
+      "path": "components/KpiTile/preview.html",
+      "group": "Data display",
+      "name": "KPI tile",
+      "subtitle": "Label · tabular value · delta · optional progress · tinted variant",
+      "height": 340,
+      "source": "design/src/previews/34-kpi-tile.html"
+    },
+    {
+      "path": "components/AmountsIdentifiers/preview.html",
+      "group": "Data display",
+      "name": "Amounts, hours & identifiers",
+      "subtitle": "Money and time as first-class type",
+      "height": 300,
+      "source": "design/src/previews/35-amounts.html"
+    },
+    {
+      "path": "components/Table/preview.html",
+      "group": "Data display",
+      "name": "Table (web)",
+      "subtitle": "Comfortable 44px and compact 36px rows · grouped · selected · footer",
+      "height": 520,
+      "source": "design/src/previews/36-table.html"
+    },
+    {
+      "path": "components/ActivityTimeline/preview.html",
+      "group": "Data display",
+      "name": "Activity timeline",
+      "subtitle": "Matter activity with actor, object and time · client-visible items marked",
+      "height": 400,
+      "source": "design/src/previews/37-timeline.html"
+    },
+    {
+      "path": "components/EmptyState/preview.html",
+      "group": "Data display",
+      "name": "Empty state",
+      "subtitle": "Icon well · title · one sentence · one action · title-2 for first-run moments",
+      "height": 320,
+      "source": "design/src/previews/38-empty-state.html"
+    },
+    {
+      "path": "components/Skeleton/preview.html",
+      "group": "Data display",
+      "name": "Loading & offline",
+      "subtitle": "Skeleton rows keep layout stable · offline banner keeps working",
+      "height": 300,
+      "source": "design/src/previews/39-skeleton.html"
+    },
+    {
+      "path": "components/Charts/preview.html",
+      "group": "Data display",
+      "name": "Charts",
+      "subtitle": "Hours vs goal · AR aging (sequential) · thin marks, recessive grid, tabular labels",
+      "height": 380,
+      "source": "design/src/previews/3a-charts.html"
+    },
+    {
+      "path": "components/Banner/preview.html",
+      "group": "Feedback",
+      "name": "Banner",
+      "subtitle": "Deadline · trust anomaly · AI disclosure · sync · compact",
+      "height": 520,
+      "source": "design/src/previews/40-banner.html"
+    },
+    {
+      "path": "components/Toast/preview.html",
+      "group": "Feedback",
+      "name": "Toast",
+      "subtitle": "Inverse surface, one line, optional undo · never for errors that need a decision",
+      "height": 200,
+      "source": "design/src/previews/41-toast.html"
+    },
+    {
+      "path": "components/Dialog/preview.html",
+      "group": "Feedback",
+      "name": "Dialog",
+      "subtitle": "Confirmations with the consequence in the body and the verb on the button",
+      "height": 420,
+      "source": "design/src/previews/42-dialog.html"
+    },
+    {
+      "path": "components/BottomSheet/preview.html",
+      "group": "Feedback",
+      "name": "Bottom sheet",
+      "subtitle": "Every create/edit flow on mobile · grabber · title row · primary at the bottom",
+      "height": 460,
+      "source": "design/src/previews/43-bottom-sheet.html"
+    },
+    {
+      "path": "components/TabBar/preview.html",
+      "group": "Navigation",
+      "name": "Tab bar",
+      "subtitle": "Today · Matters · Capture · Calendar · Billing — with the running-timer bar docked above",
+      "height": 360,
+      "source": "design/src/previews/50-tab-bar.html"
+    },
+    {
+      "path": "components/MobileHeader/preview.html",
+      "group": "Navigation",
+      "name": "Mobile headers",
+      "subtitle": "Large title with eyebrow and actions · detail nav bar with mono identifier",
+      "height": 320,
+      "source": "design/src/previews/51-mobile-header.html"
+    },
+    {
+      "path": "components/Sidebar/preview.html",
+      "group": "Navigation",
+      "name": "Sidebar (web)",
+      "subtitle": "256px, grouped by job, active item is a surface with an accent icon",
+      "height": 560,
+      "source": "design/src/previews/52-sidebar.html"
+    },
+    {
+      "path": "components/TopBar/preview.html",
+      "group": "Navigation",
+      "name": "Top bar (web)",
+      "subtitle": "Command search ⌘K · running timer widget · alerts · profile",
+      "height": 200,
+      "source": "design/src/previews/53-topbar.html"
+    },
+    {
+      "path": "components/PageHeader/preview.html",
+      "group": "Navigation",
+      "name": "Page header (web)",
+      "subtitle": "Breadcrumbs · title · actions · in-page tabs",
+      "height": 300,
+      "source": "design/src/previews/54-page-header.html"
+    },
+    {
+      "path": "components/TimerBar/preview.html",
+      "group": "Domain",
+      "name": "Running timer",
+      "subtitle": "Docked bar · hero timer with matter picker · multiple timers",
+      "height": 520,
+      "source": "design/src/previews/60-timer-bar.html"
+    },
+    {
+      "path": "components/CaptureSheet/preview.html",
+      "group": "Domain",
+      "name": "Capture sheet",
+      "subtitle": "The one place to record work: timer, voice, time, expense, task, note",
+      "height": 380,
+      "source": "design/src/previews/61-capture-sheet.html"
+    },
+    {
+      "path": "components/ReviewDayCard/preview.html",
+      "group": "Domain",
+      "name": "Review your day",
+      "subtitle": "Passive capture becomes billed time with one tap per item",
+      "height": 360,
+      "source": "design/src/previews/62-review-day.html"
+    },
+    {
+      "path": "components/ArNudgeCard/preview.html",
+      "group": "Domain",
+      "name": "Who to nudge",
+      "subtitle": "Receivables with the next action attached",
+      "height": 320,
+      "source": "design/src/previews/63-ar-nudge.html"
+    },
+    {
+      "path": "components/TrustBalanceCard/preview.html",
+      "group": "Domain",
+      "name": "Trust balance",
+      "subtitle": "Per-matter trust with reconciliation status and compliance timers",
+      "height": 340,
+      "source": "design/src/previews/64-trust-balance.html"
+    },
+    {
+      "path": "components/InvoiceSummary/preview.html",
+      "group": "Domain",
+      "name": "Invoice summary",
+      "subtitle": "Total with status · pay link state · line items in a compact table",
+      "height": 440,
+      "source": "design/src/previews/65-invoice-summary.html"
+    },
+    {
+      "path": "components/MobileToday/preview.html",
+      "group": "Screens · Mobile",
+      "name": "Today",
+      "subtitle": "The daily loop: what to bill, where to be, who to nudge",
+      "height": 900,
+      "source": "design/src/screens/m1-today.html"
+    },
+    {
+      "path": "components/MobileMatters/preview.html",
+      "group": "Screens · Mobile",
+      "name": "Matters",
+      "subtitle": "Grouped list: needs attention first, then active",
+      "height": 900,
+      "source": "design/src/screens/m2-matters.html"
+    },
+    {
+      "path": "components/MobileMatterDetail/preview.html",
+      "group": "Screens · Mobile",
+      "name": "Matter detail",
+      "subtitle": "Stage tracker, next deadline, money at a glance, then the work",
+      "height": 900,
+      "source": "design/src/screens/m3-matter-detail.html"
+    },
+    {
+      "path": "components/MobileCapture/preview.html",
+      "group": "Screens · Mobile",
+      "name": "Capture sheet over Today",
+      "subtitle": "One tap from anywhere; the matter is pre-selected from context",
+      "height": 900,
+      "source": "design/src/screens/m4-capture.html"
+    },
+    {
+      "path": "components/MobileLogTime/preview.html",
+      "group": "Screens · Mobile",
+      "name": "Log time",
+      "subtitle": "Stopping a timer lands here, pre-filled; AI cleans the narrative only if asked",
+      "height": 900,
+      "source": "design/src/screens/m5-log-time.html"
+    },
+    {
+      "path": "components/MobileBilling/preview.html",
+      "group": "Screens · Mobile",
+      "name": "Billing",
+      "subtitle": "Bill and collect from the phone: unbilled → invoices → payments → trust",
+      "height": 900,
+      "source": "design/src/screens/m6-billing.html"
+    },
+    {
+      "path": "components/MobileInvoice/preview.html",
+      "group": "Screens · Mobile",
+      "name": "Invoice · text-to-pay",
+      "subtitle": "Total, status, pay-link state, line items, and the two actions that get paid",
+      "height": 900,
+      "source": "design/src/screens/m7-invoice.html"
+    },
+    {
+      "path": "components/MobileClientApp/preview.html",
+      "group": "Screens · Mobile",
+      "name": "Client app · case status",
+      "subtitle": "Plain-language stage tracker, what happens next, pay and upload in reach",
+      "height": 900,
+      "source": "design/src/screens/m8-client-app.html"
+    },
+    {
+      "path": "components/MobileSignIn/preview.html",
+      "group": "Screens · Mobile",
+      "name": "Sign in",
+      "subtitle": "Biometric session persistence is the default; the password is the fallback",
+      "height": 900,
+      "source": "design/src/screens/m9-sign-in.html"
+    },
+    {
+      "path": "components/WebDashboard/preview.html",
+      "group": "Screens · Web",
+      "name": "Today (web)",
+      "subtitle": "Same daily loop as mobile, with room for the numbers",
+      "height": 880,
+      "source": "design/src/screens/w1-dashboard.html"
+    },
+    {
+      "path": "components/WebMatters/preview.html",
+      "group": "Screens · Web",
+      "name": "Matters (web)",
+      "subtitle": "Dense table with a detail drawer; nothing needs a second click to understand",
+      "height": 880,
+      "source": "design/src/screens/w2-matters.html"
+    },
+    {
+      "path": "components/WebPrebill/preview.html",
+      "group": "Screens · Web",
+      "name": "Pre-bill review (web)",
+      "subtitle": "Unbilled time grouped by matter, write-downs inline, invoices in one click",
+      "height": 880,
+      "source": "design/src/screens/w3-prebill.html"
+    }
+  ]
+}

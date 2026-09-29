@@ -1,0 +1,26 @@
+<section class="rp-sec" id="implementation">
+  <div class="rp-sec__head">
+    <div><span class="eyebrow">08 · Implementation</span><h2>From this page to the codebase</h2></div>
+    <div><p>Nothing in the app has been changed yet; the system lives in <code class="rp-code">design/</code> in the repo. With Cobalt and the name settled, the work is mechanical and lands in this order.</p></div>
+  </div>
+  <div class="rp-steps">
+    <div class="rp-step"><div><h4>Sync to Claude Design</h4><p>Run <code class="rp-code">/design-sync</code>, create a project called Clepso, and use <code class="rp-code">design/system</code> as the local directory. Every <code class="rp-code">components/*/preview.html</code> carries the <code class="rp-code">@dsCard</code> marker, so the Design System pane builds its cards on upload. Then generate the remaining H1 screens (calendar, contacts, matter tabs, payments, trust ledger, onboarding) against this system.</p></div></div>
+    <div class="rp-step"><div><h4>Generate the mobile tokens</h4><p>Extend <code class="rp-code">design/src/build.py</code> to emit <code class="rp-code">packages/ui/src/tokens.ts</code> and <code class="rp-code">packages/ui/tailwind-preset.cjs</code> from <code class="rp-code">tokens.py</code>: colour tokens as light/dark pairs, spacing, radius, sizes, and the type scale as NativeWind <code class="rp-code">fontSize</code> entries. Delete the hand-kept duplicates.</p></div></div>
+    <div class="rp-step"><div><h4>Fonts and theme plumbing</h4><p>Add <code class="rp-code">@expo-google-fonts/geist</code>, <code class="rp-code">@expo-google-fonts/geist-mono</code> and <code class="rp-code">expo-font</code>; load them in the root layout behind the splash screen. Add a theme provider (system / light / dark / courthouse) that sets NativeWind’s colour scheme and the status bar. Replace every hard-coded hex with a token.</p></div></div>
+    <div class="rp-step"><div><h4>Rebuild the primitives</h4><p>In <code class="rp-code">apps/mobile/src/components/ui</code>: Button (variants, sizes, icon slot, loading), Field/Input (affixes, states), Pill, Chip, Segmented, Switch/Check, List/Row, Avatar, Section, Card, KpiTile, Banner, Toast, Sheet, Dialog, StageTracker, TimerBar, TabBar, EmptyState, Skeleton. Icons via <code class="rp-code">phosphor-react-native</code>.</p></div></div>
+    <div class="rp-step"><div><h4>Re-cut the navigation</h4><p>Tabs become Today · Matters · Capture · Calendar · Billing with a custom tab bar (centre Capture button, docked timer bar). Tasks and Time tabs are removed; their content moves into Today, Matter detail, Capture and Billing. Inbox starts as a header icon.</p></div></div>
+    <div class="rp-step"><div><h4>Rebuild the screens against mock hooks</h4><p>Today, Matters, Matter detail, Capture, Log time, Billing, Invoice, Sign in, then the client-app shell in <code class="rp-code">apps/portal</code> when it is scaffolded. The existing mock hooks keep working; only the presentation changes.</p></div></div>
+    <div class="rp-step"><div><h4>Web</h4><p>When <code class="rp-code">apps/web</code> is scaffolded, it consumes the same Tailwind preset plus <code class="rp-code">tokens.css</code>, and ports the components as React + Tailwind with identical class vocabularies. Sidebar, top bar, table and drawer are the only new pieces.</p></div></div>
+  </div>
+</section>
+
+<section class="rp-sec" id="decisions">
+  <div class="rp-sec__head">
+    <div><span class="eyebrow">09 · Open items</span><h2>Settled, and what is left</h2></div>
+    <div><p>Accent (Cobalt) and the name (Clepso) are decided and applied throughout. Two smaller calls remain; my recommendation is first in each.</p></div>
+  </div>
+  <div class="rp-grid rp-grid--2">
+    <div class="rp-card"><h3>1 · Tab bar in H1</h3><p><b>Today · Matters · Capture · Calendar · Billing</b> (recommended for H1: “bill from the courthouse”) · or swap Calendar for Inbox now if lead response ships earlier than planned.</p></div>
+    <div class="rp-card"><h3>2 · Mark</h3><p>The placeholder mark is a cobalt tile with a “C” arc, set next to a tight Geist wordmark. It is deliberately simple and can ship in the staff app; a considered logo should replace it before the client app or any marketing goes out.</p></div>
+  </div>
+</section>

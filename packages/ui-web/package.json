@@ -1,0 +1,35 @@
+{
+  "name": "@lawfirm/ui-web",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Clepso web components: React DOM components over the Clepso stylesheet, for apps/web, apps/portal and Claude Design",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./clepso.css": "./dist/clepso.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/build-css.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@lawfirm/config": "workspace:*",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "typescript": "~6.0.3"
+  }
+}

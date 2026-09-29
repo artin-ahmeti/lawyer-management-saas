@@ -1,0 +1,31 @@
+<!-- @card dir="Charts" group="Data display" title="Charts" subtitle="Hours vs goal · AR aging (sequential) · thin marks, recessive grid, tabular labels" height=380 -->
+<div class="pv">
+  <div class="pv-cols">
+    <div class="pv-pane pv-pane--surface">
+      <div class="cl-chart">
+        <div class="cl-chart__title"><span>Hours billed · this week</span><span class="cl-num" style="color:var(--ink)">21.4h</span></div>
+        <div class="cl-bars">
+          <div class="cl-bars__goal" style="bottom:66%"><span>goal 6h</span></div>
+          <div class="cl-bars__bar" style="height:78%"><span>7.1</span></div>
+          <div class="cl-bars__bar" style="height:52%"><span>4.7</span></div>
+          <div class="cl-bars__bar" style="height:70%"><span>6.3</span></div>
+          <div class="cl-bars__bar is-today" style="height:37%"><span>3.4</span></div>
+          <div class="cl-bars__bar is-future" style="height:2px"></div>
+        </div>
+        <div class="cl-bars__labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Today</span><span>Fri</span></div>
+      </div>
+    </div>
+    <div class="pv-pane pv-pane--surface">
+      <div class="cl-chart">
+        <div class="cl-chart__title"><span>Accounts receivable · aging</span><span class="cl-num" style="color:var(--ink)">$33,125</span></div>
+        <div class="cl-stackbar"><span style="width:62%;background:var(--chart-seq-2)"></span><span style="width:13%;background:var(--chart-seq-3)"></span><span style="width:0%"></span><span style="width:25%;background:var(--chart-seq-5)"></span></div>
+        <div class="cl-legend"><span><i style="background:var(--chart-seq-2)"></i>Current<b>$20,500</b></span><span><i style="background:var(--chart-seq-3)"></i>1–30<b>$4,500</b></span><span><i style="background:var(--chart-seq-5)"></i>31–60<b>$8,125</b></span></div>
+      </div>
+      <div class="cl-chart" style="margin-top:18px">
+        <div class="cl-chart__title"><span>Collected · last 6 months</span></div>
+        <svg class="cl-spark" viewBox="0 0 300 36" preserveAspectRatio="none"><path d="M0 28 L60 24 L120 26 L180 16 L240 14 L300 6" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="300" cy="6" r="3" fill="var(--accent)"/></svg>
+      </div>
+    </div>
+  </div>
+  <p class="pv-note">One series needs no legend; the title names it. Magnitude uses a single-hue sequential ramp with a 2px surface gap between segments. Categorical series follow the fixed chart-cat order and never reuse status colours. Every chart has a table view and a hover tooltip in the product.</p>
+</div>

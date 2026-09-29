@@ -14,7 +14,11 @@ purely additive later. Full plan history: see the approved plan in .claude/plans
 - `packages/db` — Drizzle schema; `db:generate` emits SQL into `supabase/migrations/`
 - `packages/api-client` — generated from the API's OpenAPI spec
 - `packages/ui` — design tokens + Tailwind preset (mobile AND future web)
+- `packages/ui-web` — Clepso React DOM components over the design-system stylesheet (future web app,
+  client portal, and the Claude Design sync via `/design-sync`; sync inputs in `.design-sync/`)
 - `packages/config` — shared tsconfig presets; ESLint flat config lives at repo root
+- `design/` — Clepso design system: sources in `design/src`, generated `/design-sync` bundle in
+  `design/system` (rebuild with `python3 design/src/build.py`; never edit generated files)
 
 ## The write-path rule (never violate)
 
