@@ -6,3 +6,21 @@ build
 .next
 supabase/migrations
 pnpm-lock.yaml
+
+# design system: generated previews are not prettier-formatted (built by design/src/build.py)
+design/system/components/**/preview.html
+design/system/preview.html
+design/system/tokens.css
+design/system/components/bundle.css
+design/system/assets
+design/src/**/*.html
+design/src/*.css
+design/src/icons.svg
+
+# design-sync machine state and authored previews (formatted by hand)
+.ds-sync
+ds-bundle
+.design-sync/.cache
+.design-sync/previews
+design/system/components
+design/system/contrast-report.md

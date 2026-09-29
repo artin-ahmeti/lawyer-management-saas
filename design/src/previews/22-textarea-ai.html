@@ -1,0 +1,31 @@
+<!-- @card dir="NarrativeField" group="Inputs" title="Narrative field with AI cleanup" subtitle="Textarea · opt-in, labelled AI suggestion that never auto-commits" height=360 -->
+<div class="pv">
+  <div class="pv-cols">
+    <div class="pv-pane pv-pane--surface pv-mobile">
+      <div class="cl-field">
+        <label class="cl-field__label">Narrative</label>
+        <div class="cl-input cl-input--textarea"><textarea id="n-raw">called opp counsel re warranties, went thru schedule 3.2, agreed to redline by fri</textarea></div>
+        <div class="cl-ai">
+          <svg class="cl-ic"><use href="#i-pen"/></svg>
+          <div class="cl-ai__body">
+            <div class="cl-ai__label">Suggested cleanup · not applied</div>
+            <div class="cl-ai__text">Telephone conference with opposing counsel regarding warranty provisions; reviewed Schedule 3.2; agreed on redline delivery by Friday.</div>
+            <div class="cl-ai__actions"><button>Use this</button><button class="quiet">Edit</button><button class="quiet">Dismiss</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pv-pane pv-pane--surface pv-mobile">
+      <div class="cl-field">
+        <label class="cl-field__label">Message to client</label>
+        <div class="cl-input cl-input--textarea"><textarea id="n-msg" placeholder="Write a plain-language update…"></textarea></div>
+        <div class="cl-field__help">Clients see this in their app. Keep it to what happens next.</div>
+      </div>
+      <div class="cl-ai" style="margin-top:12px">
+        <svg class="cl-ic"><use href="#i-pen"/></svg>
+        <div class="cl-ai__body"><div class="cl-ai__label">Draft from today’s activity</div><div class="cl-ai__text">We filed the inventory with the court today. Nothing is needed from you this week; the next step is the creditor notice period, which runs to Nov 12.</div><div class="cl-ai__actions"><button>Insert</button><button class="quiet">Dismiss</button></div></div>
+      </div>
+    </div>
+  </div>
+  <p class="pv-note">AI is grey, not purple. A suggestion is a distinct block below the field with a plain label, and the user chooses. Nothing is written until they tap “Use this”. The same block carries the disclosure line where a bar rule requires it.</p>
+</div>

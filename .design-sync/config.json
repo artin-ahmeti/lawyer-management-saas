@@ -1,0 +1,91 @@
+{
+  "pkg": "@lawfirm/ui-web",
+  "globalName": "Clepso",
+  "projectId": "ff68e2a0-09e0-4f6f-9b9e-e4259e2b6c9a",
+  "shape": "package",
+  "buildCmd": "pnpm --filter @lawfirm/ui-web build",
+  "cssEntry": "dist/clepso.css",
+  "docsDir": "docs",
+  "runtimeFontPrefixes": ["Geist"],
+  "guidelinesGlob": ["../../design/system/README.md"],
+  "provider": {
+    "component": "ClepsoRoot"
+  },
+  "overrides": {
+    "Table": {
+      "cardMode": "column"
+    },
+    "Toolbar": {
+      "cardMode": "column"
+    },
+    "AppShell": {
+      "cardMode": "column"
+    },
+    "BrowserFrame": {
+      "cardMode": "column",
+      "viewport": "1340x920"
+    },
+    "PhoneFrame": {
+      "cardMode": "column",
+      "viewport": "480x940"
+    },
+    "Sidebar": {
+      "cardMode": "column"
+    },
+    "TopBar": {
+      "cardMode": "column"
+    },
+    "PageHeader": {
+      "cardMode": "column"
+    },
+    "TabBar": {
+      "cardMode": "column"
+    },
+    "TimerBar": {
+      "cardMode": "column"
+    },
+    "Drawer": {
+      "cardMode": "column"
+    },
+    "Breadcrumbs": {
+      "cardMode": "column"
+    },
+    "ScreenHeader": {
+      "cardMode": "column"
+    },
+    "NavBar": {
+      "cardMode": "column"
+    },
+    "Sheet": {
+      "cardMode": "column"
+    },
+    "Scrim": {
+      "cardMode": "column"
+    },
+    "Form": {
+      "cardMode": "column"
+    },
+    "Columns": {
+      "cardMode": "column"
+    },
+    "Icon": {
+      "cardMode": "column"
+    },
+    "KpiRow": {
+      "cardMode": "column"
+    },
+    "KpiTile": {
+      "cardMode": "column"
+    },
+    "Text": {
+      "cardMode": "column"
+    },
+    "Grid": {
+      "cardMode": "column"
+    },
+    "Stack": {
+      "cardMode": "column"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}

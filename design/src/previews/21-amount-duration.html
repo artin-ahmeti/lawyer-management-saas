@@ -1,0 +1,27 @@
+<!-- @card dir="AmountDuration" group="Inputs" title="Amount · duration · date" subtitle="Currency prefix, h:mm stepper with 0.1h increments, UTBMS code" height=380 -->
+<div class="pv">
+  <div class="pv-cols">
+    <div class="pv-pane pv-pane--surface pv-mobile">
+      <div class="cl-form">
+        <div class="cl-form__row">
+          <div class="cl-field"><label class="cl-field__label">Duration</label><div class="cl-stepper"><button aria-label="Less">−</button><span class="cl-stepper__value">1:36</span><button aria-label="More">+</button></div><div class="cl-field__help">Rounds to 0.1h (6 min)</div></div>
+          <div class="cl-field"><label class="cl-field__label">Amount</label><div class="cl-input cl-input--amount"><span class="cl-input__affix">$</span><input value="520.00" id="a-amt"></div><div class="cl-field__help">1.6h × $325.00</div></div>
+        </div>
+        <div class="cl-form__row">
+          <div class="cl-field"><label class="cl-field__label">Date</label><div class="cl-input"><svg class="cl-ic"><use href="#i-calendar"/></svg><input value="Mon, Sep 29" id="a-date"></div></div>
+          <div class="cl-field"><label class="cl-field__label">Activity code</label><div class="cl-input cl-input--select"><span class="cl-mono cl-mono--ink">L110</span><span class="cl-muted" style="margin-left:6px">Fact investigation</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="pv-pane pv-pane--surface pv-mobile">
+      <div class="pv-label">Write-down (pre-bill review)</div>
+      <div class="cl-form">
+        <div class="cl-form__row">
+          <div class="cl-field"><label class="cl-field__label">Billed hours</label><div class="cl-stepper"><button aria-label="Less">−</button><span class="cl-stepper__value">1:30</span><button aria-label="More">+</button></div><div class="cl-field__help" style="color:var(--warning-ink)">−0.1h from 1:36 recorded</div></div>
+          <div class="cl-field"><label class="cl-field__label">Billed</label><div class="cl-input cl-input--amount"><span class="cl-input__affix">$</span><input value="487.50" id="a-billed"></div></div>
+        </div>
+        <div class="cl-field"><label class="cl-field__label">Payment plan</label><div class="cl-input cl-input--select"><span>4 monthly payments of <b class="cl-num">$2,031.25</b></span></div></div>
+      </div>
+    </div>
+  </div>
+</div>

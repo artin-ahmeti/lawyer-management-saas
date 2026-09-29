@@ -1,0 +1,17 @@
+<!-- @card dir="Skeleton" group="Data display" title="Loading & offline" subtitle="Skeleton rows keep layout stable · offline banner keeps working" height=300 -->
+<div class="pv">
+  <div class="pv-cols">
+    <div class="pv-mobile pv-col">
+      <div class="cl-list">
+        <div class="cl-row"><span class="cl-skel cl-skel--circle" style="width:36px;height:36px"></span><div class="cl-row__body" style="gap:8px"><span class="cl-skel" style="width:70%"></span><span class="cl-skel" style="width:45%;height:10px"></span></div><span class="cl-skel" style="width:56px"></span></div>
+        <div class="cl-row"><span class="cl-skel cl-skel--circle" style="width:36px;height:36px"></span><div class="cl-row__body" style="gap:8px"><span class="cl-skel" style="width:60%"></span><span class="cl-skel" style="width:35%;height:10px"></span></div><span class="cl-skel" style="width:56px"></span></div>
+        <div class="cl-row"><span class="cl-skel cl-skel--circle" style="width:36px;height:36px"></span><div class="cl-row__body" style="gap:8px"><span class="cl-skel" style="width:76%"></span><span class="cl-skel" style="width:50%;height:10px"></span></div><span class="cl-skel" style="width:56px"></span></div>
+      </div>
+    </div>
+    <div class="pv-mobile pv-col">
+      <div class="cl-banner cl-banner--compact cl-banner--outline"><svg class="cl-ic"><use href="#i-wifi-off"/></svg><div class="cl-banner__body"><div class="cl-banner__title">Offline · changes will sync</div></div><span class="cl-pill">3 queued</span></div>
+      <div class="cl-banner cl-banner--compact cl-banner--success"><svg class="cl-ic"><use href="#i-check"/></svg><div class="cl-banner__body"><div class="cl-banner__title">Back online · 3 entries synced</div></div></div>
+      <p class="pv-note">Offline is a state, not an error. Reads come from cache, writes queue, and the banner says so in one line. Timers keep running.</p>
+    </div>
+  </div>
+</div>

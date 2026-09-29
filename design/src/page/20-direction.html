@@ -1,0 +1,48 @@
+<section class="rp-sec" id="direction">
+  <div class="rp-sec__head">
+    <div><span class="eyebrow">02 · Direction</span><h2>Clean, modern, exact</h2></div>
+    <div><p>The strategy wants two sentences in the reviews: “the app works in court” and “I got paid faster”. Clepso should feel like a precise instrument: light paper-like surfaces, a cool graphite neutral ramp, one clear cobalt accent, hairlines instead of shadows, tight radii, one typeface at three weights, and tabular numbers everywhere. No decoration carries meaning that a word or a number could carry better.</p></div>
+  </div>
+  <div class="rp-grid rp-grid--3">
+    <div class="rp-card"><span class="n">Principle 1</span><h3>Built for the hallway</h3><p>One-handed reach, 44pt targets, the primary action at the thumb, glanceable state through pills and dots, and a dark theme that doesn’t light up a courtroom. Nothing destructive is one tap.</p></div>
+    <div class="rp-card"><span class="n">Principle 2</span><h3>Money and time are type</h3><p>Amounts, hours and identifiers have their own styles: tabular figures, dimmed cents, mono numbers. Every amount has a status next to it. Every hour has a rate behind it.</p></div>
+    <div class="rp-card"><span class="n">Principle 3</span><h3>Lists first, cards for the exception</h3><p>Grouped lists with hairline separators carry the product. A card marks the one thing that isn’t a list item: the running timer, Review your day, a deadline, a trust warning.</p></div>
+    <div class="rp-card"><span class="n">Principle 4</span><h3>Colour is a promise</h3><p>Cobalt means “act” or “selected”. Green means paid or done. Amber means within a week. Red means late or at risk. Teal means court or system. Nothing else is coloured.</p></div>
+    <div class="rp-card"><span class="n">Principle 5</span><h3>Plain language, disclosed AI</h3><p>Client-facing copy names the next dated event. AI suggestions are grey, labelled, and applied only by hand. The disclosure line lives where the rule requires it.</p></div>
+    <div class="rp-card"><span class="n">Principle 6</span><h3>One system, three surfaces</h3><p>The same tokens drive mobile, web and the client app. Web adds density and multi-pane layout; the client app softens the voice. Nothing is redrawn per platform.</p></div>
+  </div>
+
+  <div class="rp-sub">Colour <small>Cobalt on graphite</small></div>
+  <div class="rp-grid rp-grid--3">
+    <div class="rp-card"><div style="display:flex;gap:6px;margin-bottom:12px"><i style="flex:1;height:32px;border-radius:6px;background:{{A:primary:light}}"></i><i style="flex:1;height:32px;border-radius:6px;background:{{A:tint:light}}"></i><i style="flex:1;height:32px;border-radius:6px;background:{{A:primary:dark}}"></i><i style="flex:1;height:32px;border-radius:6px;background:{{A:tint:dark}}"></i></div><h3>One accent</h3><p>Cobalt <code class="rp-code">{{A:primary:light}}</code> in light, lifted to <code class="rp-code">{{A:primary:dark}}</code> in dark so it passes on dark surfaces. It appears on one filled element per view, on selection, on links and on the current stage. Everything else is graphite.</p></div>
+    <div class="rp-card"><div style="display:flex;gap:6px;margin-bottom:12px"><i style="flex:1;height:32px;border-radius:6px;background:{{S:success:dot:light}}"></i><i style="flex:1;height:32px;border-radius:6px;background:{{S:warning:dot:light}}"></i><i style="flex:1;height:32px;border-radius:6px;background:{{S:danger:dot:light}}"></i><i style="flex:1;height:32px;border-radius:6px;background:{{S:info:dot:light}}"></i></div><h3>Four reserved states</h3><p>Success, warning, danger and a teal info hue. Teal was chosen so court dates and system notices never read as the blue accent. Status colours never decorate and never appear in charts.</p></div>
+    <div class="rp-card"><div style="display:flex;gap:6px;margin-bottom:12px"><i style="flex:1;height:32px;border-radius:6px;background:{{T:surface-canvas:light}};border:1px solid {{T:line-hairline:light}}"></i><i style="flex:1;height:32px;border-radius:6px;background:{{T:ink-secondary:light}}"></i><i style="flex:1;height:32px;border-radius:6px;background:{{T:ink-primary:light}}"></i><i style="flex:1;height:32px;border-radius:6px;background:{{T:surface-canvas:dark}}"></i></div><h3>Graphite neutrals</h3><p>A cool ramp (hue ≈ 222°) that leans toward the cobalt without competing with it. Light canvas <code class="rp-code">{{T:surface-canvas:light}}</code>, ink <code class="rp-code">{{T:ink-primary:light}}</code>; dark canvas <code class="rp-code">{{T:surface-canvas:dark}}</code>, ink <code class="rp-code">{{T:ink-primary:dark}}</code>.</p></div>
+  </div>
+
+  <div class="rp-sub">Typography <small>two families, three weights</small></div>
+  <div class="rp-grid rp-grid--3">
+    <div class="rp-card"><h3 style="font-family:var(--font-sans);letter-spacing:-0.02em">Geist · everything you read</h3><p>High x-height, distinct numerals with real tabular figures, nine weights, excellent at 13–15px on both platforms. One family from the 11px overline to the 32px greeting; titles tighten to −0.02em so large text stays crisp. Ships as <code class="rp-code">@expo-google-fonts/geist</code>.</p></div>
+    <div class="rp-card"><h3 style="font-family:var(--font-mono);font-weight:500">Geist Mono · records</h3><p>Matter numbers, invoice numbers, UTBMS codes, account suffixes and the timer. It says “this is a record” without a label, and it keeps the timer from jittering.</p></div>
+    <div class="rp-card"><h3>Why no display face</h3><p>The first draft used a serif for one line per screen. It read as editorial rather than modern, so it is gone: the greeting is now title-1 on mobile and display on web, in Geist. If a brand voice is wanted later it belongs in marketing and onboarding, not in the working screens.</p></div>
+  </div>
+</section>
+
+<section class="rp-sec" id="ia">
+  <div class="rp-sec__head">
+    <div><span class="eyebrow">03 · Navigation</span><h2>Four places and one action</h2></div>
+    <div><p>Mobile navigation is rebuilt around the strategy’s sequencing. <b>Today</b> is the daily loop (review captured time, agenda, who to nudge). <b>Matters</b> is triage and detail. <b>Capture</b> is the centre button on every screen. <b>Calendar</b> holds the docket and court dates. <b>Billing</b> is unbilled → invoices → payments → trust. Inbox (leads, client messages, approvals) starts as a header icon and takes the Calendar slot in H2 when the agenda folds into Today. Tasks and Time stop being destinations: tasks live in Today and inside matters; time lives in Capture and Billing.</p><p>Web mirrors the same model with a sidebar grouped into <b>Work</b> and <b>Money</b>, a ⌘K command palette, and the running timer in the top bar.</p></div>
+  </div>
+  <table class="rp-table">
+    <thead><tr><th>Area</th><th>Current app</th><th>Clepso</th></tr></thead>
+    <tbody>
+      <tr><td>Tabs</td><td>Home · Matters · Tasks · Time · Billing</td><td>Today · Matters · <b>Capture</b> · Calendar · Billing (Inbox in header; earns a tab in H2)</td></tr>
+      <tr><td>Home</td><td>Two stat tiles, “Coming up” card, three matter cards</td><td>Greeting, Billed today + Unbilled, Review your day, Today agenda, Who to nudge, docked timer</td></tr>
+      <tr><td>Capture</td><td>A “Time” tab with a hero timer and matter chips</td><td>A sheet from anywhere: timer, voice memo, log time, expense, task, note; matter pre-selected</td></tr>
+      <tr><td>Matters list</td><td>Search, four filter pills, floating cards</td><td>Search, chips with counts, grouped list (Needs attention / Active), deadline pill + unbilled per row, long-press to capture</td></tr>
+      <tr><td>Matter detail</td><td>Facts card, deadline card, tasks card, time card, two buttons</td><td>Nav bar with mono number, stage tracker, in-page tabs, deadline banner, three mini KPIs, tasks, time, docked actions</td></tr>
+      <tr><td>Billing</td><td>Two tiles and invoice cards</td><td>Segments (Unbilled · Invoices · Payments · Trust), Ready-to-bill card, invoice list, invoice detail with text-to-pay and plans</td></tr>
+      <tr><td>Contacts</td><td>Behind the avatar, with Sign out at the bottom</td><td>Under Matters and in the web sidebar; conflict pre-check from the contact card (H2)</td></tr>
+      <tr><td>Web</td><td>—</td><td>Sidebar (Work / Money), ⌘K, timer widget, dense tables with drawers, pre-bill review</td></tr>
+    </tbody>
+  </table>
+</section>

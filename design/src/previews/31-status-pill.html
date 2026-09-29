@@ -1,0 +1,28 @@
+<!-- @card dir="StatusPill" group="Data display" title="Status pill" subtitle="Six tones · dot variant · outline · large · the domain vocabulary" height=380 -->
+<div class="pv">
+  <div class="pv-pane pv-pane--surface">
+    <div class="pv-label">Tones</div>
+    <div class="pv-row">
+      <span class="cl-pill">Draft</span>
+      <span class="cl-pill cl-pill--accent">In progress</span>
+      <span class="cl-pill cl-pill--success"><span class="cl-pill__dot"></span>Paid</span>
+      <span class="cl-pill cl-pill--warning"><span class="cl-pill__dot"></span>Due in 4d</span>
+      <span class="cl-pill cl-pill--danger"><span class="cl-pill__dot"></span>Overdue 46d</span>
+      <span class="cl-pill cl-pill--info"><svg class="cl-ic"><use href="#i-gavel"/></svg>Court</span>
+      <span class="cl-pill cl-pill--ink">Mine</span>
+      <span class="cl-pill cl-pill--outline">Flat fee</span>
+      <span class="cl-pill cl-pill--lg cl-pill--success"><span class="cl-pill__dot"></span>Reconciled Sep 1</span>
+    </div>
+    <div class="pv-label" style="margin-top:18px">Domain vocabulary</div>
+    <div class="pv-row" style="gap:18px;align-items:flex-start">
+      <div class="cl-stack cl-stack--xs"><span class="cl-t-caption cl-muted">Matter</span><div class="pv-row" style="gap:6px"><span class="cl-pill cl-pill--accent">Open</span><span class="cl-pill cl-pill--warning">Pending</span><span class="cl-pill">Closed</span><span class="cl-pill cl-pill--outline">Hourly</span><span class="cl-pill cl-pill--outline">Contingency</span></div></div>
+      <div class="cl-stack cl-stack--xs"><span class="cl-t-caption cl-muted">Invoice</span><div class="pv-row" style="gap:6px"><span class="cl-pill">Draft</span><span class="cl-pill cl-pill--info">Sent</span><span class="cl-pill cl-pill--warning"><span class="cl-pill__dot"></span>Partial</span><span class="cl-pill cl-pill--danger"><span class="cl-pill__dot"></span>Overdue</span><span class="cl-pill cl-pill--success"><span class="cl-pill__dot"></span>Paid</span></div></div>
+      <div class="cl-stack cl-stack--xs"><span class="cl-t-caption cl-muted">Deadline</span><div class="pv-row" style="gap:6px"><span class="cl-pill">In 3 weeks</span><span class="cl-pill cl-pill--warning"><span class="cl-pill__dot"></span>In 4 days</span><span class="cl-pill cl-pill--danger"><span class="cl-pill__dot"></span>Today</span><span class="cl-pill cl-pill--danger"><span class="cl-pill__dot"></span>Missed</span></div></div>
+      <div class="cl-stack cl-stack--xs"><span class="cl-t-caption cl-muted">Time</span><div class="pv-row" style="gap:6px"><span class="cl-pill cl-pill--success">Billable</span><span class="cl-pill">No charge</span><span class="cl-pill cl-pill--warning">Written down</span><span class="cl-pill cl-pill--accent">On invoice</span></div></div>
+    </div>
+  </div>
+  <div class="pv-row cl-theme-dark pv-pane" style="padding:12px 16px">
+    <span class="cl-pill">Draft</span><span class="cl-pill cl-pill--accent">In progress</span><span class="cl-pill cl-pill--success"><span class="cl-pill__dot"></span>Paid</span><span class="cl-pill cl-pill--warning"><span class="cl-pill__dot"></span>Due in 4d</span><span class="cl-pill cl-pill--danger"><span class="cl-pill__dot"></span>Overdue 46d</span><span class="cl-pill cl-pill--info">Court</span><span class="cl-pill cl-pill--ink">Mine</span>
+  </div>
+  <p class="pv-note">Pills are 24px, sentence case, tinted background with matching ink. The dot is added when the pill is the only status marker in a row. Warning means “act within 7 days”; danger means “late” or “money at risk”. Success is never used for the accent’s job.</p>
+</div>

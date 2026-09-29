@@ -1,0 +1,24 @@
+<!-- @card dir="AmountsIdentifiers" group="Data display" title="Amounts, hours & identifiers" subtitle="Money and time as first-class type" height=300 -->
+<div class="pv">
+  <div class="pv-cols">
+    <div class="pv-pane pv-pane--surface">
+      <div class="pv-label">Money</div>
+      <div class="cl-stack cl-stack--sm">
+        <div class="cl-amount--display">$8,125<span class="cents">.00</span></div>
+        <div class="cl-amount--lg">$25,000<span class="cents">.00</span></div>
+        <div class="cl-spread"><span class="cl-t-label cl-muted">Subtotal</span><span class="cl-amount">$7,800.00</span></div>
+        <div class="cl-spread"><span class="cl-t-label cl-muted">Trust applied</span><span class="cl-amount" style="color:var(--success-ink)">−$2,000.00</span></div>
+        <div class="cl-spread"><span class="cl-t-label cl-muted">Late fee</span><span class="cl-amount" style="color:var(--danger-ink)">+$81.25</span></div>
+      </div>
+    </div>
+    <div class="pv-pane pv-pane--surface">
+      <div class="pv-label">Hours · identifiers</div>
+      <div class="cl-stack cl-stack--sm">
+        <div class="cl-inline"><span class="cl-amount">1.6h</span><span class="cl-muted cl-t-label">= 1:36</span><span class="cl-muted cl-t-label">at</span><span class="cl-amount">$325.00</span></div>
+        <div class="cl-inline"><span class="cl-mono cl-mono--ink">2026-0187</span><span class="cl-mono cl-mono--ink">INV-2026-078</span><span class="cl-mono cl-mono--ink">L110</span><span class="cl-mono cl-mono--ink">A104</span><span class="cl-mono cl-mono--ink">····4821</span></div>
+        <div class="cl-timer-hero" style="align-items:flex-start;padding:8px 0 0"><div class="cl-timer-hero__digits"><span class="dim">00:</span>42:17</div><span class="cl-t-caption cl-muted">Leading zeros dim; digits never jump because the face is tabular.</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="pv-note">Hours show one decimal in lists and h:mm in editors and timers. Negative adjustments are green when they favour the client (trust applied, write-down) and red when they cost them (late fee). Cents are always present on invoices and statements.</p>
+</div>

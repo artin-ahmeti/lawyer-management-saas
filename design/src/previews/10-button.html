@@ -1,0 +1,50 @@
+<!-- @card dir="Button" group="Actions" title="Button" subtitle="Primary · secondary · outline · tertiary · ghost · destructive — 3 sizes, loading, disabled, block" height=560 -->
+<div class="pv">
+  <div class="pv-pane pv-pane--surface">
+    <div class="pv-label">Variants · md (44)</div>
+    <div class="pv-row">
+      <button class="cl-btn cl-btn--primary">Send invoice</button>
+      <button class="cl-btn cl-btn--secondary">Record payment</button>
+      <button class="cl-btn cl-btn--outline">Log time</button>
+      <button class="cl-btn cl-btn--tertiary">Payment plan</button>
+      <button class="cl-btn cl-btn--ghost">Cancel</button>
+      <button class="cl-btn cl-btn--destructive">Void invoice</button>
+      <button class="cl-btn cl-btn--destructive-solid">Delete</button>
+    </div>
+    <div class="pv-label" style="margin-top:20px">With icons · states</div>
+    <div class="pv-row">
+      <button class="cl-btn cl-btn--primary"><svg class="cl-ic"><use href="#i-send"/></svg>Text pay link</button>
+      <button class="cl-btn cl-btn--secondary"><svg class="cl-ic"><use href="#i-play"/></svg>Start timer</button>
+      <button class="cl-btn cl-btn--primary is-loading"><span class="cl-spinner"></span><span>Saving</span></button>
+      <button class="cl-btn cl-btn--primary" disabled>Approve</button>
+      <button class="cl-btn cl-btn--secondary cl-btn--icon" aria-label="More"><svg class="cl-ic"><use href="#i-more"/></svg></button>
+    </div>
+    <div class="pv-label" style="margin-top:20px">Sizes</div>
+    <div class="pv-row">
+      <button class="cl-btn cl-btn--primary cl-btn--sm">Bill 0.2h</button>
+      <button class="cl-btn cl-btn--secondary cl-btn--sm">Skip</button>
+      <button class="cl-btn cl-btn--primary">Continue</button>
+      <button class="cl-btn cl-btn--primary cl-btn--lg">Sign in</button>
+    </div>
+  </div>
+  <div class="pv-cols">
+    <div class="pv-pane pv-mobile">
+      <div class="pv-label">Mobile · sheet footer</div>
+      <div class="cl-btn-row">
+        <button class="cl-btn cl-btn--secondary">Save draft</button>
+        <button class="cl-btn cl-btn--primary">Send for $8,125.00</button>
+      </div>
+    </div>
+    <div class="pv-pane cl-theme-dark">
+      <div class="pv-label">Dark</div>
+      <div class="pv-row">
+        <button class="cl-btn cl-btn--primary">Send invoice</button>
+        <button class="cl-btn cl-btn--secondary">Record payment</button>
+        <button class="cl-btn cl-btn--outline">Log time</button>
+        <button class="cl-btn cl-btn--tertiary">Plan</button>
+        <button class="cl-btn cl-btn--destructive">Void</button>
+      </div>
+    </div>
+  </div>
+  <p class="pv-note">One primary per view. Secondary is tonal (no heavy outline) so groups stay calm. Destructive is tonal by default; the solid form is only for the confirming step of a dialog. Labels are verbs that name the outcome, and money in a label always shows cents.</p>
+</div>

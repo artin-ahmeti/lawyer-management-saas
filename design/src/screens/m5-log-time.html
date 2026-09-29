@@ -1,0 +1,32 @@
+<!-- @card dir="MobileLogTime" group="Screens · Mobile" title="Log time" subtitle="Stopping a timer lands here, pre-filled; AI cleans the narrative only if asked" height=900 frame=phone -->
+<div class="cl-phone">
+  <div class="cl-phone__island"></div>
+  <div class="cl-phone__status"><span>9:41</span><span class="sig"><i></i></span></div>
+  <div class="cl-phone__body cl-phone__body--flush" style="background:var(--surface-2)">
+    <div class="cl-sheet" style="margin-top:44px;flex:1;border-radius:20px 20px 0 0;padding-bottom:0">
+      <div class="cl-sheet__grab"></div>
+      <div class="cl-sheet__head"><h2 class="cl-sheet__title">Log time</h2><button class="cl-iconbtn cl-iconbtn--plain cl-iconbtn--sm" aria-label="Close"><svg class="cl-ic cl-ic--sm"><use href="#i-x"/></svg></button></div>
+      <div class="cl-form">
+        <div class="cl-field"><label class="cl-field__label">Matter</label><div class="cl-input cl-input--select"><span class="cl-truncate">Estate of Harold Bennett</span><span class="cl-mono" style="margin-left:8px">2026-0187</span></div></div>
+        <div class="cl-form__row">
+          <div class="cl-field"><label class="cl-field__label">Duration</label><div class="cl-stepper"><button aria-label="Less">−</button><span class="cl-stepper__value">0:42</span><button aria-label="More">+</button></div><div class="cl-field__help">From timer · rounds to 0.7h</div></div>
+          <div class="cl-field"><label class="cl-field__label">Amount</label><div class="cl-input cl-input--amount"><span class="cl-input__affix">$</span><input value="227.50" id="lt-amt"></div><div class="cl-field__help">0.7h × $325.00</div></div>
+        </div>
+        <div class="cl-form__row">
+          <div class="cl-field"><label class="cl-field__label">Date</label><div class="cl-input"><svg class="cl-ic"><use href="#i-calendar"/></svg><input value="Today, Sep 29" id="lt-date"></div></div>
+          <div class="cl-field"><label class="cl-field__label">Activity</label><div class="cl-input cl-input--select"><span class="cl-mono cl-mono--ink">L110</span><span class="cl-muted cl-truncate" style="margin-left:6px">Fact investigation</span></div></div>
+        </div>
+        <div class="cl-field">
+          <label class="cl-field__label">Narrative</label>
+          <div class="cl-input cl-input--textarea" style="min-height:76px"><textarea id="lt-narr">drafted inventory schedules A and B, reconciled w/ appraiser numbers</textarea></div>
+          <div class="cl-ai"><svg class="cl-ic"><use href="#i-pen"/></svg><div class="cl-ai__body"><div class="cl-ai__label">Suggested cleanup · not applied</div><div class="cl-ai__text">Drafted Inventory and Appraisal Schedules A and B; reconciled asset values with appraiser’s report.</div><div class="cl-ai__actions"><button>Use this</button><button class="quiet">Dismiss</button></div></div></div>
+        </div>
+        <div class="cl-option" style="padding:4px 0"><span>Billable</span><span class="cl-switch is-on"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="cl-phone__bottom">
+    <div style="padding:10px 20px 8px;background:var(--surface-3)"><button class="cl-btn cl-btn--primary cl-btn--lg cl-btn--block">Save 0.7h · $227.50</button></div>
+    <div class="cl-phone__home" style="background:var(--surface-3)"></div>
+  </div>
+</div>

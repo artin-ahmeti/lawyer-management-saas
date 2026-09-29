@@ -1,0 +1,27 @@
+<!-- @card dir="BottomSheet" group="Feedback" title="Bottom sheet" subtitle="Every create/edit flow on mobile · grabber · title row · primary at the bottom" height=460 -->
+<div class="pv">
+  <div class="pv-cols">
+    <div class="pv-pane pv-mobile" style="background:var(--surface-2);padding:40px 0 0;border-radius:20px;overflow:hidden">
+      <div class="cl-sheet">
+        <div class="cl-sheet__grab"></div>
+        <div class="cl-sheet__head"><h2 class="cl-sheet__title">Record payment</h2><button class="cl-iconbtn cl-iconbtn--plain cl-iconbtn--sm" aria-label="Close"><svg class="cl-ic cl-ic--sm"><use href="#i-x"/></svg></button></div>
+        <div class="cl-form">
+          <div class="cl-field"><label class="cl-field__label">Amount</label><div class="cl-input cl-input--amount"><span class="cl-input__affix">$</span><input value="8,125.00" id="bs-amt"></div><div class="cl-field__help">Balance on INV-2026-078</div></div>
+          <div class="cl-form__row">
+            <div class="cl-field"><label class="cl-field__label">Method</label><div class="cl-input cl-input--select"><span>Check</span></div></div>
+            <div class="cl-field"><label class="cl-field__label">Deposit to</label><div class="cl-input cl-input--select"><span>Operating</span></div></div>
+          </div>
+        </div>
+        <button class="cl-btn cl-btn--primary cl-btn--lg cl-btn--block">Record $8,125.00</button>
+      </div>
+    </div>
+    <div class="pv-pane pv-mobile cl-theme-dark" style="padding:40px 0 0;border-radius:20px;overflow:hidden">
+      <div class="cl-sheet">
+        <div class="cl-sheet__grab"></div>
+        <div class="cl-sheet__head"><h2 class="cl-sheet__title">Quick note</h2><span class="cl-pill cl-pill--accent">People v. Webb</span></div>
+        <div class="cl-input cl-input--textarea"><textarea id="bs-note" placeholder="Judge continued to Oct 14. Prosecution to produce bodycam by…"></textarea></div>
+        <div class="cl-inline"><button class="cl-btn cl-btn--secondary"><svg class="cl-ic"><use href="#i-mic"/></svg>Dictate</button><button class="cl-btn cl-btn--secondary"><svg class="cl-ic"><use href="#i-camera"/></svg>Photo</button><span class="cl-grow"></span><button class="cl-btn cl-btn--primary">Save</button></div>
+      </div>
+    </div>
+  </div>
+</div>

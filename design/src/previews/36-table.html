@@ -1,0 +1,23 @@
+<!-- @card dir="Table" group="Data display" title="Table (web)" subtitle="Comfortable 44px and compact 36px rows · grouped · selected · footer" height=520 -->
+<div class="pv cl-web">
+  <div class="cl-toolbar">
+    <div class="cl-input cl-search" style="width:280px"><svg class="cl-ic"><use href="#i-search"/></svg><input placeholder="Search matters" id="t-search"></div>
+    <button class="cl-chip is-active">Open <span class="cl-chip__count">9</span></button><button class="cl-chip">Mine</button><button class="cl-chip">Practice area <svg class="cl-ic"><use href="#i-chevron-down"/></svg></button>
+    <div class="cl-toolbar__right"><div class="cl-seg"><button class="cl-seg__item is-active">Comfortable</button><button class="cl-seg__item">Compact</button></div><button class="cl-btn cl-btn--primary"><svg class="cl-ic"><use href="#i-plus"/></svg>New matter</button></div>
+  </div>
+  <div class="cl-table-wrap">
+    <table class="cl-table">
+      <thead><tr><th style="width:36px"><span class="cl-check cl-check--square"><svg class="cl-ic"><use href="#i-check"/></svg></span></th><th>Matter</th><th>Client</th><th>Stage</th><th>Responsible</th><th class="num">Unbilled</th><th>Next deadline</th></tr></thead>
+      <tbody>
+        <tr class="cl-table__group"><td colspan="7">Needs attention · 2</td></tr>
+        <tr class="is-selected"><td><span class="cl-check cl-check--square is-on"><svg class="cl-ic"><use href="#i-check"/></svg></span></td><td><span class="cell-title">Estate of Harold Bennett</span><span class="cell-sub"><span class="cell-mono">2026-0187</span> · Probate</span></td><td>Margaret Bennett</td><td><span class="cl-pill cl-pill--accent">Inventory</span></td><td><span class="cl-inline cl-inline--nowrap"><span class="cl-avatar cl-avatar--xs">LT</span>L. Tran</span></td><td class="num strong">$4,825.00</td><td><span class="cl-pill cl-pill--warning"><span class="cl-pill__dot"></span>Filing · Oct 3</span></td></tr>
+        <tr><td><span class="cl-check cl-check--square"><svg class="cl-ic"><use href="#i-check"/></svg></span></td><td><span class="cell-title">People v. Marcus Webb</span><span class="cell-sub"><span class="cell-mono">2026-0119</span> · Criminal defense</span></td><td>Marcus Webb</td><td><span class="cl-pill cl-pill--accent">Pretrial</span></td><td><span class="cl-inline cl-inline--nowrap"><span class="cl-avatar cl-avatar--xs">JW</span>J. Whitfield</span></td><td class="num strong">$3,000.00</td><td><span class="cl-pill cl-pill--danger"><span class="cl-pill__dot"></span>Hearing · today 9:30</span></td></tr>
+        <tr class="cl-table__group"><td colspan="7">Active · 7</td></tr>
+        <tr><td><span class="cl-check cl-check--square"><svg class="cl-ic"><use href="#i-check"/></svg></span></td><td><span class="cell-title">Alvarez v. Meridian Logistics</span><span class="cell-sub"><span class="cell-mono">2026-0142</span> · Personal injury</span></td><td>Sofia Alvarez</td><td><span class="cl-pill cl-pill--accent">Discovery</span></td><td><span class="cl-inline cl-inline--nowrap"><span class="cl-avatar cl-avatar--xs">DO</span>D. Okafor</span></td><td class="num">—</td><td><span class="cl-pill">Cutoff · Oct 24</span></td></tr>
+        <tr><td><span class="cl-check cl-check--square"><svg class="cl-ic"><use href="#i-check"/></svg></span></td><td><span class="cell-title">Kessler Holdings — Series B</span><span class="cell-sub"><span class="cell-mono">2026-0201</span> · Corporate</span></td><td>Kessler Holdings LLC</td><td><span class="cl-pill cl-pill--accent">Diligence</span></td><td><span class="cl-inline cl-inline--nowrap"><span class="cl-avatar cl-avatar--xs">DO</span>D. Okafor</span></td><td class="num strong">$12,500.00</td><td><span class="cl-muted">—</span></td></tr>
+        <tr class="cl-table__foot"><td></td><td colspan="4">9 matters</td><td class="num">$20,325.00</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="pv-note">Headers are 11px overlines; numeric columns are right-aligned tabular figures; identifiers are mono. Group rows and a footer carry the sums so totals never live in a separate tile. Hover tints the row 3%; selection uses the accent tint. Compact density is a user preference stored per table.</p>
+</div>

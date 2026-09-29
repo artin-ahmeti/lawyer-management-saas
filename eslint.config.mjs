@@ -16,6 +16,10 @@ export default tseslint.config(
       '**/*.config.js',
       '**/babel.config.js',
       '**/metro.config.js',
+      'design/**', // design-system sources/previews: plain HTML/CSS/py, not app code
+      '.ds-sync/**',
+      'ds-bundle/**',
+      '.design-sync/**',
     ],
   },
   ...tseslint.configs.recommended,
