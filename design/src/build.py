@@ -17,6 +17,7 @@ OUT = os.path.abspath(os.path.join(SRC, '..', 'system'))
 sys.path.insert(0, SRC)
 import tokens as T
 import build_tokens
+import build_mobile
 from guidelines import GUIDELINES
 
 FONTS_HREF = "https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap"
@@ -109,6 +110,7 @@ def main():
     if '--artifact' in sys.argv:
         artifact_path = sys.argv[sys.argv.index('--artifact') + 1]
     build_tokens.main()
+    build_mobile.main()
     tokens_css = read(os.path.join(OUT, 'tokens.css'))
     bundle_css = read(os.path.join(SRC, 'bundle.css'))
     base_css = read(os.path.join(SRC, 'base.css'))
