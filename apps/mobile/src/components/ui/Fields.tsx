@@ -61,7 +61,22 @@ export interface InputProps extends TextInputProps {
 }
 
 /** Text input, 48px tall. `search` for the tonal search field, `amount` with `prefix="$"` for money. */
-export function Input({ icon, prefix, suffix, search, amount, error, disabled, multiline, minHeight, className, onFocus, onBlur, style, ...rest }: InputProps) {
+export function Input({
+  icon,
+  prefix,
+  suffix,
+  search,
+  amount,
+  error,
+  disabled,
+  multiline,
+  minHeight,
+  className,
+  onFocus,
+  onBlur,
+  style,
+  ...rest
+}: InputProps) {
   const { theme } = useTheme();
   const [focused, setFocused] = useState(false);
   return (
@@ -69,7 +84,9 @@ export function Input({ icon, prefix, suffix, search, amount, error, disabled, m
       className={cn(
         'flex-row items-center gap-2.5 px-3.5',
         multiline ? 'items-start py-3' : 'h-12',
-        search ? 'rounded-[10px] border border-transparent bg-surface-2' : 'rounded-md border border-border bg-surface',
+        search
+          ? 'rounded-[10px] border border-transparent bg-surface-2'
+          : 'rounded-md border border-border bg-surface',
         focused && 'border-accent',
         focused && search && 'bg-surface',
         error && 'border-danger-dot',
@@ -97,8 +114,16 @@ export function Input({ icon, prefix, suffix, search, amount, error, disabled, m
           setFocused(false);
           onBlur?.(e);
         }}
-        className={cn('flex-1 font-sans text-body text-ink', amount && 'text-right font-sans-semibold', disabled && 'text-ink-disabled')}
-        style={[amount ? { fontVariant: ['tabular-nums'] } : null, multiline ? { textAlignVertical: 'top', lineHeight: 22 } : null, style]}
+        className={cn(
+          'flex-1 font-sans text-body text-ink',
+          amount && 'text-right font-sans-semibold',
+          disabled && 'text-ink-disabled',
+        )}
+        style={[
+          amount ? { fontVariant: ['tabular-nums'] } : null,
+          multiline ? { textAlignVertical: 'top', lineHeight: 22 } : null,
+          style,
+        ]}
         {...rest}
       />
       {suffix ? (
@@ -123,15 +148,33 @@ export interface SelectProps {
   className?: string;
 }
 
-const DOT_BG = { accent: 'bg-accent', success: 'bg-success-dot', warning: 'bg-warning-dot', danger: 'bg-danger-dot', info: 'bg-info-dot' } as const;
+const DOT_BG = {
+  accent: 'bg-accent',
+  success: 'bg-success-dot',
+  warning: 'bg-warning-dot',
+  danger: 'bg-danger-dot',
+  info: 'bg-info-dot',
+} as const;
 
 /** Select trigger styled like a text field with a chevron; opens a picker sheet. */
-export function Select({ value, placeholder, mono, code, icon, dot, onPress, className }: SelectProps) {
+export function Select({
+  value,
+  placeholder,
+  mono,
+  code,
+  icon,
+  dot,
+  onPress,
+  className,
+}: SelectProps) {
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      className={cn('h-12 flex-row items-center gap-2.5 rounded-md border border-border bg-surface px-3.5 active:bg-surface-2', className)}
+      className={cn(
+        'h-12 flex-row items-center gap-2.5 rounded-md border border-border bg-surface px-3.5 active:bg-surface-2',
+        className,
+      )}
     >
       {icon ? <Icon name={icon} tone="ink-3" /> : null}
       {dot ? <View className={cn('h-2 w-2 rounded-full', DOT_BG[dot])} /> : null}
@@ -149,7 +192,11 @@ export function Select({ value, placeholder, mono, code, icon, dot, onPress, cla
           {placeholder}
         </Text>
       )}
-      {mono ? <Text variant="mono-id" tone="muted">{mono}</Text> : null}
+      {mono ? (
+        <Text variant="mono-id" tone="muted">
+          {mono}
+        </Text>
+      ) : null}
       <Icon name="chevron-down" size="sm" tone="ink-2" />
     </Pressable>
   );
@@ -165,8 +212,18 @@ export interface StepperProps {
 /** Duration stepper (h:mm in 0.1h steps) and other counted values. */
 export function Stepper({ value, onDecrement, onIncrement, className }: StepperProps) {
   return (
-    <View className={cn('h-12 flex-row items-stretch overflow-hidden rounded-md border border-border bg-surface', className)}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Less" onPress={onDecrement} className="w-11 items-center justify-center active:bg-surface-2">
+    <View
+      className={cn(
+        'h-12 flex-row items-stretch overflow-hidden rounded-md border border-border bg-surface',
+        className,
+      )}
+    >
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Less"
+        onPress={onDecrement}
+        className="w-11 items-center justify-center active:bg-surface-2"
+      >
         <Text variant="title-3">−</Text>
       </Pressable>
       <View className="min-w-[84px] items-center justify-center border-x border-hairline px-2">
@@ -174,7 +231,12 @@ export function Stepper({ value, onDecrement, onIncrement, className }: StepperP
           {value}
         </Text>
       </View>
-      <Pressable accessibilityRole="button" accessibilityLabel="More" onPress={onIncrement} className="w-11 items-center justify-center active:bg-surface-2">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="More"
+        onPress={onIncrement}
+        className="w-11 items-center justify-center active:bg-surface-2"
+      >
         <Text variant="title-3">+</Text>
       </Pressable>
     </View>

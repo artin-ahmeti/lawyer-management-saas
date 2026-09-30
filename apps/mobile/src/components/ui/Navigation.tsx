@@ -14,7 +14,13 @@ export interface ScreenProps extends PropsWithChildren {
 }
 
 /** Canvas + safe area. Every screen root uses this; 20px gutters. */
-export function Screen({ children, scroll, bottomInset = 24, className, contentClassName }: ScreenProps) {
+export function Screen({
+  children,
+  scroll,
+  bottomInset = 24,
+  className,
+  contentClassName,
+}: ScreenProps) {
   return (
     <SafeAreaView className={cn('flex-1 bg-bg', className)} edges={['top']}>
       {scroll ? (
@@ -73,7 +79,12 @@ export function NavBar({ back, onBack, title, mono, actions }: NavBarProps) {
   return (
     <View className="-mx-2 h-11 flex-row items-center justify-between px-1">
       {back ? (
-        <Pressable accessibilityRole="button" onPress={onBack} className="flex-row items-center pr-2" hitSlop={8}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onBack}
+          className="flex-row items-center pr-2"
+          hitSlop={8}
+        >
           <Icon name="chevron-left" tone="accent" />
           <Text tone="accent">{back}</Text>
         </Pressable>

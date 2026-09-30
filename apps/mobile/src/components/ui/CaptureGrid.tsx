@@ -21,7 +21,13 @@ export const DEFAULT_CAPTURE: CaptureItem[] = [
 ];
 
 /** The 3×2 Capture grid: Start timer, Voice memo, Log time (accent), Expense, Task, Note. */
-export function CaptureGrid({ items = DEFAULT_CAPTURE, onSelect }: { items?: CaptureItem[]; onSelect?: (key: string) => void }) {
+export function CaptureGrid({
+  items = DEFAULT_CAPTURE,
+  onSelect,
+}: {
+  items?: CaptureItem[];
+  onSelect?: (key: string) => void;
+}) {
   return (
     <View className="flex-row flex-wrap gap-2.5">
       {items.map((it) => (

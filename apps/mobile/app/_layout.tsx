@@ -3,7 +3,12 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import { useFonts, Geist_400Regular, Geist_500Medium, Geist_600SemiBold } from '@expo-google-fonts/geist';
+import {
+  useFonts,
+  Geist_400Regular,
+  Geist_500Medium,
+  Geist_600SemiBold,
+} from '@expo-google-fonts/geist';
 import { GeistMono_400Regular, GeistMono_500Medium } from '@expo-google-fonts/geist-mono';
 import { AppProviders } from '@/providers/AppProviders';
 import { useTheme } from '@/theme';

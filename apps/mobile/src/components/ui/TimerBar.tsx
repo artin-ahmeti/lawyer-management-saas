@@ -18,7 +18,17 @@ export interface TimerBarProps {
 }
 
 /** The docked running-timer bar: pulsing dot, matter, mono time, pause and stop. */
-export function TimerBar({ title, subtitle, time, paused, onPause, onResume, onStop, onPress, className }: TimerBarProps) {
+export function TimerBar({
+  title,
+  subtitle,
+  time,
+  paused,
+  onPause,
+  onResume,
+  onStop,
+  onPress,
+  className,
+}: TimerBarProps) {
   const pulse = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (paused) return;
@@ -35,11 +45,16 @@ export function TimerBar({ title, subtitle, time, paused, onPause, onResume, onS
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      className={cn('flex-row items-center gap-3 rounded-lg border border-hairline bg-surface-3 py-2.5 pl-4 pr-2.5 shadow-md', className)}
+      className={cn(
+        'flex-row items-center gap-3 rounded-lg border border-hairline bg-surface-3 py-2.5 pl-4 pr-2.5 shadow-md',
+        className,
+      )}
     >
       <Animated.View
         className={cn('h-2 w-2 rounded-full', paused ? 'bg-warning-dot' : 'bg-accent')}
-        style={{ opacity: paused ? 1 : pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 0.35] }) }}
+        style={{
+          opacity: paused ? 1 : pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 0.35] }),
+        }}
       />
       <View className="flex-1">
         <Text variant="label" weight="semibold" numberOfLines={1}>
@@ -55,15 +70,30 @@ export function TimerBar({ title, subtitle, time, paused, onPause, onResume, onS
         {time}
       </Text>
       {paused ? (
-        <Pressable accessibilityRole="button" accessibilityLabel="Resume" onPress={onResume} className="h-9 w-9 items-center justify-center rounded-sm bg-accent">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Resume"
+          onPress={onResume}
+          className="h-9 w-9 items-center justify-center rounded-sm bg-accent"
+        >
           <Icon name="play" size="sm" tone="on-accent" filled />
         </Pressable>
       ) : (
         <>
-          <Pressable accessibilityRole="button" accessibilityLabel="Pause" onPress={onPause} className="h-9 w-9 items-center justify-center rounded-sm bg-surface-2">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Pause"
+            onPress={onPause}
+            className="h-9 w-9 items-center justify-center rounded-sm bg-surface-2"
+          >
             <Icon name="pause" size="sm" filled />
           </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel="Stop" onPress={onStop} className="h-9 w-9 items-center justify-center rounded-sm bg-accent">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Stop"
+            onPress={onStop}
+            className="h-9 w-9 items-center justify-center rounded-sm bg-accent"
+          >
             <Icon name="stop" size="sm" tone="on-accent" filled />
           </Pressable>
         </>

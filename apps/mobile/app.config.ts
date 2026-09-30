@@ -19,6 +19,7 @@ const config: ExpoConfig = {
     'expo-secure-store',
     'expo-local-authentication',
     'expo-web-browser',
+    ['expo-build-properties', { ios: { enableSceneSupport: true } }],
     [
       'expo-notifications',
       {

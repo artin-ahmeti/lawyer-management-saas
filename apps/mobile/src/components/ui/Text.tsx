@@ -60,7 +60,15 @@ function familyFor(base: Family, weight?: TextWeight): Family {
  * Typography primitive. Hierarchy comes from `variant` (size + weight),
  * colour only from `tone`. Numbers that line up pass `tabular`.
  */
-export function Text({ variant = 'body', tone = 'default', weight, tabular, className, style, ...rest }: TextProps) {
+export function Text({
+  variant = 'body',
+  tone = 'default',
+  weight,
+  tabular,
+  className,
+  style,
+  ...rest
+}: TextProps) {
   const t = typeScale[variant];
   return (
     <RNText

@@ -12,7 +12,10 @@ export function AppProviders({ children }: PropsWithChildren) {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <KeyboardProvider>
-          <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: queryPersister }}>
+          <PersistQueryClientProvider
+            client={queryClient}
+            persistOptions={{ persister: queryPersister }}
+          >
             <ThemeProvider>
               <BottomSheetModalProvider>{children}</BottomSheetModalProvider>
             </ThemeProvider>

@@ -21,7 +21,12 @@ export function Amount({ cents, value, size = 'md', dimCents = true, tone, ...re
       {m ? (
         <>
           {m[1]}
-          <Text variant={variant} tone={tone === 'default' || !tone ? 'muted' : tone} weight="medium" tabular>
+          <Text
+            variant={variant}
+            tone={tone === 'default' || !tone ? 'muted' : tone}
+            weight="medium"
+            tabular
+          >
             {m[2]}
           </Text>
         </>
