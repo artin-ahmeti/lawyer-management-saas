@@ -11,7 +11,8 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./clepso.css": "./dist/clepso.css"
+    "./clepso.css": "./dist/clepso.css",
+    "./clepso.base.css": "./dist/clepso.base.css"
   },
   "files": [
     "dist"

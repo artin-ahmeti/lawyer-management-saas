@@ -2,6 +2,8 @@
 // tighten per-package as real code lands.
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
+import nextPlugin from '@next/eslint-plugin-next';
+import reactHooks from 'eslint-plugin-react-hooks';
 
 export default tseslint.config(
   {
@@ -29,6 +31,17 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/consistent-type-imports': 'error',
     },
+  },
+  {
+    // Next.js app: React hooks rules + Next's core-web-vitals checks.
+    files: ['apps/web/**/*.{ts,tsx}'],
+    plugins: { '@next/next': nextPlugin, 'react-hooks': reactHooks },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs['core-web-vitals'].rules,
+      ...reactHooks.configs.recommended.rules,
+    },
+    settings: { next: { rootDir: 'apps/web' } },
   },
   {
     // NestJS DI: classes referenced in constructor params must stay VALUE

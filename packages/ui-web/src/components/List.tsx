@@ -70,6 +70,7 @@ export function ListRow({
   inset,
   className,
   onClick,
+  onKeyDown,
   ...rest
 }: ListRowProps) {
   const hasTrail =
@@ -86,6 +87,18 @@ export function ListRow({
         className,
       )}
       onClick={onClick}
+      onKeyDown={(event) => {
+        onKeyDown?.(event);
+        if (
+          !event.defaultPrevented &&
+          event.target === event.currentTarget &&
+          onClick &&
+          (event.key === 'Enter' || event.key === ' ')
+        ) {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      }}
       {...rest}
     >
       {lead ? <span className="cl-row__lead">{lead}</span> : null}

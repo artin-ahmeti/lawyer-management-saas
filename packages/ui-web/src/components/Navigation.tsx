@@ -202,7 +202,16 @@ export function BrandMark({ size = 'md', tone = 'ink', className, ...rest }: Bra
       )}
       {...rest}
     >
-      <Icon name="mark" />
+      <svg className="cl-ic" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M17.2 7.4A7.2 7.2 0 1 0 17.2 16.6"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3.4"
+          strokeLinecap="round"
+        />
+        <circle cx="19.4" cy="12" r="2" fill="currentColor" stroke="none" />
+      </svg>
     </span>
   );
 }
