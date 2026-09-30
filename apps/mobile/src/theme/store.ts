@@ -11,7 +11,7 @@ interface ThemeState {
   setPreference: (p: ThemePreference) => void;
 }
 
-const initial = (storage.getString(KEY) as ThemePreference | undefined) ?? 'system';
+const initial = (storage.getString(KEY) as ThemePreference | undefined) ?? 'light';
 
 export const useThemeStore = create<ThemeState>((set) => ({
   preference: initial,

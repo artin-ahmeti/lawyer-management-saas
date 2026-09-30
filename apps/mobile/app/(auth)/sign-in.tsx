@@ -1,84 +1,120 @@
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { router } from 'expo-router';
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Ionicons } from '@expo/vector-icons';
-import { Button, Input, Screen } from '@/components/ui';
-import { signInSchema, type SignInInput } from '@/features/auth/schemas';
+import * as LocalAuthentication from 'expo-local-authentication';
+import { BrandMark, Button, Divider, Field, Input, Screen, Text } from '@/components/ui';
 import { signInWithPassword } from '@/features/auth/hooks';
+import { supabase } from '@/lib/supabase';
 
 export default function SignIn() {
-  const [serverError, setServerError] = useState<string | null>(null);
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<SignInInput>({
-    resolver: zodResolver(signInSchema),
-    defaultValues: { email: '', password: '' },
-  });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const onSubmit = handleSubmit(async (values) => {
-    setServerError(null);
+  const passwordSignIn = async () => {
+    setBusy(true);
+    setError(null);
     try {
-      await signInWithPassword(values.email, values.password);
+      await signInWithPassword(email, password);
       router.replace('/');
-    } catch (e) {
-      setServerError(e instanceof Error ? e.message : 'Sign-in failed');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not sign in. Try again.');
+    } finally {
+      setBusy(false);
     }
-  });
+  };
+  const faceSignIn = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const available =
+        (await LocalAuthentication.hasHardwareAsync()) &&
+        (await LocalAuthentication.isEnrolledAsync());
+      if (!available) {
+        setError('Face ID is not set up on this device. Sign in with your password.');
+        return;
+      }
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Unlock Clepso',
+        cancelLabel: 'Use password',
+      });
+      if (!result.success) return;
+      const { data } = await supabase.auth.getSession();
+      if (data.session) router.replace('/');
+      else setError('Sign in with your password once to enable Face ID on this device.');
+    } catch {
+      setError('Face ID could not unlock this session. Use your password.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
-    <Screen className="justify-center">
-      <View className="mb-10 items-center">
-        <View className="mb-4 h-16 w-16 items-center justify-center rounded-2xl bg-primary">
-          <Ionicons name="scale" size={30} color="#1B2632" />
+    <Screen className="justify-center" contentClassName="justify-center">
+      <View className="gap-7">
+        <View className="gap-3">
+          <View className="flex-row items-center gap-2.5">
+            <BrandMark size="lg" tone="accent" />
+            <Text variant="title-2">Clepso</Text>
+          </View>
+          <Text variant="display" className="mt-2">
+            Welcome back.
+          </Text>
+          <Text tone="muted">Tran & Okafor LLP · you were last here yesterday at 6:12 PM.</Text>
         </View>
-        <Text className="text-display text-ink">Welcome back</Text>
-        <Text className="mt-1 text-body text-ink-muted">Sign in to your firm workspace</Text>
-      </View>
-
-      <View className="gap-4">
-        <Controller
-          control={control}
-          name="email"
-          render={({ field: { onChange, onBlur, value } }) => (
+        <Button
+          variant="primary"
+          size="lg"
+          block
+          icon="face"
+          loading={busy}
+          onPress={() => void faceSignIn()}
+        >
+          Continue with Face ID
+        </Button>
+        <View className="flex-row items-center gap-3">
+          <View className="flex-1">
+            <Divider />
+          </View>
+          <Text variant="caption" tone="muted">
+            or
+          </Text>
+          <View className="flex-1">
+            <Divider />
+          </View>
+        </View>
+        <View className="gap-4">
+          <Field label="Email">
             <Input
-              label="Email"
-              placeholder="you@firm.com"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="dana@tranokafor.law"
               autoCapitalize="none"
               autoComplete="email"
               keyboardType="email-address"
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-              error={errors.email?.message}
             />
-          )}
-        />
-        <Controller
-          control={control}
-          name="password"
-          render={({ field: { onChange, onBlur, value } }) => (
+          </Field>
+          <Field label="Password">
             <Input
-              label="Password"
-              placeholder="••••••••"
+              value={password}
+              onChangeText={setPassword}
               secureTextEntry
               autoComplete="password"
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-              error={errors.password?.message}
+              placeholder="Password"
             />
-          )}
-        />
-        {serverError ? <Text className="text-caption text-danger">{serverError}</Text> : null}
-        <Button size="lg" loading={isSubmitting} onPress={() => void onSubmit()}>
-          Sign in
-        </Button>
-        <Text className="mt-2 text-center text-caption text-ink-faint">
-          Local demo: demo@lawfirm.test / demo-password-123
+          </Field>
+          {error ? (
+            <Text variant="label" tone="danger">
+              {error}
+            </Text>
+          ) : null}
+          <Button size="lg" block loading={busy} onPress={() => void passwordSignIn()}>
+            Sign in
+          </Button>
+        </View>
+        <Text variant="caption" tone="muted" className="text-center">
+          You stay signed in on this device. Sessions lock after 15 minutes in courthouse mode.
         </Text>
       </View>
     </Screen>

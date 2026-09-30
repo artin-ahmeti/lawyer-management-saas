@@ -62,14 +62,30 @@ export interface CardProps extends PropsWithChildren {
  * A card marks the one thing that isn't a list item: the running timer,
  * Review your day, a deadline, a trust warning. Lists live in List.
  */
-export function Card({ title, subtitle, headerAction, headerLead, tone = 'default', flush, footer, onPress, className, children }: CardProps) {
+export function Card({
+  title,
+  subtitle,
+  headerAction,
+  headerLead,
+  tone = 'default',
+  flush,
+  footer,
+  onPress,
+  className,
+  children,
+}: CardProps) {
   const inkTone: TextTone = tone === 'ink' ? 'inverse' : 'default';
   const subTone: TextTone = tone === 'ink' ? 'inverse' : tone === 'tint' ? 'accent' : 'muted';
   const hasHead = title || subtitle || headerAction || headerLead;
   const body = (
     <>
       {hasHead ? (
-        <View className={cn('flex-row items-center justify-between gap-3', flush && 'px-4 pb-2.5 pt-3.5')}>
+        <View
+          className={cn(
+            'flex-row items-center justify-between gap-3',
+            flush && 'px-4 pb-2.5 pt-3.5',
+          )}
+        >
           <View className="flex-1 flex-row items-center gap-3">
             {headerLead}
             <View className="flex-1">
@@ -79,7 +95,11 @@ export function Card({ title, subtitle, headerAction, headerLead, tone = 'defaul
                 </Text>
               ) : null}
               {subtitle ? (
-                <Text variant="label" tone={subTone} className={tone === 'ink' ? 'opacity-70' : undefined}>
+                <Text
+                  variant="label"
+                  tone={subTone}
+                  className={tone === 'ink' ? 'opacity-70' : undefined}
+                >
                   {subtitle}
                 </Text>
               ) : null}
@@ -89,13 +109,21 @@ export function Card({ title, subtitle, headerAction, headerLead, tone = 'defaul
         </View>
       ) : null}
       {children}
-      {footer ? <View className={cn('mt-3.5 flex-row flex-wrap gap-2', flush && 'mt-2 px-4 pb-3.5')}>{footer}</View> : null}
+      {footer ? (
+        <View className={cn('mt-3.5 flex-row flex-wrap gap-2', flush && 'mt-2 px-4 pb-3.5')}>
+          {footer}
+        </View>
+      ) : null}
     </>
   );
   const cls = cn('overflow-hidden rounded-lg', !flush && 'p-4', CARD_BG[tone], className);
   if (onPress) {
     return (
-      <Pressable accessibilityRole="button" onPress={onPress} className={cn(cls, 'active:opacity-90')}>
+      <Pressable
+        accessibilityRole="button"
+        onPress={onPress}
+        className={cn(cls, 'active:opacity-90')}
+      >
         {body}
       </Pressable>
     );
@@ -119,13 +147,29 @@ export interface KpiTileProps {
 }
 
 /** KPI tile: label, tabular value, one delta. At most two per phone screen. */
-export function KpiTile({ label, value, unit, delta, deltaTone = 'neutral', deltaIcon, progress, tint, onPress, className }: KpiTileProps) {
-  const deltaT: TextTone = deltaTone === 'up' ? 'success' : deltaTone === 'down' ? 'danger' : 'muted';
+export function KpiTile({
+  label,
+  value,
+  unit,
+  delta,
+  deltaTone = 'neutral',
+  deltaIcon,
+  progress,
+  tint,
+  onPress,
+  className,
+}: KpiTileProps) {
+  const deltaT: TextTone =
+    deltaTone === 'up' ? 'success' : deltaTone === 'down' ? 'danger' : 'muted';
   const Wrapper = onPress ? Pressable : View;
   return (
     <Wrapper
       onPress={onPress}
-      className={cn('flex-1 gap-1 rounded-lg px-4 py-3.5', tint ? 'bg-accent-tint' : 'border border-hairline bg-surface', className)}
+      className={cn(
+        'flex-1 gap-1 rounded-lg px-4 py-3.5',
+        tint ? 'bg-accent-tint' : 'border border-hairline bg-surface',
+        className,
+      )}
     >
       <Text variant="label" className={tint ? 'text-accent-ink' : 'text-ink-2'}>
         {label}
@@ -142,13 +186,24 @@ export function KpiTile({ label, value, unit, delta, deltaTone = 'neutral', delt
       </View>
       {delta ? (
         <View className="flex-row items-center gap-1">
-          {deltaIcon ? <Icon name={deltaIcon} size={12} tone={deltaTone === 'up' ? 'success-ink' : deltaTone === 'down' ? 'danger-ink' : 'ink-2'} bold /> : null}
+          {deltaIcon ? (
+            <Icon
+              name={deltaIcon}
+              size={12}
+              tone={
+                deltaTone === 'up' ? 'success-ink' : deltaTone === 'down' ? 'danger-ink' : 'ink-2'
+              }
+              bold
+            />
+          ) : null}
           <Text variant="caption" tone={deltaT} numberOfLines={1}>
             {delta}
           </Text>
         </View>
       ) : null}
-      {progress !== undefined ? <ProgressBar value={progress} className={cn('mt-2', tint && 'bg-accent/20')} /> : null}
+      {progress !== undefined ? (
+        <ProgressBar value={progress} className={cn('mt-2', tint && 'bg-accent/20')} />
+      ) : null}
     </Wrapper>
   );
 }
@@ -162,7 +217,10 @@ export function KpiRow({ children, className }: PropsWithChildren<{ className?: 
 export function ProgressBar({ value, className }: { value: number; className?: string }) {
   return (
     <View className={cn('h-1 overflow-hidden rounded-[2px] bg-surface-2', className)}>
-      <View className="h-full rounded-[2px] bg-accent" style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
+      <View
+        className="h-full rounded-[2px] bg-accent"
+        style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+      />
     </View>
   );
 }
@@ -186,7 +244,9 @@ export function KeyValue({ items, className }: { items: KeyValueItem[]; classNam
           <Text variant="label" tone="muted" className="w-24 leading-[22px]">
             {it.label}
           </Text>
-          <View className="flex-1">{typeof it.value === 'string' ? <Text>{it.value}</Text> : it.value}</View>
+          <View className="flex-1">
+            {typeof it.value === 'string' ? <Text>{it.value}</Text> : it.value}
+          </View>
         </View>
       ))}
     </View>

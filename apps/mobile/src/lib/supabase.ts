@@ -1,8 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { storage } from './storage';
+import { h1Preview } from './h1Preview';
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const url =
+  process.env.EXPO_PUBLIC_SUPABASE_URL || (h1Preview ? 'http://127.0.0.1:54321' : undefined);
+const anonKey =
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || (h1Preview ? 'h1-local-preview' : undefined);
 
 if (!url || !anonKey) {
   throw new Error(

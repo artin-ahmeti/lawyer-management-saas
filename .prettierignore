@@ -24,3 +24,7 @@ ds-bundle
 .design-sync/previews
 design/system/components
 design/system/contrast-report.md
+apps/mobile/expo-env.d.ts
+design/handoff
+apps/web/next-env.d.ts
+apps/web/.next

@@ -5,7 +5,8 @@ import { Icon } from './Icon';
 import type { IconName } from './icons';
 import { Text, type TextTone } from './Text';
 
-export type BannerTone = 'neutral' | 'warning' | 'danger' | 'success' | 'info' | 'accent' | 'outline';
+export type BannerTone =
+  'neutral' | 'warning' | 'danger' | 'success' | 'info' | 'accent' | 'outline';
 const BANNER_BG: Record<BannerTone, string> = {
   neutral: 'bg-surface-2',
   warning: 'bg-warning-bg',
@@ -39,13 +40,49 @@ export interface BannerProps {
 }
 
 /** Inline, contextual message at the top of the content it concerns. */
-export function Banner({ tone = 'neutral', icon, title, text, actions, compact, dismissible, onDismiss, trailing, className }: BannerProps) {
-  const iconTone = tone === 'warning' ? 'warning-ink' : tone === 'danger' ? 'danger-ink' : tone === 'success' ? 'success-ink' : tone === 'info' ? 'info-ink' : tone === 'accent' ? 'accent-ink' : 'ink-2';
+export function Banner({
+  tone = 'neutral',
+  icon,
+  title,
+  text,
+  actions,
+  compact,
+  dismissible,
+  onDismiss,
+  trailing,
+  className,
+}: BannerProps) {
+  const iconTone =
+    tone === 'warning'
+      ? 'warning-ink'
+      : tone === 'danger'
+        ? 'danger-ink'
+        : tone === 'success'
+          ? 'success-ink'
+          : tone === 'info'
+            ? 'info-ink'
+            : tone === 'accent'
+              ? 'accent-ink'
+              : 'ink-2';
   return (
-    <View className={cn('flex-row gap-3', compact ? 'items-center rounded-sm px-3 py-2' : 'items-start rounded-[10px] px-3.5 py-3', BANNER_BG[tone], className)}>
-      {icon ? <Icon name={icon} tone={iconTone} className={compact ? undefined : 'mt-0.5'} /> : null}
+    <View
+      className={cn(
+        'flex-row gap-3',
+        compact ? 'items-center rounded-sm px-3 py-2' : 'items-start rounded-[10px] px-3.5 py-3',
+        BANNER_BG[tone],
+        className,
+      )}
+    >
+      {icon ? (
+        <Icon name={icon} tone={iconTone} className={compact ? undefined : 'mt-0.5'} />
+      ) : null}
       <View className="flex-1 gap-0.5">
-        <Text variant={compact ? 'label' : 'body-strong'} weight="semibold" tone={BANNER_INK[tone]} className={tone === 'info' ? 'text-info-ink' : undefined}>
+        <Text
+          variant={compact ? 'label' : 'body-strong'}
+          weight="semibold"
+          tone={BANNER_INK[tone]}
+          className={tone === 'info' ? 'text-info-ink' : undefined}
+        >
           {title}
         </Text>
         {text ? (
@@ -57,7 +94,12 @@ export function Banner({ tone = 'neutral', icon, title, text, actions, compact, 
       </View>
       {trailing}
       {dismissible ? (
-        <Pressable accessibilityRole="button" accessibilityLabel="Dismiss" onPress={onDismiss} hitSlop={8}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss"
+          onPress={onDismiss}
+          hitSlop={8}
+        >
           <Icon name="x" size="sm" tone="ink-3" />
         </Pressable>
       ) : null}
@@ -76,7 +118,12 @@ export interface ToastProps {
 export function Toast({ message, tone = 'success', action, onAction }: ToastProps) {
   return (
     <View className="flex-row items-center gap-2.5 self-start rounded-[10px] bg-surface-inverse px-3.5 py-2.5 shadow-lg">
-      <Icon name={tone === 'danger' ? 'alert' : 'check'} size="sm" tone={tone === 'danger' ? 'danger-dot' : 'success-dot'} bold />
+      <Icon
+        name={tone === 'danger' ? 'alert' : 'check'}
+        size="sm"
+        tone={tone === 'danger' ? 'danger-dot' : 'success-dot'}
+        bold
+      />
       <Text variant="label" weight="medium" tone="inverse" className="shrink">
         {message}
       </Text>
@@ -103,8 +150,14 @@ export interface DialogProps extends PropsWithChildren {
 export function Dialog({ visible, title, text, actions, onRequestClose, children }: DialogProps) {
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onRequestClose}>
-      <Pressable className="flex-1 items-center justify-center bg-black/45 p-6" onPress={onRequestClose}>
-        <Pressable className="w-full max-w-[360px] gap-2.5 rounded-lg bg-surface-3 p-5 shadow-lg" onPress={() => undefined}>
+      <Pressable
+        className="flex-1 items-center justify-center bg-black/45 p-6"
+        onPress={onRequestClose}
+      >
+        <Pressable
+          className="w-full max-w-[360px] gap-2.5 rounded-lg bg-surface-3 p-5 shadow-lg"
+          onPress={() => undefined}
+        >
           <Text variant="title-3">{title}</Text>
           {text ? <Text tone="muted">{text}</Text> : null}
           {children}
@@ -146,8 +199,23 @@ export function EmptyState({ icon, title, text, action, large }: EmptyStateProps
 }
 
 /** Shimmer-free placeholder block (static tone, respects reduced motion by design). */
-export function Skeleton({ width = '100%', height = 12, circle, className }: { width?: number | string; height?: number; circle?: boolean; className?: string }) {
-  return <View className={cn('bg-surface-2', circle ? 'rounded-full' : 'rounded-[6px]', className)} style={{ width: width as number, height }} />;
+export function Skeleton({
+  width = '100%',
+  height = 12,
+  circle,
+  className,
+}: {
+  width?: number | string;
+  height?: number;
+  circle?: boolean;
+  className?: string;
+}) {
+  return (
+    <View
+      className={cn('bg-surface-2', circle ? 'rounded-full' : 'rounded-[6px]', className)}
+      style={{ width: width as number, height }}
+    />
+  );
 }
 
 /** Skeleton shaped like a list row. */

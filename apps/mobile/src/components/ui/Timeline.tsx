@@ -23,8 +23,19 @@ export function Timeline({ events, className }: { events: TimelineEvent[]; class
         return (
           <View key={i} className="flex-row gap-3">
             <View className="items-center">
-              <View className={cn('h-7 w-7 items-center justify-center rounded-full border', e.tone === 'accent' ? 'border-transparent bg-accent-tint' : 'border-hairline bg-surface-2')}>
-                <Icon name={e.icon ?? 'check'} size={14} tone={e.tone === 'accent' ? 'accent-ink' : 'ink-2'} />
+              <View
+                className={cn(
+                  'h-7 w-7 items-center justify-center rounded-full border',
+                  e.tone === 'accent'
+                    ? 'border-transparent bg-accent-tint'
+                    : 'border-hairline bg-surface-2',
+                )}
+              >
+                <Icon
+                  name={e.icon ?? 'check'}
+                  size={14}
+                  tone={e.tone === 'accent' ? 'accent-ink' : 'ink-2'}
+                />
               </View>
               {!last ? <View className="w-0.5 flex-1 bg-hairline" /> : null}
             </View>

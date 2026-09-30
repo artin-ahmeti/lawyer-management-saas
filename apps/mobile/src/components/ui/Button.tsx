@@ -7,13 +7,7 @@ import type { IconName } from './icons';
 import { Text, type TextTone } from './Text';
 
 export type ButtonVariant =
-  | 'primary'
-  | 'secondary'
-  | 'outline'
-  | 'tertiary'
-  | 'ghost'
-  | 'destructive'
-  | 'destructive-solid';
+  'primary' | 'secondary' | 'outline' | 'tertiary' | 'ghost' | 'destructive' | 'destructive-solid';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const BOX: Record<ButtonVariant, string> = {
@@ -34,7 +28,10 @@ const LABEL: Record<ButtonVariant, TextTone> = {
   destructive: 'danger',
   'destructive-solid': 'inverse',
 };
-const SIZE: Record<ButtonSize, { box: string; variant: 'label' | 'body-strong'; icon: 'sm' | 'md' }> = {
+const SIZE: Record<
+  ButtonSize,
+  { box: string; variant: 'label' | 'body-strong'; icon: 'sm' | 'md' }
+> = {
   sm: { box: 'h-9 px-3 rounded-sm gap-1.5', variant: 'label', icon: 'sm' },
   md: { box: 'h-11 px-4 rounded-md gap-2', variant: 'body-strong', icon: 'md' },
   lg: { box: 'h-[52px] px-5 rounded-[10px] gap-2', variant: 'body-strong', icon: 'md' },
@@ -74,7 +71,18 @@ export function Button({
   const { theme } = useTheme();
   const s = SIZE[size];
   const tone = LABEL[variant];
-  const iconColor = tone === 'onAccent' ? theme['on-accent'] : tone === 'inverse' ? theme['ink-inverse'] : tone === 'accent' ? theme.accent : tone === 'danger' ? theme['danger-ink'] : tone === 'muted' ? theme['ink-2'] : theme.ink;
+  const iconColor =
+    tone === 'onAccent'
+      ? theme['on-accent']
+      : tone === 'inverse'
+        ? theme['ink-inverse']
+        : tone === 'accent'
+          ? theme.accent
+          : tone === 'danger'
+            ? theme['danger-ink']
+            : tone === 'muted'
+              ? theme['ink-2']
+              : theme.ink;
   return (
     <Pressable
       accessibilityRole="button"
@@ -127,7 +135,15 @@ export interface IconButtonProps extends Omit<PressableProps, 'children'> {
 }
 
 /** Round 40px icon button for header actions, with an optional count badge. */
-export function IconButton({ icon, label, badge, plain, size = 'md', className, ...rest }: IconButtonProps) {
+export function IconButton({
+  icon,
+  label,
+  badge,
+  plain,
+  size = 'md',
+  className,
+  ...rest
+}: IconButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -143,7 +159,12 @@ export function IconButton({ icon, label, badge, plain, size = 'md', className, 
       <Icon name={icon} size={size === 'sm' ? 'sm' : 'md'} />
       {badge !== undefined && badge !== '' ? (
         <View className="absolute -right-0.5 -top-0.5 h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-bg bg-danger-solid px-1">
-          <Text variant="caption" tone="inverse" weight="semibold" className="text-[11px] leading-[14px] text-danger-on">
+          <Text
+            variant="caption"
+            tone="inverse"
+            weight="semibold"
+            className="text-[11px] leading-[14px] text-danger-on"
+          >
             {badge}
           </Text>
         </View>
@@ -153,7 +174,15 @@ export function IconButton({ icon, label, badge, plain, size = 'md', className, 
 }
 
 /** The 56px round accent Capture action: the only raised, filled, round control. */
-export function CaptureButton({ onPress, label = 'Capture', size = 56 }: { onPress?: () => void; label?: string; size?: number }) {
+export function CaptureButton({
+  onPress,
+  label = 'Capture',
+  size = 56,
+}: {
+  onPress?: () => void;
+  label?: string;
+  size?: number;
+}) {
   const { theme } = useTheme();
   return (
     <Pressable
@@ -161,7 +190,15 @@ export function CaptureButton({ onPress, label = 'Capture', size = 56 }: { onPre
       accessibilityLabel={label}
       onPress={onPress}
       className="items-center justify-center rounded-full bg-accent shadow-lg active:bg-accent-pressed"
-      style={{ width: size, height: size, shadowColor: theme.accent, shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 6 }}
+      style={{
+        width: size,
+        height: size,
+        shadowColor: theme.accent,
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 6,
+      }}
     >
       <Icon name="plus" size={size > 52 ? 26 : 24} color={theme['on-accent']} bold />
     </Pressable>

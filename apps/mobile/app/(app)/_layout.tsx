@@ -1,19 +1,24 @@
-import { Stack } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
+import { useSession } from '@/features/auth/hooks';
+import { h1Preview } from '@/lib/h1Preview';
+import { useTheme } from '@/theme';
 
 export default function AppLayout() {
-  return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: '#1B2632' },
-        headerTintColor: '#EEE9DF',
-        headerTitleStyle: { fontWeight: '600' },
-        headerShadowVisible: false,
-        contentStyle: { backgroundColor: '#1B2632' },
-      }}
-    >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="matters/[id]" options={{ title: 'Matter' }} />
-      <Stack.Screen name="contacts" options={{ title: 'Contacts' }} />
-    </Stack>
-  );
+  if (h1Preview) return <Stack screenOptions={{ headerShown: false }} />;
+  return <AuthenticatedAppLayout />;
+}
+
+function AuthenticatedAppLayout() {
+  const { session, loading } = useSession();
+  const { theme } = useTheme();
+  if (loading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-bg">
+        <ActivityIndicator color={theme.accent} />
+      </View>
+    );
+  }
+  if (!session) return <Redirect href="/(auth)/sign-in" />;
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

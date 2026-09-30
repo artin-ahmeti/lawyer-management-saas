@@ -4,6 +4,7 @@ packages:
 allowBuilds:
   '@scarf/scarf': false # telemetry only
   '@sentry/cli': true
+  '@shopify/react-native-skia': false # prebuilt binaries ship in the package; iOS build verified without it
   esbuild: true
   msgpackr-extract: true
 minimumReleaseAgeExclude:
@@ -32,3 +33,10 @@ minimumReleaseAgeExclude:
   - supabase@2.115.0
   - turbo@2.10.11
   - vitest@4.1.11
+  - expo-constants@57.0.20
+  - expo-modules-core@57.0.20
+  - expo@57.0.26
+  - '@expo/ui@57.0.21'
+  - expo-document-picker@57.0.3
+  - expo-router@57.0.24
+  - expo-updates@57.0.24

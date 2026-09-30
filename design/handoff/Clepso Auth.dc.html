@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/clepso-ff68e2a0-09e0-4f6f-9b9e-e4259e2b6c9a/_ds_bundle.css">
+<link rel="stylesheet" href="_ds/clepso-ff68e2a0-09e0-4f6f-9b9e-e4259e2b6c9a/styles.css">
+<script src="_ds/clepso-ff68e2a0-09e0-4f6f-9b9e-e4259e2b6c9a/_ds_bundle.js"></script>
+<style>
+html,body{margin:0;padding:0;min-height:100%;background:var(--bg)}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline;text-underline-offset:3px}
+@keyframes cl-enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes cl-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes cl-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes cl-pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+@keyframes cl-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media (max-width:960px){#cl-preview{display:none!important}#cl-root{grid-template-columns:minmax(0,1fr)!important}}
+</style>
+</helmet>
+<div id="cl-root" class="cl cl-web {{ themeClass }}" style="min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);background:var(--bg);color:var(--ink);font-family:var(--font-sans)">
+
+  <!-- ─── Form column ─── -->
+  <section data-screen-label="Auth" style="display:flex;flex-direction:column;min-height:100vh;padding:28px 48px 24px;min-width:0">
+    <header style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true" style="flex:none;color:var(--accent)"><path d="M17.2 7.4A7.2 7.2 0 1 0 17.2 16.6" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><circle cx="19.4" cy="12" r="2" fill="currentColor"/></svg>
+        <span class="cl-wordmark" style="font-size:24px;letter-spacing:-0.035em;color:var(--ink)">Clepso</span>
+      </div>
+      <button class="cl-btn cl-btn--ghost cl-btn--icon" aria-label="Toggle theme" onClick="{{ toggleTheme }}" style="border-radius:var(--radius-full)">
+        <sc-if value="{{ isDark }}" hint-placeholder-val="{{ true }}"><svg class="cl-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></sc-if>
+        <sc-if value="{{ isLight }}" hint-placeholder-val="{{ false }}"><svg class="cl-ic" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg></sc-if>
+      </button>
+    </header>
+
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px 0">
+      <div style="width:100%;max-width:400px;min-width:0">
+
+        <!-- SIGN IN -->
+        <sc-if value="{{ isSignin }}" hint-placeholder-val="{{ true }}">
+          <div data-screen-label="Sign in" style="display:flex;flex-direction:column;gap:28px;animation:cl-enter 260ms var(--ease-standard) both">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="cl-eyebrow">Tran &amp; Okafor LLP</div>
+              <h1 class="cl-t-title-1" style="font-size:32px;line-height:38px">Welcome back.</h1>
+              <p class="cl-t-body cl-muted">You were last here yesterday at 6:12 PM.</p>
+            </div>
+
+            <sc-if value="{{ signinBanner }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:var(--radius-md);background:var(--danger-bg);color:var(--danger-ink);font:var(--text-body-sm);animation:cl-shake 320ms var(--ease-standard)">
+                <svg class="cl-ic cl-ic--sm" viewBox="0 0 24 24" style="margin-top:2px"><path d="M12 3 2.5 20h19zM12 9v5M12 17h.01"/></svg>
+                <span>That password doesn't match <b>dana@tranokafor.law</b>. Try again or <a href="#" onClick="{{ goForgot }}" style="color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:3px">reset it</a>.</span>
+              </div>
+            </sc-if>
+
+            <button class="cl-btn cl-btn--outline cl-btn--lg cl-btn--block" onClick="{{ goTwofa }}">
+              <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.5l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.3 6.9-17.7z"/><path fill="#FBBC05" d="M10.5 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.3 0 11.7-2.1 15.6-5.7l-7.7-6c-2.1 1.4-4.8 2.3-7.9 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+              Continue with Google
+            </button>
+
+            <div style="display:flex;align-items:center;gap:12px"><span class="cl-divider" style="flex:1"></span><span class="cl-t-caption cl-faint">or with email</span><span class="cl-divider" style="flex:1"></span></div>
+
+            <div class="cl-form">
+              <div class="{{ emailFieldClass }}">
+                <label class="cl-field__label" for="si-email">Work email</label>
+                <div class="cl-input"><input id="si-email" type="email" placeholder="you@yourfirm.law" value="{{ email }}" onChange="{{ onEmail }}" autoComplete="email"></div>
+                <sc-if value="{{ emailErr }}" hint-placeholder-val="{{ false }}"><div class="cl-field__help">{{ emailErr }}</div></sc-if>
+              </div>
+              <div class="{{ pwFieldClass }}">
+                <label class="cl-field__label" for="si-pw"><span>Password</span><a href="#" class="opt" onClick="{{ goForgot }}" style="color:var(--accent);font-weight:500">Forgot?</a></label>
+                <div class="cl-input">
+                  <input id="si-pw" type="{{ pwType }}" placeholder="••••••••••" value="{{ password }}" onChange="{{ onPassword }}" autoComplete="current-password">
+                  <button type="button" onClick="{{ togglePw }}" aria-label="Show password" style="all:unset;cursor:pointer;color:var(--ink-3);font:var(--text-caption);font-weight:600;padding:2px 4px">{{ pwToggleLabel }}</button>
+                </div>
+                <sc-if value="{{ pwErr }}" hint-placeholder-val="{{ false }}"><div class="cl-field__help">{{ pwErr }}</div></sc-if>
+              </div>
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font:var(--text-body-sm);color:var(--ink-2)">
+                <button type="button" class="{{ rememberClass }}" onClick="{{ toggleRemember }}" aria-label="Stay signed in"><svg class="cl-ic" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>
+                Stay signed in on this device
+              </label>
+              <button class="{{ signinBtnClass }}" onClick="{{ submitSignin }}" style="margin-top:4px">
+                <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}"><span class="cl-spinner"></span></sc-if>
+                Sign in
+              </button>
+            </div>
+
+            <p class="cl-t-body-sm cl-muted" style="text-align:center">New firm on Clepso? <a href="#" onClick="{{ goSignup }}" style="font-weight:600">Create an account</a></p>
+          </div>
+        </sc-if>
+
+        <!-- FORGOT -->
+        <sc-if value="{{ isForgot }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Forgot password" style="display:flex;flex-direction:column;gap:28px;animation:cl-enter 260ms var(--ease-standard) both">
+            <a href="#" onClick="{{ goSignin }}" style="display:inline-flex;align-items:center;gap:4px;font:var(--text-label);font-weight:600;color:var(--ink-2)"><svg class="cl-ic cl-ic--sm" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>Back to sign in</a>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <h1 class="cl-t-title-1" style="font-size:32px;line-height:38px">Reset your password.</h1>
+              <p class="cl-t-body cl-muted">We'll email a link that works for 15 minutes. Nothing changes until you use it.</p>
+            </div>
+            <div class="cl-form">
+              <div class="cl-field">
+                <label class="cl-field__label" for="fp-email">Work email</label>
+                <div class="cl-input"><input id="fp-email" type="email" placeholder="you@yourfirm.law" value="{{ email }}" onChange="{{ onEmail }}"></div>
+              </div>
+              <button class="cl-btn cl-btn--primary cl-btn--lg cl-btn--block" onClick="{{ goForgotSent }}">Email reset link</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- FORGOT SENT -->
+        <sc-if value="{{ isForgotSent }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Reset link sent" style="display:flex;flex-direction:column;gap:24px;animation:cl-enter 260ms var(--ease-standard) both">
+            <span class="cl-ic-well cl-ic-well--lg cl-ic-well--accent" style="animation:cl-pop 420ms var(--ease-standard) both"><svg class="cl-ic" viewBox="0 0 24 24"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/></svg></span>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <h1 class="cl-t-title-1" style="font-size:32px;line-height:38px">Check your inbox.</h1>
+              <p class="cl-t-body cl-muted">A reset link is on its way to <b style="color:var(--ink)">{{ emailDisplay }}</b>. It expires in 15 minutes.</p>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="cl-btn cl-btn--secondary cl-btn--lg" onClick="{{ goSignin }}">Back to sign in</button>
+              <button class="cl-btn cl-btn--ghost cl-btn--lg" onClick="{{ goForgot }}">Didn't get it? Resend</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 2FA -->
+        <sc-if value="{{ isTwofa }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Two-factor code" style="display:flex;flex-direction:column;gap:28px;animation:cl-enter 260ms var(--ease-standard) both">
+            <a href="#" onClick="{{ goSignin }}" style="display:inline-flex;align-items:center;gap:4px;font:var(--text-label);font-weight:600;color:var(--ink-2)"><svg class="cl-ic cl-ic--sm" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>Back</a>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="cl-eyebrow">Two-step verification</div>
+              <h1 class="cl-t-title-1" style="font-size:32px;line-height:38px">Enter the code from your phone.</h1>
+              <p class="cl-t-body cl-muted">We texted a 6-digit code to <span class="cl-mono cl-mono--ink">····4210</span>. It's good for 10 minutes.</p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px">
+                <sc-for list="{{ codeCells }}" as="c" hint-placeholder-count="6">
+                  <input ref="{{ c.ref }}" value="{{ c.value }}" onChange="{{ c.onChange }}" onKeyDown="{{ c.onKeyDown }}" inputMode="numeric" maxLength="1" aria-label="Digit" style="all:unset;box-sizing:border-box;height:56px;width:100%;text-align:center;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);color:var(--ink);font:500 24px/1 var(--font-mono);font-variant-numeric:tabular-nums;transition:border-color 120ms,box-shadow 120ms" style-focus="border-color:var(--accent);box-shadow:0 0 0 3px var(--focus-ring)">
+                </sc-for>
+              </div>
+              <sc-if value="{{ codeErr }}" hint-placeholder-val="{{ false }}"><div class="cl-t-caption cl-tone-danger" style="animation:cl-shake 320ms var(--ease-standard)">{{ codeErr }}</div></sc-if>
+            </div>
+            <button class="{{ twofaBtnClass }}" onClick="{{ submitCode }}"><sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}"><span class="cl-spinner"></span></sc-if>Verify and continue</button>
+            <div style="display:flex;justify-content:space-between;gap:12px;font:var(--text-body-sm);color:var(--ink-2)">
+              <a href="#" onClick="{{ noop }}" style="font-weight:600">Resend code</a>
+              <a href="#" onClick="{{ noop }}" style="font-weight:600">Use a backup code</a>
+            </div>
+            <p class="cl-t-caption cl-faint">Tip: type 000000 to see the error state.</p>
+          </div>
+        </sc-if>
+
+        <!-- SIGN UP · ACCOUNT -->
+        <sc-if value="{{ isSuAccount }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Sign up · Account" style="display:flex;flex-direction:column;gap:28px;animation:cl-enter 260ms var(--ease-standard) both">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;gap:8px" aria-label="Step 1 of 3">
+                <span style="height:3px;flex:1;border-radius:2px;background:var(--accent)"></span>
+                <span style="height:3px;flex:1;border-radius:2px;background:var(--border)"></span>
+                <span style="height:3px;flex:1;border-radius:2px;background:var(--border)"></span>
+              </div>
+              <div class="cl-eyebrow">Step 1 of 3 · Your account</div>
+              <h1 class="cl-t-title-1" style="font-size:32px;line-height:38px">Let's get you set up.</h1>
+            </div>
+            <div class="cl-form">
+              <div class="cl-field">
+                <label class="cl-field__label" for="su-name">Full name</label>
+                <div class="cl-input"><input id="su-name" placeholder="Dana Okafor" value="{{ name }}" onChange="{{ onName }}" autoComplete="name"></div>
+              </div>
+              <div class="{{ emailFieldClass }}">
+                <label class="cl-field__label" for="su-email">Work email</label>
+                <div class="cl-input"><input id="su-email" type="email" placeholder="dana@tranokafor.law" value="{{ email }}" onChange="{{ onEmail }}" autoComplete="email"></div>
+                <sc-if value="{{ emailErr }}" hint-placeholder-val="{{ false }}"><div class="cl-field__help">{{ emailErr }}</div></sc-if>
+              </div>
+              <div class="{{ pwFieldClass }}">
+                <label class="cl-field__label" for="su-pw">Password</label>
+                <div class="cl-input">
+                  <input id="su-pw" type="{{ pwType }}" placeholder="At least 8 characters" value="{{ password }}" onChange="{{ onPassword }}" autoComplete="new-password">
+                  <button type="button" onClick="{{ togglePw }}" style="all:unset;cursor:pointer;color:var(--ink-3);font:var(--text-caption);font-weight:600;padding:2px 4px">{{ pwToggleLabel }}</button>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:4px">
+                  <sc-for list="{{ strengthSegs }}" as="s" hint-placeholder-count="4">
+                    <span style="height:3px;border-radius:2px;background:{{ s.color }};transition:background 200ms var(--ease-standard)"></span>
+                  </sc-for>
+                </div>
+                <div style="display:flex;justify-content:space-between;gap:8px">
+                  <span class="cl-t-caption" style="color:{{ strengthColor }}">{{ strengthLabel }}</span>
+                  <sc-if value="{{ pwErr }}" hint-placeholder-val="{{ false }}"><span class="cl-t-caption cl-tone-danger">{{ pwErr }}</span></sc-if>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;margin-top:6px">
+                  <sc-for list="{{ pwRules }}" as="r" hint-placeholder-count="4">
+                    <span style="display:flex;align-items:center;gap:6px;font:var(--text-caption);color:{{ r.color }};transition:color 200ms">
+                      <span style="width:14px;height:14px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:{{ r.bg }};color:{{ r.fg }};transition:background 200ms"><svg viewBox="0 0 24 24" style="width:9px;height:9px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+                      {{ r.label }}
+                    </span>
+                  </sc-for>
+                </div>
+              </div>
+              <button class="cl-btn cl-btn--primary cl-btn--lg cl-btn--block" onClick="{{ submitAccount }}" style="margin-top:4px">Create account</button>
+            </div>
+            <p class="cl-t-caption cl-faint" style="text-align:center">By continuing you agree to the Terms of Service and Privacy Policy.</p>
+            <p class="cl-t-body-sm cl-muted" style="text-align:center">Already have an account? <a href="#" onClick="{{ goSignin }}" style="font-weight:600">Sign in</a></p>
+          </div>
+        </sc-if>
+
+        <!-- SIGN UP · VERIFY EMAIL -->
+        <sc-if value="{{ isSuVerify }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Verify email" style="display:flex;flex-direction:column;gap:24px;animation:cl-enter 260ms var(--ease-standard) both">
+            <span class="cl-ic-well cl-ic-well--lg cl-ic-well--accent" style="animation:cl-pop 420ms var(--ease-standard) both"><svg class="cl-ic" viewBox="0 0 24 24"><path d="M3 13 5.5 5h13L21 13v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM3 13h5l1.5 3h5L16 13h5"/></svg></span>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <h1 class="cl-t-title-1" style="font-size:32px;line-height:38px">Confirm it's you.</h1>
+              <p class="cl-t-body cl-muted">We sent a verification link to <b style="color:var(--ink)">{{ emailDisplay }}</b>. Open it on any device; this page will move on by itself.</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--radius-md);background:var(--surface);border:1px solid var(--hairline);font:var(--text-body-sm);color:var(--ink-2)">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);animation:cl-pulse 1.4s ease-in-out infinite"></span>
+              Waiting for you to open the link…
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="cl-btn cl-btn--primary cl-btn--lg" onClick="{{ goSuFirm }}">I've verified, continue</button>
+              <button class="cl-btn cl-btn--ghost cl-btn--lg" onClick="{{ noop }}">Resend email</button>
+            </div>
+            <p class="cl-t-caption cl-faint">Wrong address? <a href="#" onClick="{{ goSuAccount }}">Go back and change it</a>.</p>
+          </div>
+        </sc-if>
+
+        <!-- SIGN UP · FIRM -->
+        <sc-if value="{{ isSuFirm }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Sign up · Firm" style="display:flex;flex-direction:column;gap:28px;animation:cl-enter 260ms var(--ease-standard) both">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;gap:8px" aria-label="Step 2 of 3">
+                <span style="height:3px;flex:1;border-radius:2px;background:var(--accent)"></span>
+                <span style="height:3px;flex:1;border-radius:2px;background:var(--accent)"></span>
+                <span style="height:3px;flex:1;border-radius:2px;background:var(--border)"></span>
+              </div>
+              <div class="cl-eyebrow">Step 2 of 3 · Your firm</div>
+              <h1 class="cl-t-title-1" style="font-size:32px;line-height:38px">Tell us about the firm.</h1>
+              <p class="cl-t-body cl-muted">This sets up your matter numbering, playbooks and invoice header. You can change all of it later.</p>
+            </div>
+            <div class="cl-form">
+              <div class="cl-field">
+                <label class="cl-field__label" for="su-firm">Firm name</label>
+                <div class="cl-input"><input id="su-firm" placeholder="Tran &amp; Okafor LLP" value="{{ firm }}" onChange="{{ onFirm }}" autoComplete="organization"></div>
+              </div>
+              <div class="cl-form__row">
+                <div class="cl-field">
+                  <label class="cl-field__label">Firm size</label>
+                  <div class="cl-input cl-input--select"><span>{{ firmSize }}</span></div>
+                </div>
+                <div class="cl-field">
+                  <label class="cl-field__label">State bar</label>
+                  <div class="cl-input cl-input--select"><span>California</span></div>
+                </div>
+              </div>
+              <div class="cl-field">
+                <label class="cl-field__label"><span>Practice areas</span><span class="opt">Pick any</span></label>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  <sc-for list="{{ practices }}" as="p" hint-placeholder-count="6">
+                    <button type="button" class="{{ p.cls }}" onClick="{{ p.onToggle }}" style="transition:background 120ms,color 120ms">
+                      <sc-if value="{{ p.on }}" hint-placeholder-val="{{ false }}"><svg class="cl-ic" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></sc-if>
+                      {{ p.label }}
+                    </button>
+                  </sc-for>
+                </div>
+                <div class="cl-field__help">Each area installs a playbook: stages, deadline rules and flat-fee templates.</div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:4px">
+                <button class="cl-btn cl-btn--ghost cl-btn--lg" onClick="{{ goSuVerify }}">Back</button>
+                <button class="cl-btn cl-btn--primary cl-btn--lg" onClick="{{ goSuTeam }}" style="flex:1">Continue</button>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- SIGN UP · TEAM -->
+        <sc-if value="{{ isSuTeam }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Sign up · Invite team" style="display:flex;flex-direction:column;gap:28px;animation:cl-enter 260ms var(--ease-standard) both">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;gap:8px" aria-label="Step 3 of 3">
+                <span style="height:3px;flex:1;border-radius:2px;background:var(--accent)"></span>
+                <span style="height:3px;flex:1;border-radius:2px;background:var(--accent)"></span>
+                <span style="height:3px;flex:1;border-radius:2px;background:var(--accent)"></span>
+              </div>
+              <div class="cl-eyebrow">Step 3 of 3 · Your team</div>
+              <h1 class="cl-t-title-1" style="font-size:32px;line-height:38px">Bring in the people who bill.</h1>
+              <p class="cl-t-body cl-muted">Invites carry a role and a default rate. Everyone gets the mobile app on day one.</p>
+            </div>
+            <div class="cl-form">
+              <sc-for list="{{ invites }}" as="inv" hint-placeholder-count="3">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 128px;gap:8px">
+                  <div class="cl-input"><input placeholder="{{ inv.placeholder }}" value="{{ inv.email }}" onChange="{{ inv.onEmail }}" type="email"></div>
+                  <div class="cl-input cl-input--select"><span>{{ inv.role }}</span></div>
+                </div>
+              </sc-for>
+              <button class="cl-btn cl-btn--tertiary" onClick="{{ addInvite }}" style="align-self:flex-start;padding-left:4px"><svg class="cl-ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add another</button>
+              <div style="display:flex;gap:8px;margin-top:4px">
+                <button class="cl-btn cl-btn--ghost cl-btn--lg" onClick="{{ goDone }}">Skip for now</button>
+                <button class="cl-btn cl-btn--primary cl-btn--lg" onClick="{{ goDone }}" style="flex:1">{{ inviteCta }}</button>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- DONE -->
+        <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Done" style="display:flex;flex-direction:column;gap:24px;animation:cl-enter 260ms var(--ease-standard) both">
+            <span class="cl-ic-well cl-ic-well--lg cl-ic-well--success" style="animation:cl-pop 420ms var(--ease-standard) both"><svg class="cl-ic" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="cl-eyebrow">{{ firmDisplay }}</div>
+              <h1 class="cl-t-title-1" style="font-size:32px;line-height:38px">{{ doneTitle }}</h1>
+              <p class="cl-t-body cl-muted">{{ doneBody }}</p>
+            </div>
+            <div class="cl-list">
+              <div class="cl-row"><span class="cl-ic-well"><svg class="cl-ic" viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6zM9 12l2 2 4-4"/></svg></span><div class="cl-row__body"><div class="cl-row__title">Two-step verification is on</div><div class="cl-row__sub">Codes go to ····4210</div></div><span class="cl-pill cl-pill--success"><span class="cl-pill__dot"></span>Active</span></div>
+              <div class="cl-row"><span class="cl-ic-well"><svg class="cl-ic" viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M9 10v1M15 10v1M9 15c1 1 2 1.5 3 1.5s2-.5 3-1.5"/></svg></span><div class="cl-row__body"><div class="cl-row__title">Biometric session on mobile</div><div class="cl-row__sub">Set up when you open the app</div></div><span class="cl-pill">Pending</span></div>
+            </div>
+            <button class="cl-btn cl-btn--primary cl-btn--lg cl-btn--block" onClick="{{ goSignin }}">Open Today</button>
+            <p class="cl-t-caption cl-faint" style="text-align:center">Prototype loops back to sign in.</p>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+
+    <footer style="display:flex;justify-content:space-between;gap:12px;font:var(--text-caption);color:var(--ink-3);flex-wrap:wrap">
+      <span>© 2026 Clepso · SOC 2 Type II · Data encrypted at rest</span>
+      <span style="display:flex;gap:14px"><a href="#" onClick="{{ noop }}" style="color:inherit">Privacy</a><a href="#" onClick="{{ noop }}" style="color:inherit">Terms</a><a href="#" onClick="{{ noop }}" style="color:inherit">Status</a></span>
+    </footer>
+  </section>
+
+  <!-- ─── Product preview column ─── -->
+  <aside id="cl-preview" onMouseMove="{{ onParallax }}" onMouseLeave="{{ resetParallax }}" style="position:relative;overflow:hidden;background:var(--bg);border-left:1px solid var(--hairline);display:flex;flex-direction:column;min-height:100vh;perspective:1500px">
+    <canvas ref="{{ canvasRef }}" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;display:block"></canvas>
+    <div style="position:relative;padding:52px 56px 0 64px;display:flex;flex-direction:column;gap:14px;max-width:580px">
+      <div style="display:inline-flex;align-items:center;gap:8px;align-self:flex-start;height:28px;padding:0 10px 0 5px;border-radius:var(--radius-full);background:var(--surface);border:1px solid var(--hairline);font:var(--text-caption);font-weight:600;color:var(--ink-2)">
+        <span class="cl-ic-well" style="width:18px;height:18px;border-radius:5px"><svg class="cl-ic" viewBox="0 0 24 24" style="width:11px;height:11px;stroke-width:2.5"><path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4"/></svg></span>
+        AI drafts · you approve
+      </div>
+      <h2 class="cl-t-display" style="font-size:42px;line-height:46px;letter-spacing:-0.025em;text-wrap:balance">Your day, already billed.</h2>
+      <p class="cl-t-body cl-muted" style="text-wrap:pretty;max-width:420px">AI captures the work. You approve. Clients pay.</p>
+      <div style="display:flex;align-items:center;gap:10px;font:var(--text-label);font-weight:500;color:var(--ink-2);min-height:22px">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);animation:cl-pulse 1.4s ease-in-out infinite;flex:none"></span>
+        <span style="opacity:{{ tickerOpacity }};transform:translateY({{ tickerShift }});transition:opacity 280ms var(--ease-standard),transform 280ms var(--ease-standard)">{{ tickerText }}</span>
+      </div>
+    </div>
+
+    <div style="position:relative;flex:1;margin-top:40px;min-height:560px">
+      <div ref="{{ frameRef }}" style="position:absolute;left:72px;top:0;width:640px;transform-style:preserve-3d;transition:transform 800ms var(--ease-standard);transform:rotateY(-14deg) rotateX(7deg);will-change:transform">
+        <div style="animation:cl-float 9s ease-in-out infinite">
+          <div class="cl-theme-dark" style="width:640px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-lg),0 48px 90px -36px var(--accent);color:var(--ink);font:var(--text-body-sm);overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;height:52px;padding:0 18px;border-bottom:1px solid var(--hairline);background:var(--surface-3)">
+              <div style="display:flex;align-items:center;gap:10px"><span class="cl-avatar cl-avatar--xs cl-avatar--accent">DO</span><span class="cl-t-label" style="color:var(--ink)">Today</span><span class="cl-t-label cl-faint">Mon, Sep 29</span></div>
+              <div class="cl-topbar__timer" style="height:30px"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent);animation:cl-pulse 1.4s ease-in-out infinite"></span><span class="title">Estate of Bennett</span><span class="time">{{ timerText }}</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;padding:18px">
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;align-items:center;justify-content:space-between"><span class="cl-t-title-3">Review your day</span><span class="cl-pill cl-pill--accent"><span class="cl-pill__dot"></span>Automating</span></div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <sc-for list="{{ steps }}" as="s" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;background:{{ s.bg }};border:1px solid {{ s.border }};opacity:{{ s.opacity }};transform:translateX({{ s.shift }});transition:all 500ms var(--ease-standard)">
+                      <span class="{{ s.wellClass }}" style="width:32px;height:32px;border-radius:8px;transition:all 400ms"><svg class="cl-ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="{{ s.icon }}"/></svg></span>
+                      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span class="cl-t-label" style="color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.title }}</span><span class="cl-t-caption cl-muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.sub }}</span></div>
+                      <span style="width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:none;background:{{ s.dotBg }};color:var(--on-accent);transition:all 400ms var(--ease-standard)">
+                        <sc-if value="{{ s.done }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></sc-if>
+                        <sc-if value="{{ s.active }}" hint-placeholder-val="{{ false }}"><span class="cl-spinner" style="width:12px;height:12px;border-width:2px;color:var(--accent)"></span></sc-if>
+                      </span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div class="cl-kpi cl-kpi--tint" style="padding:14px 16px 12px"><span class="cl-kpi__label">Billed today</span><span class="cl-kpi__value" style="transition:all 400ms">{{ billedToday }}<small>of 6h</small></span><div class="cl-progress"><div class="cl-progress__bar" style="width:{{ billedPct }};transition:width 900ms var(--ease-standard)"></div></div></div>
+                <div class="cl-kpi" style="padding:14px 16px;flex:1;gap:8px">
+                  <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="cl-kpi__label">Hours this week</span><span class="cl-t-label cl-num" style="color:var(--ink);font-weight:600">21.4h</span></div>
+                  <div style="position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;align-items:end;height:84px">
+                    <span style="position:absolute;left:0;right:0;top:34%;border-top:1px dashed var(--border-strong);opacity:.7"></span>
+                    <sc-for list="{{ bars }}" as="b" hint-placeholder-count="5">
+                      <span style="height:{{ b.h }};background:{{ b.bg }};border-radius:3px 3px 1px 1px;transition:height 900ms var(--ease-standard) {{ b.delay }};min-height:2px;position:relative"></span>
+                    </sc-for>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;font:var(--text-caption);color:var(--ink-3);text-align:center"><span>Mon</span><span>Tue</span><span>Wed</span><span style="color:var(--ink);font-weight:600">Today</span><span>Fri</span></div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;padding:12px 18px 14px;border-top:1px solid var(--hairline)">
+              <span class="cl-ic-well cl-ic-well--success" style="width:32px;height:32px;border-radius:8px"><svg class="cl-ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/></svg></span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;justify-content:space-between;gap:12px"><span class="cl-t-label" style="color:var(--ink);font-weight:600">Pre-bill ready · 6 matters</span><span class="cl-t-label cl-num" style="color:var(--ink)"><span style="color:var(--ink-2)">$41,300 →</span> {{ invoicedText }}</span></div>
+                <div class="cl-progress" style="margin:0"><div class="cl-progress__bar" style="width:{{ invoicedPct }};transition:width 1200ms var(--ease-standard)"></div></div>
+              </div>
+              <button class="cl-btn cl-btn--primary" style="height:32px">Send invoices</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:absolute;right:-88px;top:-26px;transform:translateZ(90px)"><div class="cl-theme-dark" style="animation:cl-float 7s ease-in-out -2s infinite"><span style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px 0 8px;border-radius:var(--radius-full);background:var(--surface-3);border:1px solid var(--border);box-shadow:var(--shadow-md);color:var(--ink);font:var(--text-label);font-weight:600;white-space:nowrap"><span class="cl-ic-well cl-ic-well--accent" style="width:22px;height:22px;border-radius:6px"><svg class="cl-ic" viewBox="0 0 24 24" style="width:13px;height:13px"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></span>Voice memo → 0.3h entry</span></div></div>
+        <div style="position:absolute;left:-58px;bottom:62px;transform:translateZ(120px)"><div class="cl-theme-dark" style="animation:cl-float 8s ease-in-out -4s infinite"><span style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px 0 8px;border-radius:var(--radius-full);background:var(--surface-3);border:1px solid var(--border);box-shadow:var(--shadow-md);color:var(--ink);font:var(--text-label);font-weight:600;white-space:nowrap"><span class="cl-ic-well cl-ic-well--info" style="width:22px;height:22px;border-radius:6px"><svg class="cl-ic" viewBox="0 0 24 24" style="width:13px;height:13px"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></span>Deadline chain · filing Fri Oct 3</span></div></div>
+        <div style="position:absolute;right:-40px;bottom:-30px;transform:translateZ(70px)"><div class="cl-theme-dark" style="animation:cl-float 6.5s ease-in-out -1s infinite"><span style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px 0 8px;border-radius:var(--radius-full);background:var(--surface-3);border:1px solid var(--border);box-shadow:var(--shadow-md);color:var(--ink);font:var(--text-label);font-weight:600;white-space:nowrap"><span class="cl-ic-well cl-ic-well--success" style="width:22px;height:22px;border-radius:6px"><svg class="cl-ic" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>Paid · Margaret Bennett · $8,125.00</span></div></div>
+      </div>
+    </div>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;,&quot;section&quot;:&quot;Appearance&quot;},&quot;showErrors&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;States&quot;},&quot;autoAdvanceVerify&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Flow&quot;}}">
+class Component extends DCLogic {
+  state = { screen: 'signin', theme: null, email: '', password: '', name: '', firm: '', showPw: false, remember: true, loading: false,
+    emailErr: '', pwErr: '', codeErr: '', banner: false, code: ['', '', '', '', '', ''],
+    practices: { Probate: true, 'Personal injury': false, Corporate: true, 'Criminal defense': false, Family: false, Immigration: false },
+    invites: [{ email: '', role: 'Attorney' }, { email: '', role: 'Paralegal' }, { email: '', role: 'Staff' }] };
+  frameRef = React.createRef();
+  canvasRef = React.createRef();
+  TICKS = ['Transcribing voice memo · “Bennett, point three…”', 'Drafted 0.2h · Call with Sofia Alvarez · L390', 'Deadline chain updated · Inventory filing Fri Oct 3', 'Pay link opened · INV-2026-078 · Margaret Bennett', 'Pre-bill ready · 6 matters · $41,300 unbilled'];
+  STEPS = [
+    { icon: 'M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z', title: 'Call ended · Sofia Alvarez · 12 min', sub: 'Detected from your phone log · 10:24 AM' },
+    { icon: 'M4 20h4L19 9l-4-4L4 16zM13 7l4 4', title: 'Entry drafted', sub: '“Call with client re: discovery responses” · 0.2h · L390' },
+    { icon: 'm5 12.5 4.5 4.5L19 7.5', title: 'Approved with one tap', sub: 'Billable · $85.00 at $425/h' },
+    { icon: 'M5 3h14v18l-3-2-3 2-3-2-3 2V3zM9 8h6M9 12h6', title: 'Added to pre-bill', sub: 'Alvarez v. Meridian · INV-2026-096' },
+  ];
+  codeRefs = [0, 1, 2, 3, 4, 5].map(() => React.createRef());
+  go(screen) { this.setState({ screen, emailErr: '', pwErr: '', codeErr: '', banner: false, loading: false, code: ['', '', '', '', '', ''] }); }
+  strength(p) {
+    let s = 0; if (p.length >= 8) s++; if (/\d/.test(p)) s++; if (/[a-z]/.test(p) && /[A-Z]/.test(p)) s++; if (/[^\w\s]/.test(p)) s++;
+    return s;
+  }
+  renderVals() {
+    const st = this.state, P = this.props;
+    const theme = st.theme || P.theme || 'dark';
+    const showErrors = P.showErrors ?? false;
+    const email = st.email, pw = st.password;
+    const strong = this.strength(pw);
+    const strengthColors = ['var(--border)', 'var(--danger-dot)', 'var(--warning-dot)', 'var(--accent)', 'var(--success-dot)'];
+    const strengthLabels = ['Enter a password', 'Weak', 'Fair', 'Good', 'Strong'];
+    const rule = (ok, label) => ({ label, color: ok ? 'var(--success-ink)' : 'var(--ink-3)', bg: ok ? 'var(--success-dot)' : 'var(--surface-2)', fg: ok ? '#fff' : 'transparent' });
+    const emailErr = st.emailErr || (showErrors && st.screen === 'su-account' ? 'Already used by Tran & Okafor LLP. Sign in instead?' : '');
+    const pwErr = st.pwErr;
+    const banner = st.banner || (showErrors && st.screen === 'signin');
+    const set = (k) => (e) => this.setState({ [k]: e.target.value, emailErr: '', pwErr: '', banner: false });
+    const onCode = (i) => (e) => {
+      const v = e.target.value.replace(/\D/g, '').slice(-1);
+      const code = [...st.code]; code[i] = v;
+      this.setState({ code, codeErr: '' }, () => { if (v && i < 5) this.codeRefs[i + 1].current?.focus(); if (code.every(Boolean)) this.submitCode(); });
+    };
+    const onCodeKey = (i) => (e) => { if (e.key === 'Backspace' && !st.code[i] && i > 0) this.codeRefs[i - 1].current?.focus(); };
+    const btn = (extra) => 'cl-btn cl-btn--primary cl-btn--lg cl-btn--block' + (st.loading ? ' is-loading' : '') + (extra || '');
+    const inviteCount = st.invites.filter(i => i.email.trim()).length;
+    const fromSignup = st.flow === 'signup';
+    return {
+      themeClass: theme === 'dark' ? 'cl-theme-dark' : 'cl-theme-light', isDark: theme === 'dark', isLight: theme !== 'dark',
+      toggleTheme: () => this.setState({ theme: theme === 'dark' ? 'light' : 'dark' }),
+      isSignin: st.screen === 'signin', isForgot: st.screen === 'forgot', isForgotSent: st.screen === 'forgot-sent', isTwofa: st.screen === 'twofa',
+      isSuAccount: st.screen === 'su-account', isSuVerify: st.screen === 'su-verify', isSuFirm: st.screen === 'su-firm', isSuTeam: st.screen === 'su-team', isDone: st.screen === 'done',
+      goSignin: (e) => { e?.preventDefault?.(); this.setState({ flow: 'signin' }); this.go('signin'); }, goForgot: (e) => { e?.preventDefault?.(); this.go('forgot'); },
+      goForgotSent: () => this.go('forgot-sent'), goTwofa: () => this.go('twofa'), goSignup: (e) => { e?.preventDefault?.(); this.setState({ flow: 'signup' }); this.go('su-account'); }, loading: st.loading,
+      goSuAccount: (e) => { e?.preventDefault?.(); this.go('su-account'); }, goSuVerify: () => this.go('su-verify'), goSuFirm: () => this.go('su-firm'), goSuTeam: () => this.go('su-team'), goDone: () => this.go('done'),
+      noop: (e) => e?.preventDefault?.(),
+      email, password: pw, name: st.name, firm: st.firm, emailDisplay: email || 'dana@tranokafor.law', firmDisplay: st.firm || 'Tran & Okafor LLP',
+      onEmail: set('email'), onPassword: set('password'), onName: set('name'), onFirm: set('firm'),
+      pwType: st.showPw ? 'text' : 'password', pwToggleLabel: st.showPw ? 'Hide' : 'Show', togglePw: () => this.setState({ showPw: !st.showPw }),
+      rememberClass: 'cl-check cl-check--square' + (st.remember ? ' is-on' : ''), toggleRemember: () => this.setState({ remember: !st.remember }),
+      emailFieldClass: 'cl-field' + (emailErr ? ' is-error' : ''), pwFieldClass: 'cl-field' + (pwErr ? ' is-error' : ''), emailErr, pwErr, signinBanner: banner,
+      signinBtnClass: btn(), twofaBtnClass: btn(),
+      submitSignin: () => {
+        if (!email.trim()) return this.setState({ emailErr: 'Enter your work email' });
+        if (pw.length < 8) return this.setState({ pwErr: 'At least 8 characters' });
+        this.setState({ loading: true }); setTimeout(() => this.go('twofa'), 700);
+      },
+      submitAccount: () => {
+        if (!email.trim()) return this.setState({ emailErr: 'Enter your work email' });
+        if (strong < 2) return this.setState({ pwErr: 'Make it stronger' });
+        this.setState({ loading: true }); setTimeout(() => this.go('su-verify'), 500);
+      },
+      codeCells: st.code.map((value, i) => ({ value, ref: this.codeRefs[i], onChange: onCode(i), onKeyDown: onCodeKey(i) })), codeErr: st.codeErr,
+      submitCode: () => this.submitCode(),
+      strengthSegs: [1, 2, 3, 4].map(n => ({ color: n <= strong ? strengthColors[strong] : 'var(--border)' })), strengthColor: strong ? strengthColors[strong] : 'var(--ink-3)', strengthLabel: strengthLabels[strong],
+      pwRules: [rule(pw.length >= 8, '8+ characters'), rule(/\d/.test(pw), 'A number'), rule(/[a-z]/.test(pw) && /[A-Z]/.test(pw), 'Upper & lower case'), rule(/[^\w\s]/.test(pw), 'A symbol')],
+      firmSize: '2–10 people',
+      practices: Object.keys(st.practices).map(label => ({ label, on: st.practices[label], cls: 'cl-chip' + (st.practices[label] ? ' is-active' : ''), onToggle: () => this.setState({ practices: { ...st.practices, [label]: !st.practices[label] } }) })),
+      invites: st.invites.map((inv, i) => ({ ...inv, placeholder: ['lisa@tranokafor.law', 'j.whitfield@tranokafor.law', 'colleague@tranokafor.law'][Math.min(i, 2)], onEmail: (e) => { const invites = st.invites.map((x, j) => j === i ? { ...x, email: e.target.value } : x); this.setState({ invites }); } })),
+      addInvite: () => this.setState({ invites: [...st.invites, { email: '', role: 'Staff' }] }),
+      inviteCta: inviteCount ? `Send ${inviteCount} invite${inviteCount > 1 ? 's' : ''}` : 'Send invites',
+      doneTitle: fromSignup ? `Welcome to Clepso, ${(st.name || 'Dana').split(' ')[0]}.` : 'Welcome back, Dana.',
+      doneBody: fromSignup ? 'Your firm workspace is ready. Probate and Corporate playbooks are installed; invites go out as soon as you open Today.' : 'Signed in on this device. You have 3 things to review from yesterday.',
+      frameRef: this.frameRef, canvasRef: this.canvasRef,
+      ...this.motionVals(),
+      onParallax: (e) => { const el = this.frameRef.current; if (!el) return; const r = e.currentTarget.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; el.style.transform = `rotateY(${-14 + x * 8}deg) rotateX(${7 - y * 6}deg) translate3d(${x * -12}px, ${y * -10}px, 0)`; },
+      resetParallax: () => { const el = this.frameRef.current; if (el) el.style.transform = 'rotateY(-14deg) rotateX(7deg)'; },
+    };
+  }
+  submitCode() {
+    const code = this.state.code.join('');
+    if (code.length < 6) return this.setState({ codeErr: 'Enter all six digits' });
+    if (code === '000000') return this.setState({ codeErr: "That code didn't match. Check the newest text or request another.", code: ['', '', '', '', '', ''] }, () => this.codeRefs[0].current?.focus());
+    this.setState({ loading: true }); setTimeout(() => this.go('done'), 600);
+  }
+  motionVals() {
+    const tick = this.state.tick || 0, mounted = !!this.state.mounted;
+    const pos = tick % 13, stage = Math.min(4, Math.floor(pos / 2.5));
+    const steps = this.STEPS.map((s, i) => {
+      const done = i < stage, active = i === stage, upcoming = i > stage;
+      return { ...s, done, active,
+        opacity: upcoming ? .38 : 1, shift: upcoming ? '6px' : '0px',
+        bg: active ? 'var(--accent-tint)' : 'var(--surface-2)', border: active ? 'var(--accent)' : 'transparent',
+        wellClass: 'cl-ic-well' + (done ? ' cl-ic-well--success' : active ? ' cl-ic-well--accent' : ''),
+        dotBg: done ? 'var(--success-dot)' : active ? 'transparent' : 'var(--surface-3)' };
+    });
+    const secs = 42 * 60 + 17 + tick, pad = n => String(n).padStart(2, '0');
+    const billed = stage >= 3 ? 3.6 : 3.4;
+    const bars = [78, 52, 70, billed / 6 * 100 * .6, 0].map((h, i) => ({ h: mounted ? `${Math.max(h, 2)}%` : '2px', delay: `${i * 90}ms`, bg: i === 3 ? 'var(--accent)' : i === 4 ? 'var(--surface-2)' : 'var(--chart-seq-3, var(--accent-ink))' }));
+    const ti = Math.floor(tick / 4) % this.TICKS.length;
+    return { steps, timerText: `${pad(Math.floor(secs / 3600))}:${pad(Math.floor(secs / 60) % 60)}:${pad(secs % 60)}`,
+      billedToday: billed.toFixed(1), billedPct: `${Math.round(billed / 6 * 100)}%`, bars,
+      invoicedText: stage >= 4 ? '$8,210.00 invoiced' : '$8,125.00 invoiced', invoicedPct: stage >= 4 ? '24%' : '20%',
+      tickerText: this.TICKS[ti], tickerOpacity: this.state.tickerHidden ? 0 : 1, tickerShift: this.state.tickerHidden ? '4px' : '0px' };
+  }
+  startWaves() {
+    const c = this.canvasRef.current; if (!c) return;
+    const ctx = c.getContext('2d'); const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const rgb = (hex) => { const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(x => x + x).join('') : h.slice(0, 6), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+    const draw = (now) => {
+      const host = c.parentElement; if (!host) return;
+      const w = host.clientWidth, h = host.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+      if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const cs = getComputedStyle(host); const bg = cs.getPropertyValue('--bg').trim() || '#12151B'; const [r, g, b] = rgb(cs.getPropertyValue('--accent').trim() || '#2B52D9');
+      const dark = cs.getPropertyValue('--ink').trim().toLowerCase() > '#8';
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+      const t = now / 1000;
+      const glow = ctx.createRadialGradient(w * .8, h * .12, 0, w * .8, h * .12, w * .8);
+      glow.addColorStop(0, `rgba(${r},${g},${b},${dark ? .22 : .16})`); glow.addColorStop(1, `rgba(${r},${g},${b},0)`);
+      ctx.fillStyle = glow; ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 4; i++) {
+        const base = h * (.48 + i * .11), amp = 26 + i * 12, k = .0032 * (1 + i * .25), sp = .32 + i * .11;
+        ctx.beginPath(); ctx.moveTo(0, h);
+        for (let x = 0; x <= w; x += 6) { const y = base + Math.sin(x * k + t * sp + i) * amp + Math.sin(x * .009 - t * .5 + i * 2) * 12; ctx.lineTo(x, y); }
+        ctx.lineTo(w, h); ctx.closePath();
+        const gr = ctx.createLinearGradient(0, base - amp, 0, h);
+        const a = (dark ? .16 : .12) - i * .025;
+        gr.addColorStop(0, `rgba(${r},${g},${b},${a})`); gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        ctx.fillStyle = gr; ctx.fill();
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 6) { const y = base + Math.sin(x * k + t * sp + i) * amp + Math.sin(x * .009 - t * .5 + i * 2) * 12; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+        ctx.strokeStyle = `rgba(${r},${g},${b},${(dark ? .45 : .35) - i * .08})`; ctx.lineWidth = 1.1; ctx.stroke();
+      }
+      if (!reduced) this._raf = requestAnimationFrame(draw);
+    };
+    this._raf = requestAnimationFrame(draw);
+  }
+  componentDidMount() {
+    if (this.props.autoAdvanceVerify) { this._t = setInterval(() => { if (this.state.screen === 'su-verify') this.go('su-firm'); }, 4000); }
+    this._tick = setInterval(() => {
+      const tick = (this.state.tick || 0) + 1;
+      if (tick % 4 === 3) { this.setState({ tickerHidden: true }); setTimeout(() => this.setState({ tick, tickerHidden: false }), 300); }
+      else this.setState({ tick });
+    }, 1000);
+    setTimeout(() => this.setState({ mounted: true }), 150);
+    this.startWaves();
+  }
+  componentDidUpdate() { if (this.canvasRef.current && !this._raf) this.startWaves(); }
+  componentWillUnmount() { clearInterval(this._t); clearInterval(this._tick); cancelAnimationFrame(this._raf); }
+}
+</script>
+</body>
+</html>
+

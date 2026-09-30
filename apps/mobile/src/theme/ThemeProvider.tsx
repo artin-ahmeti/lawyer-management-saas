@@ -13,7 +13,11 @@ interface ThemeContextValue {
   courthouse: boolean;
 }
 
-const ThemeContext = createContext<ThemeContextValue>({ scheme: 'light', theme: themes.light, courthouse: false });
+const ThemeContext = createContext<ThemeContextValue>({
+  scheme: 'light',
+  theme: themes.light,
+  courthouse: false,
+});
 
 /**
  * Applies the Clepso theme to everything below it. Colour utilities in the
@@ -24,7 +28,13 @@ export function ThemeProvider({ children }: PropsWithChildren) {
   const device = useColorScheme();
   const preference = useThemeStore((s) => s.preference);
   const scheme: ThemeName =
-    preference === 'system' ? (device === 'dark' ? 'dark' : 'light') : preference === 'courthouse' ? 'dark' : preference;
+    preference === 'system'
+      ? device === 'dark'
+        ? 'dark'
+        : 'light'
+      : preference === 'courthouse'
+        ? 'dark'
+        : preference;
 
   useEffect(() => {
     nwColorScheme.set(scheme);

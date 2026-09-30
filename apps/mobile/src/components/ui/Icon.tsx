@@ -23,7 +23,15 @@ export interface IconProps {
 }
 
 /** Stroke icon from the Clepso set (Phosphor Regular), sized by role and coloured by token. */
-export function Icon({ name, size = 'md', tone = 'ink', color, filled, bold, className }: IconProps) {
+export function Icon({
+  name,
+  size = 'md',
+  tone = 'ink',
+  color,
+  filled,
+  bold,
+  className,
+}: IconProps) {
   const { theme } = useTheme();
   const px = typeof size === 'number' ? size : SIZE[size];
   const c = color ?? theme[tone];
@@ -80,7 +88,13 @@ export function IconWell({ name, tone = 'neutral', size = 'md', round, className
 }
 
 /** The Clepso placeholder mark: a tile with a "C" arc. */
-export function BrandMark({ size = 'md', tone = 'ink' }: { size?: 'md' | 'lg'; tone?: 'ink' | 'accent' }) {
+export function BrandMark({
+  size = 'md',
+  tone = 'ink',
+}: {
+  size?: 'md' | 'lg';
+  tone?: 'ink' | 'accent';
+}) {
   const { theme } = useTheme();
   const px = size === 'lg' ? 48 : 32;
   const icon = size === 'lg' ? 26 : 18;

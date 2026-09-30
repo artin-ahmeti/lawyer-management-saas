@@ -21,9 +21,21 @@ export interface SegmentedControlProps {
 }
 
 /** Switches between views of the same object; filters use Chip instead. */
-export function SegmentedControl({ items, value, onChange, scroll, className }: SegmentedControlProps) {
+export function SegmentedControl({
+  items,
+  value,
+  onChange,
+  scroll,
+  className,
+}: SegmentedControlProps) {
   const inner = (
-    <View className={cn('flex-row gap-0.5 rounded-md bg-surface-2 p-[3px]', !scroll && 'w-full', className)}>
+    <View
+      className={cn(
+        'flex-row gap-0.5 rounded-md bg-surface-2 p-[3px]',
+        !scroll && 'w-full',
+        className,
+      )}
+    >
       {items.map((it) => {
         const active = it.value === value;
         return (
@@ -32,9 +44,18 @@ export function SegmentedControl({ items, value, onChange, scroll, className }: 
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
             onPress={() => onChange?.(it.value)}
-            className={cn('h-8 flex-row items-center justify-center gap-1.5 rounded-[6px] px-3', !scroll && 'flex-1', active && 'bg-surface shadow-sm')}
+            className={cn(
+              'h-8 flex-row items-center justify-center gap-1.5 rounded-[6px] px-3',
+              !scroll && 'flex-1',
+              active && 'bg-surface shadow-sm',
+            )}
           >
-            <Text variant="label" weight="semibold" tone={active ? 'default' : 'muted'} numberOfLines={1}>
+            <Text
+              variant="label"
+              weight="semibold"
+              tone={active ? 'default' : 'muted'}
+              numberOfLines={1}
+            >
               {it.label}
             </Text>
             {it.count !== undefined ? (
@@ -72,19 +93,31 @@ export function Chip({ active, count, icon, trailing, onPress, children }: ChipP
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
       onPress={onPress}
-      className={cn('h-8 flex-row items-center gap-1.5 rounded-full border px-3', active ? 'border-ink bg-ink' : 'border-border bg-surface active:bg-surface-2')}
+      className={cn(
+        'h-8 flex-row items-center gap-1.5 rounded-full border px-3',
+        active ? 'border-ink bg-ink' : 'border-border bg-surface active:bg-surface-2',
+      )}
     >
       {icon ? <Icon name={icon} size="xs" tone={active ? 'ink-inverse' : 'ink'} /> : null}
       <Text variant="label" weight="medium" tone={active ? 'inverse' : 'default'}>
         {children}
       </Text>
       {count !== undefined ? (
-        <Text variant="label" tone={active ? 'inverse' : 'faint'} tabular className={active ? 'opacity-70' : undefined}>
+        <Text
+          variant="label"
+          tone={active ? 'inverse' : 'faint'}
+          tabular
+          className={active ? 'opacity-70' : undefined}
+        >
           {count}
         </Text>
       ) : null}
-      {trailing === 'chevron' ? <Icon name="chevron-down" size="xs" tone={active ? 'ink-inverse' : 'ink'} /> : null}
-      {trailing === 'close' ? <Icon name="x" size="xs" tone={active ? 'ink-inverse' : 'ink'} /> : null}
+      {trailing === 'chevron' ? (
+        <Icon name="chevron-down" size="xs" tone={active ? 'ink-inverse' : 'ink'} />
+      ) : null}
+      {trailing === 'close' ? (
+        <Icon name="x" size="xs" tone={active ? 'ink-inverse' : 'ink'} />
+      ) : null}
     </Pressable>
   );
 }
@@ -92,7 +125,11 @@ export function Chip({ active, count, icon, trailing, onPress, children }: ChipP
 /** Horizontal, scrollable row of chips. Keep the first chip "All" with the total. */
 export function ChipGroup({ children, className }: PropsWithChildren<{ className?: string }>) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName={cn('flex-row gap-2 py-0.5', className)}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerClassName={cn('flex-row gap-2 py-0.5', className)}
+    >
       {children}
     </ScrollView>
   );
@@ -112,7 +149,10 @@ export function Switch({ checked, onChange, label }: SwitchProps) {
       accessibilityState={{ checked }}
       accessibilityLabel={label}
       onPress={() => onChange?.(!checked)}
-      className={cn('h-[26px] w-11 justify-center rounded-full px-[3px]', checked ? 'bg-accent' : 'bg-border')}
+      className={cn(
+        'h-[26px] w-11 justify-center rounded-full px-[3px]',
+        checked ? 'bg-accent' : 'bg-border',
+      )}
     >
       <View className={cn('h-5 w-5 rounded-full bg-white shadow-sm', checked && 'self-end')} />
     </Pressable>
@@ -153,7 +193,10 @@ export function Radio({ checked }: { checked: boolean }) {
     <View
       accessibilityRole="radio"
       accessibilityState={{ checked }}
-      className={cn('h-[22px] w-[22px] rounded-full', checked ? 'border-[7px] border-accent' : 'border-[1.5px] border-border-strong')}
+      className={cn(
+        'h-[22px] w-[22px] rounded-full',
+        checked ? 'border-[7px] border-accent' : 'border-[1.5px] border-border-strong',
+      )}
     />
   );
 }
@@ -167,7 +210,13 @@ export interface OptionRowProps {
 }
 
 /** A 44px settings row: label, optional hint, and a control. */
-export function OptionRow({ label, hint, control, controlPosition = 'end', onPress }: OptionRowProps) {
+export function OptionRow({
+  label,
+  hint,
+  control,
+  controlPosition = 'end',
+  onPress,
+}: OptionRowProps) {
   return (
     <Pressable onPress={onPress} className="min-h-[44px] flex-row items-center gap-3 py-3">
       {controlPosition === 'start' ? control : null}

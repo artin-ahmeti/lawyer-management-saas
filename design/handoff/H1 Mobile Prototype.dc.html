@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="_ds/clepso-ff68e2a0-09e0-4f6f-9b9e-e4259e2b6c9a/_ds_bundle.css">
+  <link rel="stylesheet" href="_ds/clepso-ff68e2a0-09e0-4f6f-9b9e-e4259e2b6c9a/styles.css">
+  <script src="_ds/clepso-ff68e2a0-09e0-4f6f-9b9e-e4259e2b6c9a/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; }
+    a { color: var(--accent); } a:hover { color: var(--accent-hover); }
+    .proto-scroll::-webkit-scrollbar { display: none; }
+  </style>
+</helmet>
+<x-import component-from-global-scope="Clepso.ClepsoRoot" density="web" theme="light" hint-size="100%,100%" style="min-height:100vh;display:block">
+  <div style="max-width:1440px;margin:0 auto;padding:40px 32px 64px;display:flex;flex-direction:column;gap:48px">
+    <header style="display:flex;flex-direction:column;gap:16px;max-width:760px">
+      <div class="cl-t-overline cl-muted">Clepso · Horizon 1 · Mobile staff app</div>
+      <h1 class="cl-t-display" style="margin:0">Bill from the courthouse</h1>
+      <p class="cl-t-body" style="margin:0;color:var(--ink-2)">Working prototype of the H1 mobile app for Tran &amp; Okafor LLP, composed from the shipped Clepso components. The phone below is live: tap through <b>Today → Bill 0.2h → Billing → INV-2026-078 → Text pay link → Payment received</b>, or use the panel beside it to jump between states. Every screen has a courthouse-mode twin in the board further down.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+        <div style="background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-lg);padding:14px 16px;display:flex;flex-direction:column;gap:4px"><div class="cl-t-overline cl-muted">Sources</div><div class="cl-t-body-sm">Clepso design system (81 components), brand book, 12 reference screens on <span class="cl-t-mono-id">design/clepso-design-system</span>, mock data from <span class="cl-t-mono-id">apps/mobile/src/mocks/data.ts</span>.</div></div>
+        <div style="background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-lg);padding:14px 16px;display:flex;flex-direction:column;gap:4px"><div class="cl-t-overline cl-muted">Assumptions</div><div class="cl-t-body-sm">Signed-in user Dana Okafor logs at $425/h. Today is Mon, Sep 29 2026. Brief dates and amounts override the August mock data. Old Expo screens (dark amber palette) are replaced, not recreated.</div></div>
+        <div style="background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-lg);padding:14px 16px;display:flex;flex-direction:column;gap:4px"><div class="cl-t-overline cl-muted">Scope of this pass</div><div class="cl-t-body-sm">H1 mobile: sign in, Today (4 states), Capture and its six flows, Matters + detail, New matter from playbook, Calendar, Billing (4 tabs), Invoice, payment sheets, Trust, Contacts, Settings. Web and H2/H3 follow.</div></div>
+      </div>
+    </header>
+
+    <section style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+      <div style="flex:none">{{ phone }}</div>
+      <aside style="flex:1 1 320px;max-width:420px;display:flex;flex-direction:column;gap:24px">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="cl-t-overline cl-muted">Theme</div>
+          <x-import component-from-global-scope="Clepso.SegmentedControl" block="{{ true }}" value="{{ themeValue }}" on-change="{{ setTheme }}" items="{{ themeItems }}" hint-size="100%,36px"></x-import>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="cl-t-overline cl-muted">Clickable flow</div>
+          <x-import component-from-global-scope="Clepso.List" hint-size="100%,300px">
+            <sc-for list="{{ flowSteps }}" as="s" hint-placeholder-count="7">
+              <x-import component-from-global-scope="Clepso.ListRow" regular="{{ true }}" title="{{ s.label }}" lead="{{ s.lead }}" pill="{{ s.pill }}" hint-size="100%,48px"></x-import>
+            </sc-for>
+          </x-import>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <x-import component-from-global-scope="Clepso.Button" size="sm" variant="secondary" on-click="{{ resetFlow }}" hint-size="auto,36px">Reset flow</x-import>
+            <x-import component-from-global-scope="Clepso.Button" size="sm" variant="secondary" on-click="{{ clientPays }}" hint-size="auto,36px">Simulate: Margaret pays by ACH</x-import>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="cl-t-overline cl-muted">Today states</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <x-import component-from-global-scope="Clepso.Chip" active="{{ isDefault }}" on-click="{{ stDefault }}" hint-size="auto,32px">Default</x-import>
+            <x-import component-from-global-scope="Clepso.Chip" active="{{ isEmptyReview }}" on-click="{{ stEmptyReview }}" hint-size="auto,32px">Nothing to review</x-import>
+            <x-import component-from-global-scope="Clepso.Chip" active="{{ isOffline }}" on-click="{{ stOffline }}" hint-size="auto,32px">Offline</x-import>
+            <x-import component-from-global-scope="Clepso.Chip" active="{{ isPaused }}" on-click="{{ stPaused }}" hint-size="auto,32px">Timer paused</x-import>
+            <x-import component-from-global-scope="Clepso.Chip" active="{{ isNoTimer }}" on-click="{{ stNoTimer }}" hint-size="auto,32px">No timer</x-import>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="cl-t-overline cl-muted">Jump to</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <sc-for list="{{ jumps }}" as="j" hint-placeholder-count="10">
+              <x-import component-from-global-scope="Clepso.Chip" active="{{ j.active }}" on-click="{{ j.go }}" hint-size="auto,32px">{{ j.label }}</x-import>
+            </sc-for>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="cl-t-overline cl-muted">Screen board</div>
+        <h2 class="cl-t-title-2" style="margin:0">Every screen, light and courthouse mode</h2>
+        <p class="cl-t-body-sm" style="margin:0;color:var(--ink-2)">Named <span class="cl-t-mono-id">H1 · Mobile · Section · Screen · state</span>. Static snapshots of the same code as the prototype above.</p>
+      </div>
+      <sc-if value="{{ showBoard }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:28px 24px">
+          <sc-for list="{{ board }}" as="b" hint-placeholder-count="6">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div class="cl-t-label" style="color:var(--ink-2)">{{ b.label }}</div>
+              <div style="display:flex;gap:16px">
+                <div style="width:242px;height:524px;flex:none"><div style="transform:scale(0.62);transform-origin:top left;pointer-events:none">{{ b.light }}</div></div>
+                <div style="width:242px;height:524px;flex:none"><div style="transform:scale(0.62);transform-origin:top left;pointer-events:none">{{ b.dark }}</div></div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </section>
+
+    <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:32px;max-width:1100px">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="cl-t-overline cl-muted">Component gaps</div>
+        <ul class="cl-t-body-sm" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;color:var(--ink-2)">
+          <li><b style="color:var(--ink)">Waveform</b> — voice-memo recording level. Props: <span class="cl-t-mono-id">levels[], live</span>. Composed here from bars in <span class="cl-t-mono-id">--accent</span>. Needed by Capture · Voice memo.</li>
+          <li><b style="color:var(--ink)">MonthGrid</b> — 7-column month with event dots. Props: <span class="cl-t-mono-id">month, days[{date, dots[]}], selected</span>. Composed from divs + <span class="cl-t-mono-id">Dot</span>. Needed by Calendar · Month.</li>
+          <li><b style="color:var(--ink)">ReceiptSlot</b> — dashed drop/camera target for a receipt photo. Props: <span class="cl-t-mono-id">image?, onCapture</span>. Needed by Capture · Expense.</li>
+          <li><b style="color:var(--ink)">PlanSchedule</b> — instalment preview (date · amount · state). Composed from <span class="cl-t-mono-id">List</span>. Needed by Billing · Offer a payment plan.</li>
+          <li><b style="color:var(--ink)">OfflineBanner</b> — <span class="cl-t-mono-id">Banner compact tone="info" icon="wifi-off"</span> works, but a persistent variant that sits under the header without a margin would avoid per-screen glue.</li>
+        </ul>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="cl-t-overline cl-muted">Decisions log</div>
+        <ul class="cl-t-body-sm" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;color:var(--ink-2)">
+          <li>Matter detail shows two mini KPIs (Unbilled, Trust), not three as in the reference screen; the design system caps phone screens at two tiles. Hours moved to the Unbilled delta.</li>
+          <li>Review your day is a grouped <span class="cl-t-mono-id">List</span> under a section header (as in the reference), not a <span class="cl-t-mono-id">Card</span>; Bill / Skip live in the row trail.</li>
+          <li>Payment plans show as one invoice with a <span class="cl-t-mono-id">Pill tone="warning"</span> “Partial” and “plan 2 of 4” in the subtitle; the schedule appears only in the plan sheet.</li>
+          <li>Text pay link is a <span class="cl-t-mono-id">Dialog</span> (one irreversible send), Record payment and Offer a plan are <span class="cl-t-mono-id">Sheet</span>s (they collect input).</li>
+          <li>Payment received is a state of Invoice detail (success banner + Paid pill + updated KPIs), not a separate screen; the client-side push is simulated from the side panel.</li>
+          <li>Courthouse mode adds a “Quick note” variant of the Note sheet, pre-pointed at the matter with a hearing today (People v. Webb, Dept. 22).</li>
+          <li>Contacts is reached from a header action on Matters in H1; it earns no tab.</li>
+          <li>Durations round up to 0.1h at save (12 min → 0.2h); the stepper moves in 6-minute steps.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light' | 'dark'&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;showBoard&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign(this.defaults(), { themeOverride: null, flow: 0 });
+    this.go = this.go.bind(this);
+  }
+  defaults() {
+    return {
+      screen: 'today', sheet: null, dialog: null, toast: null, offline: false,
+      timer: { running: true, paused: false, seconds: 42 * 60 + 17, matter: 'Estate of Harold Bennett', sub: 'Draft inventory schedules' },
+      review: ['call', 'board', 'memo'], billedMin: 204, inv078: 'overdue', texted: false, paidAt: null,
+      billingTab: 'invoices', matterId: 'bennett', matterTab: 'overview', calView: 'agenda', contactId: null,
+      lt: { matterId: 'alvarez', minutes: 12, narrative: 'call w/ Sofia re: IME scheduling, next steps on discovery', source: 'call', ai: false, billable: true },
+      recordMethod: 'ach', planN: 4, playbook: 'probate', voiceDone: true, taskTitle: 'Confirm appraiser invoice for disbursement',
+    };
+  }
+  componentDidMount() {
+    this.tick = setInterval(() => {
+      const t = this.state.timer;
+      if (t.running && !t.paused) this.setState({ timer: Object.assign({}, t, { seconds: t.seconds + 1 }) });
+    }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.tick); clearTimeout(this.toastT); clearTimeout(this.payT); }
+
+  // ── state helpers ───────────────────────────────────────────
+  set(patch) { this.setState(patch); }
+  flow(n) { if (n > this.state.flow) this.setState({ flow: n }); }
+  go(key) {
+    const patch = { screen: key, sheet: null, dialog: null };
+    if (key === 'billing' && this.state.flow >= 3) this.flow(4);
+    this.setState(patch);
+  }
+  openSheet(s, extra) { this.setState(Object.assign({ sheet: s, dialog: null }, extra || {})); }
+  close() { this.setState({ sheet: null, dialog: null }); }
+  toast(message, action) {
+    clearTimeout(this.toastT);
+    this.setState({ toast: { message, action } });
+    this.toastT = setTimeout(() => this.setState({ toast: null }), 3200);
+  }
+  fmt(s) { const p = (n) => String(n).padStart(2, '0'); return p(Math.floor(s / 3600)) + ':' + p(Math.floor(s / 60) % 60) + ':' + p(s % 60); }
+  hours(min) { return Math.ceil(min / 6) / 10; }
+  money(c) { const neg = c < 0; c = Math.abs(c); return (neg ? '−' : '') + '$' + Math.floor(c / 100).toLocaleString('en-US') + '.' + String(c % 100).padStart(2, '0'); }
+  hm(min) { return Math.floor(min / 60) + ':' + String(min % 60).padStart(2, '0'); }
+
+  // ── actions ─────────────────────────────────────────────────
+  billReview(item) {
+    const map = { call: { matterId: 'alvarez', minutes: 12, narrative: 'call w/ Sofia re: IME scheduling, next steps on discovery', source: 'call' },
+      board: { matterId: 'kessler', minutes: 60, narrative: 'kessler board sync - series B diligence status, warranties', source: 'board' },
+      memo: { matterId: 'bennett', minutes: 18, narrative: 'Bennett, point three, reviewed appraiser report, reconciled schedule B', source: 'memo' } };
+    this.openSheet('logtime', { lt: Object.assign({ ai: false, billable: true }, map[item]) });
+    if (item === 'call') this.flow(2);
+  }
+  skipReview(item) { this.setState({ review: this.state.review.filter((r) => r !== item) }); }
+  saveTime() {
+    const lt = this.state.lt, m = MATTERS[lt.matterId], hrs = this.hours(lt.minutes);
+    const review = this.state.review.filter((r) => r !== lt.source);
+    this.setState({ sheet: null, review, billedMin: this.state.billedMin + Math.round(hrs * 60), lt: Object.assign({}, lt, { source: null }) });
+    this.toast('Time entry saved · ' + hrs.toFixed(1) + 'h to ' + m.short, 'Undo');
+    if (lt.source === 'call') this.flow(3);
+  }
+  stopTimer() {
+    const t = this.state.timer;
+    this.openSheet('logtime', { lt: { matterId: 'bennett', minutes: Math.max(6, Math.round(t.seconds / 60)), narrative: 'drafted inventory schedules A and B, reconciled w/ appraiser numbers', source: 'timer', ai: false, billable: true }, timer: Object.assign({}, t, { running: false }) });
+  }
+  startTimer(matterId) {
+    const m = MATTERS[matterId];
+    this.setState({ timer: { running: true, paused: false, seconds: 0, matter: m.title, sub: 'Timer started from Capture' }, sheet: null });
+  }
+  textPayLink() {
+    this.setState({ dialog: null, texted: true });
+    this.toast('Pay link texted to Margaret Bennett · (415) 555-0177');
+    this.flow(6);
+    clearTimeout(this.payT);
+    this.payT = setTimeout(() => { if (this.state.inv078 !== 'paid') this.clientPays(); }, 6000);
+  }
+  clientPays() {
+    clearTimeout(this.payT);
+    if (this.state.inv078 === 'paid') return;
+    this.setState({ inv078: 'paid', paidAt: '9:52 AM', sheet: null, dialog: null, screen: 'invoice' });
+    this.toast('Payment received · $8,125.00 from Margaret Bennett');
+    this.flow(7);
+  }
+  recordPayment() { this.setState({ inv078: 'paid', paidAt: '9:52 AM', sheet: null }); this.toast('Payment recorded · $8,125.00 by ' + METHODS[this.state.recordMethod]); this.flow(7); }
+
+  // ── render primitives ───────────────────────────────────────
+  scroll(children) {
+    return React.createElement('div', { className: 'proto-scroll', style: { flex: 1, minHeight: 0, overflowY: 'auto', margin: '0 -20px', padding: '0 20px 28px', scrollbarWidth: 'none' } }, children);
+  }
+  tabs(st, key) {
+    const C = window.Clepso, h = React.createElement, t = st.timer;
+    return h(React.Fragment, null,
+      t.running ? h(C.TimerBar, { title: t.matter, subtitle: t.sub, time: this.fmt(t.seconds), paused: t.paused,
+        onPause: () => this.set({ timer: Object.assign({}, t, { paused: true }) }), onResume: () => this.set({ timer: Object.assign({}, t, { paused: false }) }), onStop: () => this.stopTimer() }) : null,
+      h(C.TabBar, { items: TABS, activeKey: key, onSelect: this.go, onCapture: () => this.openSheet('capture') }));
+  }
+  footer(st, buttons, extra) {
+    const C = window.Clepso, h = React.createElement, t = st.timer;
+    return h(React.Fragment, null,
+      t.running ? h(C.TimerBar, { title: t.matter, subtitle: t.sub, time: this.fmt(t.seconds), paused: t.paused, onPause: () => this.set({ timer: Object.assign({}, t, { paused: true }) }), onResume: () => this.set({ timer: Object.assign({}, t, { paused: false }) }), onStop: () => this.stopTimer() }) : null,
+      h('div', { style: { padding: '10px 20px 6px', background: 'var(--bg)', borderTop: '1px solid var(--hairline)' } }, h(C.ButtonRow, null, buttons), extra || null));
+  }
+  offlineBanner(st) {
+    const C = window.Clepso, h = React.createElement;
+    return st.offline ? h(C.Banner, { tone: 'info', icon: 'wifi-off', compact: true, title: 'Offline · changes will sync', trailing: h(C.Pill, { tone: 'info' }, '2 queued'), style: { marginTop: 10 } }) : null;
+  }
+  sub(parts) {
+    const C = window.Clepso, h = React.createElement, out = [];
+    parts.forEach((p, i) => { if (i) out.push(h(C.RowSep, { key: 's' + i })); out.push(typeof p === 'string' ? p : React.cloneElement(p, { key: 'p' + i })); });
+    return h(React.Fragment, null, out);
+  }
+
+  // ── screens ─────────────────────────────────────────────────
+  scrSignIn(st) {
+    const C = window.Clepso, h = React.createElement;
+    return { noScroll: true, bottomSurface: 'canvas', noFade: true, body: h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 28 } },
+      h('div', { className: 'cl-stack cl-stack--sm', style: { alignItems: 'flex-start' } },
+        h('div', { className: 'cl-inline', style: { gap: 10 } }, h(C.BrandMark, { size: 'lg', tone: 'accent' }), h(C.Wordmark)),
+        h('h1', { className: 'cl-h1', style: { fontSize: 34, lineHeight: '40px', marginTop: 14 } }, 'Welcome back.'),
+        h('div', { className: 'cl-t-body cl-muted' }, 'Tran & Okafor LLP · you were last here yesterday at 6:12 PM.')),
+      h(C.Button, { variant: 'primary', size: 'lg', block: true, icon: 'face', onClick: () => this.go('today') }, 'Continue with Face ID'),
+      h('div', { className: 'cl-inline', style: { justifyContent: 'center' } }, h('span', { className: 'cl-divider', style: { flex: 1 } }), h('span', { className: 'cl-t-caption cl-muted' }, 'or'), h('span', { className: 'cl-divider', style: { flex: 1 } })),
+      h(C.Form, null,
+        h(C.Field, { label: 'Email' }, h(C.Input, { defaultValue: 'dana@tranokafor.law' })),
+        h(C.Field, { label: 'Password' }, h(C.Input, { type: 'password', defaultValue: '••••••••••' })),
+        h(C.Button, { variant: 'secondary', size: 'lg', block: true, onClick: () => this.go('today') }, 'Sign in')),
+      h('div', { className: 'cl-t-caption cl-muted', style: { textAlign: 'center' } }, 'You stay signed in on this device. Sessions lock after 15 minutes in courthouse mode.')) };
+  }
+
+  scrToday(st) {
+    const C = window.Clepso, h = React.createElement, hrs = st.billedMin / 60;
+    const rev = st.review;
+    const reviewRows = {
+      call: h(C.ListRow, { key: 'call', lead: h(C.IconWell, { name: 'phone' }), regular: true, title: 'Call · Sofia Alvarez · 12 min', subtitle: this.sub(['Alvarez v. Meridian', '10:12 AM']),
+        trail: h(React.Fragment, null, h(C.Button, { variant: 'primary', size: 'sm', onClick: () => this.billReview('call') }, 'Bill 0.2h'), h(C.Button, { variant: 'ghost', size: 'sm', onClick: () => this.skipReview('call') }, 'Skip')) }),
+      board: h(C.ListRow, { key: 'board', lead: h(C.IconWell, { name: 'calendar' }), regular: true, title: 'Kessler board sync · 1h', subtitle: this.sub(['Kessler — Series B', '2:00 PM']),
+        trail: h(React.Fragment, null, h(C.Button, { variant: 'primary', size: 'sm', onClick: () => this.billReview('board') }, 'Bill 1.0h'), h(C.Button, { variant: 'ghost', size: 'sm', onClick: () => this.skipReview('board') }, 'Skip')) }),
+      memo: h(C.ListRow, { key: 'memo', lead: h(C.IconWell, { name: 'mic' }), regular: true, title: 'Voice memo · “Bennett, point three…”', subtitle: this.sub(['Transcribed', '0.3h suggested']),
+        trail: h(C.Button, { variant: 'secondary', size: 'sm', onClick: () => this.openSheet('voice') }, 'Review') }),
+    };
+    const paid = st.inv078 === 'paid';
+    return { body: h(React.Fragment, null,
+      h(C.ScreenHeader, { eyebrow: 'Monday, September 29', title: 'Good morning, Dana.', actions: h(React.Fragment, null, h(C.IconButton, { icon: 'inbox', label: 'Inbox', badge: 3 }), h('span', { onClick: () => this.go('settings'), style: { cursor: 'pointer', display: 'inline-flex' } }, h(C.Avatar, { tone: 'accent', initials: 'DO' }))) }),
+      this.offlineBanner(st),
+      h(C.KpiRow, { style: { marginTop: 14 } },
+        h(C.KpiTile, { tint: true, label: 'Billed today', value: hrs.toFixed(1), unit: 'of 6h', progress: Math.min(100, Math.round(hrs / 6 * 100)) }),
+        h('div', { onClick: () => { this.set({ billingTab: 'unbilled' }); this.go('billing'); }, style: { display: 'contents', cursor: 'pointer' } }, h(C.KpiTile, { label: 'Unbilled', value: '$17,325', delta: h('span', { style: { color: 'var(--accent)', fontWeight: 600 } }, 'Review & bill →') }))),
+      h(C.SectionHeader, { title: 'Review your day', count: rev.length || undefined }),
+      rev.length ? h(C.List, null, rev.map((r) => reviewRows[r])) : h(C.List, null, h(C.EmptyState, { icon: 'clock', title: 'Nothing to review', text: 'Calls, meetings and voice memos you haven’t billed will show up here.' })),
+      h(C.SectionHeader, { title: 'Today', action: 'Calendar', onAction: () => this.go('calendar') }),
+      h(C.List, null,
+        h(C.ListRow, { lead: h(C.TimeBlock, { main: '9:30', sub: 'AM' }), title: 'Pretrial conference', subtitle: this.sub(['People v. Webb', 'Dept. 22']), pill: h(C.Pill, { tone: 'info', icon: 'gavel' }, 'Court'), pressable: true, onClick: () => { this.set({ matterId: 'webb', matterTab: 'overview' }); this.go('matter'); } }),
+        h(C.ListRow, { lead: h(C.TimeBlock, { main: '2:00', sub: 'PM' }), title: 'Kessler board sync', subtitle: 'Zoom', pill: h(C.Pill, null, 'Meeting') }),
+        h(C.ListRow, { lead: h(C.TimeBlock, { main: 'Fri', sub: 'Oct 3' }), title: 'Inventory filing due', subtitle: 'Estate of Bennett', pill: h(C.Pill, { tone: 'warning', dot: true }, '4 days'), pressable: true, onClick: () => { this.set({ matterId: 'bennett', matterTab: 'overview' }); this.go('matter'); } })),
+      h(C.SectionHeader, { title: 'Who to nudge', action: 'All AR', onAction: () => { this.set({ billingTab: 'invoices' }); this.go('billing'); } }),
+      paid ? h(C.List, null, h(C.EmptyState, { icon: 'check', title: 'Nobody to nudge', text: 'Every sent invoice is inside its terms.' }))
+        : h(C.List, null, h(C.ListRow, { inset: true, lead: h(C.Avatar, { name: 'Margaret Bennett' }), title: 'Margaret Bennett', subtitle: this.sub([h(C.Mono, null, 'INV-2026-078'), st.texted ? 'link texted' : 'link opened']), value: '$8,125.00', meta: '46 days late', metaTone: 'danger', pressable: true, onClick: () => { this.go('invoice'); this.flow(5); } }))),
+      bottom: this.tabs(st, 'today') };
+  }
+
+  scrMatters(st) {
+    const C = window.Clepso, h = React.createElement;
+    const row = (id) => { const m = MATTERS[id]; return h(C.ListRow, { key: id, pressable: true, title: m.title, subtitle: this.sub([m.client, m.area, h(C.Mono, null, m.number)]), pill: h(C.Pill, { tone: m.pillTone, dot: m.pillDot }, m.pill), meta: m.meta, onClick: () => { this.set({ matterId: id, matterTab: 'overview' }); this.go('matter'); } }); };
+    return { body: h(React.Fragment, null,
+      h(C.ScreenHeader, { title: 'Matters', actions: h(React.Fragment, null, h(C.IconButton, { icon: 'users', label: 'Contacts', onClick: () => this.go('contacts') }), h(C.IconButton, { icon: 'plus', label: 'New matter', onClick: () => this.openSheet('newmatter') })) }),
+      this.offlineBanner(st),
+      h(C.Input, { search: true, icon: 'search', placeholder: 'Search by name, client or number', style: { marginTop: 12 } }),
+      h(C.ChipGroup, { style: { marginTop: 10 } }, h(C.Chip, { active: true, count: 12 }, 'All'), h(C.Chip, { count: 5 }, 'Mine'), h(C.Chip, null, 'Open'), h(C.Chip, null, 'Pending'), h(C.Chip, null, 'Closed')),
+      h(C.SectionHeader, { title: 'Needs attention', count: 2 }),
+      h(C.List, null, row('bennett'), row('webb')),
+      h(C.SectionHeader, { title: 'Active', count: 7, action: 'Sort · Recent' }),
+      h(C.List, null, row('alvarez'), row('kessler'), row('delgado'), row('okonkwo'),
+        h(C.ListRow, { pressable: true, title: 'Nguyen v. Cascade Property Mgmt', subtitle: this.sub(['Thanh Nguyen', 'Landlord/tenant', h(C.Mono, null, '2025-0388')]), pill: h(C.Pill, null, 'Closed'), meta: 'Paid Jul 18' }))),
+      bottom: this.tabs(st, 'matters') };
+  }
+
+  scrMatter(st) {
+    const C = window.Clepso, h = React.createElement, m = MATTERS[st.matterId], tab = st.matterTab;
+    const tabs = h(C.SegmentedControl, { scroll: true, style: { marginTop: 14 }, value: tab, onChange: (v) => this.set({ matterTab: v }), items: [{ value: 'overview', label: 'Overview' }, { value: 'activity', label: 'Activity' }, { value: 'tasks', label: 'Tasks', count: m.tasks.length }, { value: 'time', label: 'Time' }, { value: 'docs', label: 'Docs' }, { value: 'billing', label: 'Billing' }] });
+    const taskRows = m.tasks.map((t, i) => h(C.ListRow, { key: i, lead: h(C.Checkbox, { checked: !!t.done }), regular: true, done: !!t.done, title: t.title, subtitle: t.who, meta: t.due, metaTone: t.tone || 'neutral' }));
+    const timeRows = m.time.map((e, i) => h(C.ListRow, { key: i, lead: h(C.TimeBlock, { main: e.t, sub: e.d }), regular: true, title: e.title, subtitle: h(C.Mono, null, e.code), value: e.v, pill: e.pill ? h(C.Pill, { tone: e.pill === 'No charge' ? 'neutral' : 'success' }, e.pill) : undefined }));
+    let content;
+    if (tab === 'overview') content = h(React.Fragment, null,
+      m.banner ? h(C.Banner, Object.assign({ style: { marginTop: 14 } }, m.banner, { actions: h(React.Fragment, null, h(C.Button, { variant: 'primary', size: 'sm', onClick: () => this.toast(m.banner.primary + ' · ' + m.short) }, m.banner.primary), h(C.Button, { variant: 'ghost', size: 'sm', onClick: () => this.toast('Added to calendar · ' + m.banner.title) }, 'Add to calendar')) })) : null,
+      h(C.KpiRow, { style: { marginTop: 12 } }, h(C.KpiTile, { label: 'Unbilled', value: m.unbilledShort, delta: m.hours + 'h · ' + m.entries + ' entries' }), h(C.KpiTile, { label: 'Trust', value: m.trustShort, delta: m.trust ? h(React.Fragment, null, 'IOLTA ', h(C.Mono, null, '····4821')) : 'No funds held' })),
+      h(C.SectionHeader, { title: 'Open tasks', count: m.tasks.length, action: 'Add', onAction: () => this.openSheet('task') }),
+      h(C.List, null, taskRows),
+      h(C.SectionHeader, { title: 'Recent time', action: 'All ' + m.entries, onAction: () => this.set({ matterTab: 'time' }) }),
+      h(C.List, null, timeRows.slice(0, 2)));
+    else if (tab === 'activity') content = h(C.Timeline, { style: { marginTop: 16 }, events: m.activity });
+    else if (tab === 'tasks') content = h(React.Fragment, null, h(C.SectionHeader, { title: 'Tasks', count: m.tasks.length, action: 'Add', onAction: () => this.openSheet('task') }), h(C.List, null, taskRows));
+    else if (tab === 'time') content = h(React.Fragment, null, h(C.SectionHeader, { title: 'Time', count: m.entries, action: 'Log time', onAction: () => this.openSheet('logtime', { lt: { matterId: st.matterId, minutes: 6, narrative: '', source: null, ai: false, billable: true } }) }),
+      h(C.List, { footer: h(React.Fragment, null, h('span', null, 'Unbilled'), h(C.Amount, { cents: m.unbilled })) }, timeRows));
+    else if (tab === 'docs') content = h(React.Fragment, null,
+      h(C.SectionHeader, { title: 'Folders' }),
+      h(C.List, null, ['Court filings', 'Correspondence', 'Client documents', 'Drafts'].map((f, i) => h(C.ListRow, { key: i, lead: h(C.IconWell, { name: 'folder' }), title: f, meta: [4, 11, 7, 3][i] + ' files', chevron: true, pressable: true }))),
+      h(C.SectionHeader, { title: 'Recent', action: 'Upload' }),
+      h(C.List, null, h(C.ListRow, { lead: h(C.IconWell, { name: 'file' }), regular: true, title: 'Inventory & Appraisal — Schedule A.pdf', subtitle: this.sub(['Draft', 'Sep 29']), trail: h(C.Button, { size: 'sm', icon: 'link', onClick: () => this.toast('Share link copied · expires in 7 days') }, 'Share') }),
+        h(C.ListRow, { lead: h(C.IconWell, { name: 'file' }), regular: true, title: 'Letters of administration.pdf', subtitle: this.sub(['Filed', 'Jun 3']), trail: h(C.Button, { size: 'sm', icon: 'link' }, 'Share') })));
+    else content = h(React.Fragment, null,
+      h(C.KpiRow, { style: { marginTop: 14 } }, h(C.KpiTile, { label: 'Unbilled', value: m.unbilledShort, delta: m.hours + 'h since last invoice' }), h(C.KpiTile, { label: 'Trust', value: m.trustShort, delta: m.trust ? 'Reconciled Sep 1' : 'No funds held' })),
+      h(C.SectionHeader, { title: 'Invoices', count: m.invoices.length }),
+      h(C.List, null, m.invoices.map((id) => this.invoiceRow(st, id))),
+      m.trust ? h(C.SectionHeader, { title: 'Trust for this matter', action: 'Ledger', onAction: () => { this.set({ billingTab: 'trust' }); this.go('billing'); } }) : null,
+      m.trust ? h(C.List, null, h(C.ListRow, { regular: true, title: 'Retainer received', subtitle: this.sub(['Jun 3', 'ACH']), value: '$25,000.00' }), h(C.ListRow, { regular: true, title: 'Applied to INV-2026-052', subtitle: 'Jul 2', value: '−$6,760.00' })) : null);
+    return { body: h(React.Fragment, null,
+      h(C.NavBar, { back: 'Matters', onBack: () => this.go('matters'), title: m.number, mono: true, actions: h(React.Fragment, null, h(C.IconButton, { plain: true, icon: 'play', label: 'Start timer', onClick: () => this.startTimer(st.matterId) }), h(C.IconButton, { plain: true, icon: 'more', label: 'More' })) }),
+      h('div', { className: 'cl-stack cl-stack--xs', style: { marginTop: 4 } },
+        h('h1', { className: 'cl-h2', style: { margin: 0 } }, m.title),
+        h('div', { className: 'cl-t-label cl-muted' }, m.client, h('span', { className: 'cl-faint' }, ' · '), m.area, h('span', { className: 'cl-faint' }, ' · '), m.attorney),
+        h('div', { className: 'cl-inline', style: { marginTop: 6 } }, h(C.Pill, { tone: m.statusTone }, m.status), h(C.Pill, { tone: 'outline' }, m.billing), m.walled ? h(C.Pill, { tone: 'outline', icon: 'shield' }, 'Walled') : null)),
+      h(C.StageTracker, { style: { marginTop: 16 }, stages: m.stages }),
+      tabs, content),
+      bottomSurface: 'canvas',
+      bottom: this.footer(st, h(React.Fragment, null, h(C.Button, { icon: 'clock', onClick: () => this.openSheet('logtime', { lt: { matterId: st.matterId, minutes: 6, narrative: '', source: null, ai: false, billable: true } }) }, 'Log time'), h(C.Button, { icon: 'message' }, 'Message'), h(C.Button, { variant: 'primary', icon: 'receipt', onClick: () => this.toast('Draft invoice created · ' + this.money(m.unbilled)) }, 'Invoice'))) };
+  }
+
+  scrCalendar(st) {
+    const C = window.Clepso, h = React.createElement;
+    const day = (label, rows) => h(React.Fragment, { key: label }, h(C.SectionHeader, { title: label }), h(C.List, null, rows));
+    const agenda = h(React.Fragment, null,
+      day('Today · Mon, Sep 29', [
+        h(C.ListRow, { key: 1, lead: h(C.TimeBlock, { main: '9:30', sub: 'AM' }), title: 'Pretrial conference', subtitle: this.sub(['People v. Webb', 'Dept. 22']), pill: h(C.Pill, { tone: 'info', icon: 'gavel' }, 'Court') }),
+        h(C.ListRow, { key: 2, lead: h(C.TimeBlock, { main: '2:00', sub: 'PM' }), title: 'Kessler board sync', subtitle: 'Zoom', pill: h(C.Pill, null, 'Meeting') })]),
+      h(C.Banner, { tone: 'danger', icon: 'alert', compact: true, style: { marginTop: 20 }, title: 'Two court events overlap Wed, Oct 1', trailing: h(C.Icon, { name: 'chevron-right' }) }),
+      day('Wed, Oct 1', [
+        h(C.ListRow, { key: 1, lead: h(C.TimeBlock, { main: '10:00', sub: 'AM' }), title: 'Deposition · Meridian safety officer', subtitle: this.sub(['Alvarez v. Meridian', '2h']), pill: h(C.Pill, { tone: 'info', icon: 'gavel' }, 'Court') }),
+        h(C.ListRow, { key: 2, lead: h(C.TimeBlock, { main: '10:30', sub: 'AM' }), title: 'Motion hearing', subtitle: this.sub(['People v. Webb', 'Dept. 22']), pill: h(C.Pill, { tone: 'danger', dot: true }, 'Conflict') })]),
+      day('Fri, Oct 3', [
+        h(C.ListRow, { key: 1, lead: h(C.TimeBlock, { main: '5:00', sub: 'PM' }), title: 'Inventory filing due', subtitle: this.sub(['Estate of Bennett', 'Prob. Code §8800']), pill: h(C.Pill, { tone: 'warning', dot: true }, '4 days'), pressable: true, onClick: () => { this.set({ matterId: 'bennett', matterTab: 'overview' }); this.go('matter'); } })]),
+      day('Thu, Oct 9', [h(C.ListRow, { key: 1, lead: h(C.TimeBlock, { main: 'Due' }), title: 'INV-2026-092 due', subtitle: this.sub(['Kessler Holdings LLC', '$25,000.00']), pill: h(C.Pill, null, 'Invoice') })]),
+      day('Sat, Oct 11', [h(C.ListRow, { key: 1, lead: h(C.TimeBlock, { main: 'RFE' }), title: 'RFE response window closes', subtitle: 'Okonkwo I-130 petition', pill: h(C.Pill, null, '12 days') })]),
+      day('Fri, Oct 24', [h(C.ListRow, { key: 1, lead: h(C.TimeBlock, { main: '5:00', sub: 'PM' }), title: 'Discovery cutoff', subtitle: this.sub(['Alvarez v. Meridian', 'CCP §2024.020']), pill: h(C.Pill, null, '25 days') })]));
+    const dots = { 29: ['info', 'neutral'], 1: ['danger'], 3: ['warning'], 9: ['neutral'], 11: ['neutral'], 24: ['neutral'] };
+    const cells = [];
+    ['M', 'T', 'W', 'T', 'F', 'S', 'S'].forEach((d, i) => cells.push(h('div', { key: 'h' + i, className: 'cl-t-overline cl-muted', style: { textAlign: 'center', padding: '6px 0' } }, d)));
+    for (let i = 0; i < 35; i++) {
+      const date = i - 1; // Oct 2026 starts Thursday (i=3); Sep 29 at i=1
+      const n = date < 1 ? 28 + date + 1 : date; // Sep 29,30 then Oct 1..
+      const isSep = date < 1; const label = isSep ? 29 + i - 0 : date; const num = isSep ? [29, 30][i] : date;
+      if (i > 32) break;
+      const today = i === 0, dd = dots[num] && (isSep ? num === 29 : num !== 29);
+      cells.push(h('div', { key: i, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 0', minHeight: 48 } },
+        h('span', { className: 'cl-num', style: { width: 28, height: 28, borderRadius: 'var(--radius-full)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', font: 'var(--text-label)', background: today ? 'var(--accent)' : 'transparent', color: today ? 'var(--on-accent)' : isSep ? 'var(--ink-3)' : 'var(--ink)' } }, num),
+        h('span', { style: { display: 'flex', gap: 3, height: 6 } }, (dd ? dots[num] : []).map((t, k) => h(C.Dot, { key: k, tone: t })))));
+      void n; void label;
+    }
+    const month = h(React.Fragment, null,
+      h('div', { className: 'cl-spread', style: { marginTop: 16 } }, h('span', { className: 'cl-t-title-3' }, 'October 2026'), h('div', { className: 'cl-inline', style: { gap: 4 } }, h(C.IconButton, { plain: true, size: 'sm', icon: 'chevron-left', label: 'Previous month' }), h(C.IconButton, { plain: true, size: 'sm', icon: 'chevron-right', label: 'Next month' }))),
+      h('div', { style: { marginTop: 8, background: 'var(--surface)', border: '1px solid var(--hairline)', borderRadius: 'var(--radius-lg)', padding: '8px 8px 4px', display: 'grid', gridTemplateColumns: 'repeat(7,1fr)' } }, cells),
+      h(C.SectionHeader, { title: 'Deadline chains', count: 2 }),
+      h(C.List, null,
+        h(C.ListRow, { lead: h(C.IconWell, { name: 'alert', tone: 'warning' }), title: 'Probate · Bennett', subtitle: this.sub(['Letters Jun 3', 'Inventory Oct 3', 'Creditor notice Feb 3']), chevron: true, pressable: true }),
+        h(C.ListRow, { lead: h(C.IconWell, { name: 'alert' }), title: 'Discovery · Alvarez', subtitle: this.sub(['Cutoff Oct 24', 'Expert disclosure Nov 14', 'Trial Jan 12']), chevron: true, pressable: true })));
+    return { body: h(React.Fragment, null,
+      h(C.ScreenHeader, { title: 'Calendar', actions: h(React.Fragment, null, h(C.IconButton, { icon: 'search', label: 'Search' }), h(C.IconButton, { icon: 'plus', label: 'New event', onClick: () => this.toast('New event · added to Google Calendar too') })) }),
+      this.offlineBanner(st),
+      h(C.SegmentedControl, { block: true, style: { marginTop: 12 }, value: st.calView, onChange: (v) => this.set({ calView: v }), items: [{ value: 'agenda', label: 'Agenda' }, { value: 'month', label: 'Month' }] }),
+      st.calView === 'agenda' ? agenda : month),
+      bottom: this.tabs(st, 'calendar') };
+  }
+
+  invoiceRow(st, id) {
+    const C = window.Clepso, h = React.createElement, inv = INVOICES[id];
+    const status = id === '078' ? (st.inv078 === 'paid' ? { tone: 'success', dot: true, label: 'Paid today' } : { tone: 'danger', dot: true, label: 'Overdue 46d' }) : inv.pill;
+    return h(C.ListRow, { key: id, pressable: true, title: inv.client, subtitle: this.sub([h(C.Mono, null, inv.number), inv.matterShort]), value: this.money(inv.total), pill: h(C.Pill, { tone: status.tone, dot: status.dot }, status.label),
+      onClick: id === '078' ? () => { this.go('invoice'); this.flow(5); } : () => this.toast('Prototype: only INV-2026-078 opens') });
+  }
+  scrBilling(st) {
+    const C = window.Clepso, h = React.createElement, tab = st.billingTab, paid = st.inv078 === 'paid';
+    let content;
+    if (tab === 'invoices') content = h(React.Fragment, null,
+      h(C.KpiRow, { style: { marginTop: 14 } },
+        h(C.KpiTile, { label: 'Outstanding', value: paid ? '$25,000' : '$33,125', delta: paid ? 'Nothing overdue' : '$8,125 overdue', deltaTone: paid ? 'up' : 'down', deltaIcon: paid ? 'check' : 'alert' }),
+        h(C.KpiTile, { label: 'Collected · 30d', value: paid ? '$20,575' : '$12,450', delta: paid ? '95%' : '18%', deltaTone: 'up', deltaIcon: 'arrow-up-right' })),
+      h(C.Card, { tone: 'tint', style: { marginTop: 12 }, title: 'Ready to bill', subtitle: h('span', { style: { color: 'var(--accent-ink)' } }, '3 matters · $17,325.00 unbilled · oldest 31 days'), headerAction: h(C.Button, { variant: 'primary', size: 'sm', onClick: () => this.set({ billingTab: 'unbilled' }) }, 'Review') }),
+      h(C.SectionHeader, { title: 'Invoices', action: 'Filter · All' }),
+      h(C.List, null, ['078', '092', '095', '094', '061'].map((id) => this.invoiceRow(st, id))));
+    else if (tab === 'unbilled') content = h(React.Fragment, null,
+      h(C.KpiRow, { style: { marginTop: 14 } }, h(C.KpiTile, { tint: true, label: 'Unbilled', value: '$17,325', delta: '3 matters · 41.2h' }), h(C.KpiTile, { label: 'Written down', value: '$162', delta: '0.5h this cycle', deltaTone: 'neutral' })),
+      h(C.SectionHeader, { title: 'Estate of Harold Bennett', count: 4 }),
+      h(C.List, { footer: h(React.Fragment, null, h('span', null, 'Bill'), h(C.Amount, { cents: 482500 })) },
+        h(C.ListRow, { lead: h(C.TimeBlock, { main: '1:36', sub: 'Sep 29' }), regular: true, title: 'Draft inventory schedules', subtitle: this.sub(['L. Tran', h(C.Mono, null, 'L110')]), value: '$520.00' }),
+        h(C.ListRow, { lead: h(C.TimeBlock, { main: '0:30', sub: 'Sep 26' }), regular: true, title: 'Call with appraiser re: valuation', subtitle: this.sub(['L. Tran', h(C.Mono, null, 'L120')]), value: '$0.00', pill: h(C.Pill, { tone: 'warning', dot: true }, 'Written down') }),
+        h(C.ListRow, { lead: h(C.TimeBlock, { main: '6:12', sub: 'Sep 19' }), regular: true, title: 'Prepare Inventory & Appraisal', subtitle: this.sub(['L. Tran', h(C.Mono, null, 'L110')]), value: '$2,015.00' }),
+        h(C.ListRow, { lead: h(C.TimeBlock, { main: '7:00', sub: 'Sep 8' }), regular: true, title: 'Creditor claim review', subtitle: this.sub(['D. Okafor', h(C.Mono, null, 'L120')]), value: '$2,290.00' })),
+      h(C.SectionHeader, { title: 'Kessler Holdings — Series B', count: 1 }),
+      h(C.List, { footer: h(React.Fragment, null, h('span', null, 'Bill'), h(C.Amount, { cents: 1250000 })) }, h(C.ListRow, { lead: h(C.IconWell, { name: 'check' }), regular: true, title: 'Milestone 2 of 3 · Diligence complete', subtitle: 'Flat fee · $37,500.00', value: '$12,500.00' })),
+      h(C.Button, { variant: 'primary', size: 'lg', block: true, style: { marginTop: 20 }, onClick: () => this.toast('3 draft invoices created · $17,325.00') }, 'Generate 3 invoices · $17,325.00'));
+    else if (tab === 'payments') content = h(React.Fragment, null,
+      h(C.KpiRow, { style: { marginTop: 14 } }, h(C.KpiTile, { label: 'Collected · 30d', value: paid ? '$20,575' : '$12,450' }), h(C.KpiTile, { label: 'Days to pay', value: '19', unit: 'avg', delta: '−6 vs. last quarter', deltaTone: 'up' })),
+      h(C.SectionHeader, { title: 'Payments' }),
+      h(C.List, null,
+        paid ? h(C.ListRow, { lead: h(C.Avatar, { name: 'Margaret Bennett' }), inset: true, title: 'Margaret Bennett', subtitle: this.sub([h(C.Mono, null, 'INV-2026-078'), 'ACH', 'Today ' + st.paidAt]), value: '$8,125.00', pill: h(C.Pill, { tone: 'success', dot: true }, 'Settled') }) : null,
+        h(C.ListRow, { lead: h(C.Avatar, { name: 'Elena Delgado' }), inset: true, title: 'Elena Delgado', subtitle: this.sub([h(C.Mono, null, 'INV-2026-094'), 'Card', 'Sep 20']), value: '$1,625.00', pill: h(C.Pill, { tone: 'warning', dot: true }, 'Plan 2 of 4') }),
+        h(C.ListRow, { lead: h(C.Avatar, { name: 'Marcus Webb' }), inset: true, title: 'Marcus Webb', subtitle: this.sub(['Retainer', 'ACH', 'Sep 3']), value: '$3,000.00', pill: h(C.Pill, { tone: 'success', dot: true }, 'Earned on receipt') }),
+        h(C.ListRow, { lead: h(C.Avatar, { name: 'Thanh Nguyen' }), inset: true, title: 'Thanh Nguyen', subtitle: this.sub([h(C.Mono, null, 'INV-2026-061'), 'ACH', 'Jul 18']), value: '$4,450.00', pill: h(C.Pill, { tone: 'success', dot: true }, 'Settled') })));
+    else content = this.trustContent(st);
+    return { body: h(React.Fragment, null,
+      h(C.ScreenHeader, { title: 'Billing', actions: h(React.Fragment, null, h(C.IconButton, { icon: 'search', label: 'Search' }), h(C.IconButton, { icon: 'plus', label: 'New invoice' })) }),
+      this.offlineBanner(st),
+      h(C.SegmentedControl, { block: true, style: { marginTop: 12 }, value: tab, onChange: (v) => this.set({ billingTab: v }), items: [{ value: 'unbilled', label: 'Unbilled' }, { value: 'invoices', label: 'Invoices' }, { value: 'payments', label: 'Payments' }, { value: 'trust', label: 'Trust' }] }),
+      content),
+      bottom: this.tabs(st, 'billing') };
+  }
+  trustContent(st) {
+    const C = window.Clepso, h = React.createElement;
+    return h(React.Fragment, null,
+      h(C.Card, { style: { marginTop: 14 }, headerLead: h(C.IconWell, { name: 'lock', tone: 'success' }), title: h(React.Fragment, null, 'IOLTA ', h(C.Mono, null, '····4821')), subtitle: 'First Republic · 3-way reconciled Sep 1', headerAction: h(C.Pill, { tone: 'success', dot: true }, 'Reconciled') },
+        h('div', { className: 'cl-spread', style: { alignItems: 'flex-end' } }, h('div', null, h('div', { className: 'cl-t-caption cl-muted' }, 'Held for 4 clients'), h(C.Amount, { cents: 5124000, size: 'lg' })), h(C.Button, { size: 'sm', icon: 'download', onClick: () => this.toast('Audit pack exported · PDF + CSV') }, 'Audit pack'))),
+      h(C.Banner, { tone: 'warning', icon: 'alert', style: { marginTop: 12 }, title: '14-day notice · appraiser disbursement', text: 'Estate of Bennett · $1,850.00 · notice sent Sep 24 · disburse from Oct 8', actions: h(C.Button, { variant: 'primary', size: 'sm' }, 'Schedule disbursement') }),
+      h(C.SectionHeader, { title: 'Balances by matter' }),
+      h(C.List, null,
+        h(C.ListRow, { pressable: true, title: 'Estate of Harold Bennett', subtitle: this.sub(['Margaret Bennett', h(C.Mono, null, '2026-0187')]), value: '$18,240.00', meta: 'Last activity Sep 24', onClick: () => { this.set({ matterId: 'bennett', matterTab: 'billing' }); this.go('matter'); } }),
+        h(C.ListRow, { pressable: true, title: 'Kessler Holdings — Series B', subtitle: this.sub(['Retainer', h(C.Mono, null, '2026-0201')]), value: '$18,240.00', meta: 'Applied Jul 2' }),
+        h(C.ListRow, { pressable: true, title: 'In re Marriage of Delgado', subtitle: this.sub(['Plan deposits', h(C.Mono, null, '2026-0210')]), value: '$3,250.00', pill: h(C.Pill, { tone: 'warning', dot: true }, '45-day timer · Oct 20') }),
+        h(C.ListRow, { pressable: true, title: 'Okonkwo I-130 petition', subtitle: this.sub(['Filing fees advanced', h(C.Mono, null, '2026-0214')]), value: '$11,510.00', meta: 'Unreconciled 12 days' })),
+      h(C.SectionHeader, { title: 'Ledger', action: 'All' }),
+      h(C.Timeline, { events: [
+        { icon: 'dollar', tone: 'accent', title: h(React.Fragment, null, h('b', null, 'Deposit'), ' · $3,250.00 · Delgado plan instalment'), meta: 'Sep 20 · ACH · cleared' },
+        { icon: 'send', title: h(React.Fragment, null, h('b', null, '14-day notice sent'), ' · Bennett appraiser disbursement'), meta: 'Sep 24 · Margaret Bennett · emailed' },
+        { icon: 'check', title: h(React.Fragment, null, h('b', null, '3-way reconciliation'), ' · bank, book and client ledgers match'), meta: 'Sep 1 · D. Okafor' },
+        { icon: 'receipt', title: h(React.Fragment, null, h('b', null, 'Applied to invoice'), ' · $6,760.00 · INV-2026-052 Kessler'), meta: 'Jul 2' }] }));
+  }
+
+  scrInvoice(st) {
+    const C = window.Clepso, h = React.createElement, paid = st.inv078 === 'paid', inv = INVOICES['078'];
+    const events = [];
+    if (paid) events.push({ icon: 'dollar', tone: 'accent', title: h(React.Fragment, null, h('b', null, 'Payment received'), ' · $8,125.00 by ACH'), meta: 'Today ' + st.paidAt + ' · settles in 1–2 business days' });
+    if (st.texted) events.push({ icon: 'send', title: h(React.Fragment, null, 'Pay link texted to ', h('b', null, '(415) 555-0177')), meta: 'Today 9:47 AM · ACH offered first' });
+    events.push({ icon: 'send', title: h(React.Fragment, null, 'Reminder texted · ', h('b', null, 'opened'), ', not paid'), meta: 'Sep 13 · 8:40 AM' });
+    events.push({ icon: 'send', title: 'Invoice sent by text and email', meta: 'Jul 15' });
+    return { body: h(React.Fragment, null,
+      h(C.NavBar, { back: 'Billing', onBack: () => this.go('billing'), title: 'INV-2026-078', mono: true, actions: h(React.Fragment, null, h(C.IconButton, { plain: true, icon: 'upload', label: 'Share' }), h(C.IconButton, { plain: true, icon: 'more', label: 'More' })) }),
+      h('div', { style: { marginTop: 6 } }, paid ? h(C.Pill, { tone: 'success', dot: true, size: 'lg' }, 'Paid today') : h(C.Pill, { tone: 'danger', dot: true, size: 'lg' }, 'Overdue 46 days')),
+      h('div', { style: { marginTop: 10 } }, h(C.Amount, { cents: 812500, size: 'display', style: { fontSize: 40, lineHeight: '46px' } })),
+      h('div', { className: 'cl-t-label cl-muted', style: { marginTop: 2 } }, 'Margaret Bennett · Estate of Harold Bennett'),
+      paid ? h(C.Banner, { tone: 'success', icon: 'check', style: { marginTop: 14 }, title: 'Payment received · $8,125.00 by ACH', text: 'Today ' + st.paidAt + ' · deposits to operating ····3310 in 1–2 business days. No card fee.', actions: h(React.Fragment, null, h(C.Button, { variant: 'primary', size: 'sm', onClick: () => this.toast('Receipt texted and emailed to Margaret Bennett') }, 'Send receipt'), h(C.Button, { variant: 'ghost', size: 'sm', onClick: () => this.go('billing') }, 'Back to Billing')) }) : null,
+      h(C.KeyValue, { style: { marginTop: 14 }, items: [
+        { label: 'Issued', value: 'Jul 15 · net 30' },
+        { label: 'Due', value: paid ? 'Aug 14' : h(C.Text, { tone: 'danger', style: { fontWeight: 600 } }, 'Aug 14') },
+        { label: 'Pay link', value: st.texted ? 'Texted today 9:47 AM · ACH offered first' : 'Texted Sep 12 · opened Sep 13 · ACH offered first' },
+        { label: 'Trust', value: h(React.Fragment, null, '$18,240.00 available · ', h('span', { className: 'cl-link', style: { color: 'var(--accent)', fontWeight: 600, cursor: 'pointer' }, onClick: () => this.openSheet('record', { recordMethod: 'trust' }) }, 'apply')) }] }),
+      h(C.SectionHeader, { title: 'Line items', count: 3, action: paid ? undefined : 'Edit' }),
+      h(C.List, { footer: h(React.Fragment, null, h('span', null, 'Total'), h(C.Amount, { cents: 812500 })) }, inv.lines.map((l, i) => h(C.ListRow, { key: i, regular: true, title: l.title, subtitle: l.sub, value: l.v, style: { minHeight: 52 } }))),
+      h(C.SectionHeader, { title: 'Activity' }),
+      h(C.Timeline, { events })),
+      bottomSurface: 'canvas',
+      bottom: paid
+        ? this.footer(st, h(C.Button, { icon: 'send', onClick: () => this.toast('Receipt texted and emailed to Margaret Bennett') }, 'Send receipt'))
+        : this.footer(st, h(React.Fragment, null, h(C.Button, { onClick: () => this.openSheet('record', { recordMethod: 'ach' }) }, 'Record payment'), h(C.Button, { variant: 'primary', icon: 'send', onClick: () => this.set({ dialog: 'textpay' }) }, 'Text pay link')),
+          h(C.Button, { variant: 'tertiary', size: 'sm', block: true, style: { marginTop: 4 }, onClick: () => this.openSheet('plan') }, 'Offer a payment plan')) };
+  }
+
+  scrContacts(st) {
+    const C = window.Clepso, h = React.createElement;
+    const row = (c) => h(C.ListRow, { key: c.id, lead: h(C.Avatar, { name: c.name, kind: c.kind, icon: c.kind === 'org' ? 'building' : undefined }), inset: true, pressable: true, chevron: true, title: c.name, subtitle: this.sub([c.role, c.matter]), onClick: () => { this.set({ contactId: c.id }); this.go('contact'); } });
+    return { body: h(React.Fragment, null,
+      h(C.ScreenHeader, { title: 'Contacts', actions: h(React.Fragment, null, h(C.IconButton, { icon: 'plus', label: 'New contact' })) }),
+      h(C.Input, { search: true, icon: 'search', placeholder: 'Search people and companies', style: { marginTop: 12 } }),
+      h(C.ChipGroup, { style: { marginTop: 10 } }, h(C.Chip, { active: true, count: 14 }, 'All'), h(C.Chip, { count: 6 }, 'Clients'), h(C.Chip, null, 'Opposing'), h(C.Chip, null, 'Experts'), h(C.Chip, null, 'Courts')),
+      h(C.SectionHeader, { title: 'Clients', count: 6 }),
+      h(C.List, null, CONTACTS.filter((c) => c.group === 'client').map(row)),
+      h(C.SectionHeader, { title: 'Other parties', count: 3 }),
+      h(C.List, null, CONTACTS.filter((c) => c.group !== 'client').map(row))),
+      bottom: this.tabs(st, 'matters') };
+  }
+  scrContact(st) {
+    const C = window.Clepso, h = React.createElement, c = CONTACTS.find((x) => x.id === st.contactId) || CONTACTS[1];
+    return { body: h(React.Fragment, null,
+      h(C.NavBar, { back: 'Contacts', onBack: () => this.go('contacts'), actions: h(React.Fragment, null, h(C.IconButton, { plain: true, icon: 'pen', label: 'Edit' }), h(C.IconButton, { plain: true, icon: 'more', label: 'More' })) }),
+      h('div', { className: 'cl-inline', style: { gap: 14, marginTop: 8, alignItems: 'center' } }, h(C.Avatar, { name: c.name, size: 'xl', kind: c.kind, icon: c.kind === 'org' ? 'building' : undefined }), h('div', null, h('h1', { className: 'cl-h2', style: { margin: 0 } }, c.name), h('div', { className: 'cl-t-label cl-muted', style: { marginTop: 2 } }, c.role + ' · ' + c.matter))),
+      h(C.ButtonRow, { style: { marginTop: 16 } }, h(C.Button, { icon: 'phone', onClick: () => this.toast('Calling ' + c.phone + ' · call will appear in Review your day') }, 'Call'), h(C.Button, { variant: 'primary', icon: 'message', onClick: () => this.toast('Text to ' + c.name + ' · logged to matter') }, 'Text'), h(C.Button, { icon: 'send' }, 'Email')),
+      h(C.Banner, { tone: 'outline', icon: 'shield', style: { marginTop: 16 }, title: 'Conflict pre-check · no matches', text: 'Checked against 14 contacts and 12 matters on Sep 29. Aliases and related parties included.', actions: h(C.Button, { size: 'sm', variant: 'ghost', onClick: () => this.toast('Conflict check re-run · no matches') }, 'Run again') }),
+      h(C.KeyValue, { style: { marginTop: 14 }, items: [{ label: 'Phone', value: c.phone }, { label: 'Email', value: c.email }, { label: 'Type', value: c.kind === 'org' ? 'Company' : 'Person' }, { label: 'Portal', value: c.group === 'client' ? 'Invited · last seen Sep 13' : '—' }] }),
+      h(C.SectionHeader, { title: 'Matters', count: 1 }),
+      h(C.List, null, h(C.ListRow, { pressable: true, chevron: true, title: c.matterFull, subtitle: this.sub([c.role, h(C.Mono, null, c.matterNo)]), onClick: () => { this.set({ matterId: c.matterId, matterTab: 'overview' }); this.go('matter'); } }))),
+      bottom: this.tabs(st, 'matters') };
+  }
+
+  scrSettings(st) {
+    const C = window.Clepso, h = React.createElement, dark = st.dark;
+    return { body: h(React.Fragment, null,
+      h(C.NavBar, { back: 'Today', onBack: () => this.go('today'), title: 'Settings' }),
+      h(C.List, { style: { marginTop: 8 } }, h(C.ListRow, { lead: h(C.Avatar, { tone: 'accent', initials: 'DO', size: 'lg' }), inset: true, title: 'Dana Okafor', subtitle: this.sub(['Attorney', 'Tran & Okafor LLP']), chevron: true, pressable: true })),
+      h(C.SectionHeader, { title: 'Rates' }),
+      h(C.List, null, h(C.ListRow, { title: 'Hourly rate', value: '$425.00', meta: 'per hour', chevron: true, pressable: true }), h(C.ListRow, { title: 'Rounding', value: '0.1h', meta: 'round up', chevron: true, pressable: true })),
+      h(C.SectionHeader, { title: 'Device' }),
+      h(C.List, null,
+        h(C.OptionRow, { label: 'Courthouse mode', hint: 'Dark, silent, quick notes and timers', control: h(C.Switch, { checked: dark, onChange: (v) => this.set({ themeOverride: v ? 'dark' : 'light' }) }), style: { padding: '10px 16px' } }),
+        h(C.OptionRow, { label: 'Face ID', hint: 'Stay signed in on this iPhone', control: h(C.Switch, { checked: true }), style: { padding: '10px 16px' } }),
+        h(C.ListRow, { title: 'Lock after', value: '15 min', chevron: true, pressable: true }),
+        h(C.OptionRow, { label: 'Work offline', hint: 'Keep matters and time available without signal', control: h(C.Switch, { checked: true }), style: { padding: '10px 16px' } })),
+      h(C.SectionHeader, { title: 'Notifications' }),
+      h(C.List, null,
+        h(C.OptionRow, { label: 'Review your day', hint: 'Daily at 5:30 PM', control: h(C.Switch, { checked: true }), style: { padding: '10px 16px' } }),
+        h(C.OptionRow, { label: 'Payments received', control: h(C.Switch, { checked: true }), style: { padding: '10px 16px' } }),
+        h(C.OptionRow, { label: 'Deadlines', hint: '7 days, 1 day and morning of', control: h(C.Switch, { checked: true }), style: { padding: '10px 16px' } })),
+      h(C.SectionHeader, { title: 'Plan' }),
+      h(C.List, null, h(C.ListRow, { title: 'Clepso for firms', subtitle: this.sub(['3 users', 'renews Oct 12']), value: '$147.00', meta: 'per month', chevron: true, pressable: true })),
+      h('div', { style: { marginTop: 12 } }, h(C.Button, { variant: 'destructive', block: true, onClick: () => this.toast('You can cancel any time. Your data exports first.') }, 'Cancel subscription'), h('div', { className: 'cl-t-caption cl-muted', style: { marginTop: 8, textAlign: 'center' } }, 'Cancel in two taps. We export your matters, time and trust ledger before anything closes.'))),
+      bottom: this.tabs(st, 'today') };
+  }
+
+  // ── sheets & dialogs ────────────────────────────────────────
+  overlay(st) {
+    const C = window.Clepso, h = React.createElement;
+    const parts = [];
+    if (st.sheet) parts.push(h(C.Scrim, { key: 'scrim', onClick: () => this.close() }, h(C.Sheet, Object.assign({ style: { width: '100%', paddingBottom: 34, maxHeight: '92%', overflowY: 'auto' }, onClick: (e) => e.stopPropagation() }, this.sheet(st)))));
+    if (st.dialog) parts.push(h(C.Scrim, { key: 'dlg', center: true, onClick: () => this.close() }, h('div', { onClick: (e) => e.stopPropagation() }, this.dialog(st))));
+    if (st.toast) parts.push(h('div', { key: 'toast', style: { position: 'absolute', left: 16, right: 16, bottom: st.timer.running ? 176 : 112, display: 'flex', justifyContent: 'center', pointerEvents: 'none' } }, h(C.Toast, { message: st.toast.message, action: st.toast.action })));
+    return parts.length ? h(React.Fragment, null, parts) : null;
+  }
+  closeBtn() { const C = window.Clepso; return React.createElement(C.IconButton, { plain: true, size: 'sm', icon: 'x', label: 'Close', onClick: () => this.close() }); }
+  matterChips(sel, onPick) {
+    const C = window.Clepso, h = React.createElement;
+    return h(C.ChipGroup, null, h('span', { className: 'cl-t-caption cl-muted', style: { alignSelf: 'center', flex: 'none' } }, 'Recent'), ['bennett', 'webb', 'kessler', 'alvarez'].map((id) => h(C.Chip, { key: id, active: sel === id, onClick: () => onPick(id) }, MATTERS[id].short)));
+  }
+  sheet(st) {
+    const C = window.Clepso, h = React.createElement, s = st.sheet, dark = st.dark;
+    if (s === 'capture') return { title: 'Capture', headerRight: h(C.Text, { variant: 'label', tone: 'muted' }, 'to ', h('b', { style: { color: 'var(--ink)' } }, dark ? 'People v. Webb' : 'Estate of Bennett')), children: h(React.Fragment, null,
+      h(C.CaptureGrid, { items: [
+        { key: 'timer', label: 'Start timer', icon: 'play', accent: true, onClick: () => this.openSheet('timer') },
+        { key: 'voice', label: 'Voice memo', icon: 'mic', accent: true, onClick: () => this.openSheet('voice') },
+        { key: 'time', label: 'Log time', icon: 'clock', accent: true, onClick: () => this.openSheet('logtime', { lt: { matterId: dark ? 'webb' : 'bennett', minutes: 6, narrative: '', source: null, ai: false, billable: true } }) },
+        { key: 'expense', label: 'Expense', icon: 'camera', onClick: () => this.openSheet('expense') },
+        { key: 'task', label: 'Task', icon: 'check', onClick: () => this.openSheet('task') },
+        { key: 'note', label: 'Note', icon: 'pen', onClick: () => this.openSheet('note') }] }),
+      this.matterChips(dark ? 'webb' : 'bennett', () => {})) };
+    if (s === 'timer') { const t = st.timer; return { title: t.running ? 'Running timer' : 'Start timer', headerRight: this.closeBtn(), children: h(React.Fragment, null,
+      h(C.TimerHero, { time: t.running ? this.fmt(t.seconds) : '00:00:00', caption: t.running ? t.matter + ' · ' + t.sub : 'Choose a matter to start', style: { marginTop: 8 } }),
+      h('div', { style: { marginTop: 16 } }, this.matterChips(t.running ? 'bennett' : 'webb', (id) => this.startTimer(id))),
+      h(C.Field, { label: 'Activity', style: { marginTop: 16 } }, h(C.Select, { code: 'L110', value: 'Fact investigation' })),
+      t.running
+        ? h(C.ButtonRow, { style: { marginTop: 20 } }, h(C.Button, { size: 'lg', icon: t.paused ? 'play' : 'pause', onClick: () => this.set({ timer: Object.assign({}, t, { paused: !t.paused }) }) }, t.paused ? 'Resume' : 'Pause'), h(C.Button, { variant: 'primary', size: 'lg', icon: 'stop', onClick: () => this.set({ dialog: 'stoptimer' }) }, 'Stop & log'))
+        : h(C.Button, { variant: 'primary', size: 'lg', block: true, icon: 'play', style: { marginTop: 20 }, onClick: () => this.startTimer('webb') }, 'Start timer for People v. Webb')) }; }
+    if (s === 'voice') return { title: 'Voice memo', headerRight: this.closeBtn(), children: h(React.Fragment, null,
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 14, marginTop: 4 } }, h(C.IconWell, { name: 'mic', tone: 'accent', size: 'lg', round: true }),
+        h('div', { style: { flex: 1, display: 'flex', alignItems: 'center', gap: 3, height: 32 } }, [6, 12, 20, 28, 18, 10, 22, 30, 16, 8, 14, 26, 20, 12, 6, 10, 18, 24, 14, 8, 4, 6, 4, 4].map((v, i) => h('span', { key: i, style: { width: 3, height: v, borderRadius: 2, background: i < 20 ? 'var(--accent)' : 'var(--border)' } }))),
+        h('span', { className: 'cl-t-mono-id', style: { fontSize: 15, color: 'var(--ink)' } }, '0:14')),
+      h('div', { className: 'cl-t-overline cl-muted', style: { marginTop: 18 } }, 'Transcript'),
+      h('div', { className: 'cl-t-body', style: { marginTop: 6, color: 'var(--ink-2)' } }, '“Bennett, point three. Reviewed the appraiser’s report and reconciled Schedule B against it.”'),
+      h(C.AiSuggestion, { style: { marginTop: 12 }, label: 'Parsed into an entry · not applied', text: h(React.Fragment, null, h('b', null, 'Estate of Harold Bennett'), ' · 0.3h · ', h(C.Mono, null, 'L110'), ' · Reviewed appraiser’s report; reconciled Inventory Schedule B to appraised values.'), actions: [{ label: 'Use this', onClick: () => this.billReview('memo') }, { label: 'Edit', quiet: true, onClick: () => this.billReview('memo') }, { label: 'Dismiss', quiet: true, onClick: () => this.skipReview('memo') }] }),
+      h(C.Banner, { tone: 'outline', icon: 'pen', compact: true, style: { marginTop: 12 }, title: 'Transcribed on device · nothing is saved until you tap Log' }),
+      h(C.Button, { variant: 'primary', size: 'lg', block: true, style: { marginTop: 16 }, onClick: () => this.billReview('memo') }, 'Log 0.3h to Estate of Bennett')) };
+    if (s === 'logtime') {
+      const lt = st.lt, m = MATTERS[lt.matterId], hrs = this.hours(lt.minutes), amt = Math.round(hrs * 42500);
+      const help = lt.source === 'call' ? 'From the 12-min call · rounds to ' + hrs.toFixed(1) + 'h' : lt.source === 'timer' ? 'From timer · rounds to ' + hrs.toFixed(1) + 'h' : lt.source === 'memo' ? 'From voice memo · rounds to ' + hrs.toFixed(1) + 'h' : lt.source === 'board' ? 'From calendar · rounds to ' + hrs.toFixed(1) + 'h' : 'Rounds to 0.1h (6 min)';
+      const cleaned = { call: 'Telephone conference with client regarding IME scheduling and next steps in discovery.', board: 'Attended Kessler board sync regarding Series B diligence status and warranty provisions.', memo: 'Reviewed appraiser’s report; reconciled Inventory Schedule B to appraised values.', timer: 'Drafted Inventory and Appraisal Schedules A and B; reconciled asset values with appraiser’s report.' }[lt.source] || 'Reviewed file and prepared notes for next steps.';
+      return { title: 'Log time', headerRight: this.closeBtn(), children: h(React.Fragment, null,
+        h(C.Form, null,
+          h(C.Field, { label: 'Matter' }, h(C.Select, { value: m.title, mono: m.number })),
+          h(C.FormRow, null,
+            h(C.Field, { label: 'Duration', help }, h(C.Stepper, { value: this.hm(lt.minutes), onDecrement: () => this.set({ lt: Object.assign({}, lt, { minutes: Math.max(6, lt.minutes - 6) }) }), onIncrement: () => this.set({ lt: Object.assign({}, lt, { minutes: lt.minutes + 6 }) }) })),
+            h(C.Field, { label: 'Amount', help: hrs.toFixed(1) + 'h × $425.00' }, h(C.Input, { amount: true, prefix: '$', value: (amt / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','), readOnly: true }))),
+          h(C.FormRow, null, h(C.Field, { label: 'Date' }, h(C.Input, { icon: 'calendar', defaultValue: 'Today, Sep 29' })), h(C.Field, { label: 'Activity' }, h(C.Select, { code: lt.source === 'call' ? 'L120' : 'L110', value: lt.source === 'call' ? 'Analysis/strategy' : 'Fact investigation' }))),
+          h(C.Field, { label: 'Narrative' }, h(C.Textarea, { key: lt.ai ? 'ai' : 'raw', minHeight: 72, defaultValue: lt.ai ? cleaned : lt.narrative }),
+            lt.ai ? null : h(C.AiSuggestion, { label: 'Suggested cleanup · not applied', text: cleaned, actions: [{ label: 'Use this', onClick: () => this.set({ lt: Object.assign({}, lt, { ai: true }) }) }, { label: 'Dismiss', quiet: true }] })),
+          h(C.OptionRow, { label: 'Billable', hint: lt.billable ? undefined : 'Saved as no charge', control: h(C.Switch, { checked: lt.billable, onChange: (v) => this.set({ lt: Object.assign({}, lt, { billable: v }) }) }), style: { padding: '4px 0' } })),
+        h(C.Button, { variant: 'primary', size: 'lg', block: true, style: { marginTop: 16 }, onClick: () => this.saveTime() }, lt.billable ? 'Save ' + hrs.toFixed(1) + 'h · ' + this.money(amt) : 'Save ' + hrs.toFixed(1) + 'h · no charge')) };
+    }
+    if (s === 'expense') return { title: 'Expense', headerRight: this.closeBtn(), children: h(React.Fragment, null,
+      h(C.Form, null,
+        h(C.Field, { label: 'Receipt' }, h('div', { style: { height: 96, border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-md)', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: 'var(--ink-2)' } }, h(C.Icon, { name: 'camera' }), h('span', { className: 'cl-t-label' }, 'Photograph the receipt · amount is read for you'))),
+        h(C.FormRow, null, h(C.Field, { label: 'Amount' }, h(C.Input, { amount: true, prefix: '$', defaultValue: '435.00' })), h(C.Field, { label: 'Date' }, h(C.Input, { icon: 'calendar', defaultValue: 'Today, Sep 29' }))),
+        h(C.Field, { label: 'Matter' }, h(C.Select, { value: 'Estate of Harold Bennett', mono: '2026-0187' })),
+        h(C.Field, { label: 'Description' }, h(C.Input, { defaultValue: 'Probate court filing fee · Inventory' })),
+        h(C.AiSuggestion, { label: 'Read from receipt · not applied', text: 'SF Superior Court · $435.00 · Sep 29 · Filing fee', actions: [{ label: 'Looks right' }, { label: 'Dismiss', quiet: true }] }),
+        h(C.OptionRow, { label: 'Bill to client', hint: 'Costs advanced · appears on the next invoice', control: h(C.Switch, { checked: true }), style: { padding: '4px 0' } })),
+      h(C.Button, { variant: 'primary', size: 'lg', block: true, style: { marginTop: 16 }, onClick: () => { this.close(); this.toast('Expense saved · $435.00 to Estate of Bennett'); } }, 'Save expense · $435.00')) };
+    if (s === 'task') return { title: 'Task', headerRight: this.closeBtn(), children: h(React.Fragment, null,
+      h(C.Form, null,
+        h(C.Field, { label: 'Task' }, h(C.Input, { defaultValue: st.taskTitle })),
+        h(C.Field, { label: 'Matter' }, h(C.Select, { value: MATTERS[st.matterId].title, mono: MATTERS[st.matterId].number })),
+        h(C.FormRow, null, h(C.Field, { label: 'Due' }, h(C.Input, { icon: 'calendar', defaultValue: 'Tue, Oct 7' })), h(C.Field, { label: 'Assign to' }, h(C.Select, { value: 'Dana Okafor' }))),
+        h(C.OptionRow, { label: 'Remind me', hint: 'Morning of, 8:00 AM', control: h(C.Switch, { checked: true }), style: { padding: '4px 0' } })),
+      h(C.Button, { variant: 'primary', size: 'lg', block: true, style: { marginTop: 16 }, onClick: () => { this.close(); this.toast('Task added · due Tue, Oct 7'); } }, 'Add task')) };
+    if (s === 'note') return { title: dark ? 'Quick note' : 'Note', headerRight: dark ? h(C.Pill, { tone: 'info', icon: 'gavel' }, 'Dept. 22') : this.closeBtn(), children: h(React.Fragment, null,
+      dark ? h('div', { className: 'cl-t-label cl-muted', style: { marginTop: -6 } }, 'People v. Webb · pretrial · timer keeps running') : null,
+      h(C.Form, { style: { marginTop: dark ? 12 : 0 } },
+        h(C.Field, { label: dark ? undefined : 'Note' }, h(C.Textarea, { minHeight: dark ? 132 : 96, defaultValue: dark ? 'Judge continued to Oct 15, 9:00 AM. DA to produce bodycam by Oct 8. Ask Marcus about the alibi witness (cousin).' : 'Margaret wants the appraiser’s summary before Friday’s filing.' })),
+        dark ? null : h(C.Field, { label: 'Matter' }, h(C.Select, { value: 'Estate of Harold Bennett', mono: '2026-0187' })),
+        dark ? h(C.AiSuggestion, { label: 'Found in your note · not applied', text: h(React.Fragment, null, 'Add ', h('b', null, 'Hearing · Oct 15, 9:00 AM'), ' and task ', h('b', null, 'DA bodycam due Oct 8'), '?'), actions: [{ label: 'Add both', onClick: () => { this.close(); this.toast('Hearing and task added · People v. Webb'); } }, { label: 'Dismiss', quiet: true }] }) : null,
+        h(C.OptionRow, { label: 'Visible to client', hint: 'Off · internal note', control: h(C.Switch, { checked: false }), style: { padding: '4px 0' } })),
+      h(C.Button, { variant: 'primary', size: 'lg', block: true, style: { marginTop: 16 }, onClick: () => { this.close(); this.toast(dark ? 'Note saved · People v. Webb' : 'Note saved · Estate of Bennett'); } }, 'Save note')) };
+    if (s === 'record') { const meth = st.recordMethod; return { title: 'Record payment', headerRight: this.closeBtn(), children: h(React.Fragment, null,
+      h(C.Form, null,
+        h(C.Field, { label: 'Invoice' }, h(C.Select, { value: 'Margaret Bennett · $8,125.00', mono: 'INV-2026-078' })),
+        h(C.Field, { label: 'Amount', help: 'Full balance · leave lower to record a partial' }, h(C.Input, { amount: true, prefix: '$', defaultValue: '8,125.00' })),
+        h(C.Field, { label: 'Method' }, h(C.SegmentedControl, { block: true, value: meth, onChange: (v) => this.set({ recordMethod: v }), items: [{ value: 'ach', label: 'ACH' }, { value: 'card', label: 'Card' }, { value: 'check', label: 'Check' }, { value: 'trust', label: 'Trust' }] })),
+        meth === 'trust' ? h(C.Banner, { tone: 'outline', icon: 'lock', compact: true, title: 'Transfers $8,125.00 from IOLTA ····4821 · $10,115.00 stays in trust' }) : null,
+        h(C.FormRow, null, h(C.Field, { label: 'Received' }, h(C.Input, { icon: 'calendar', defaultValue: 'Today, Sep 29' })), h(C.Field, { label: 'Reference', optional: true }, h(C.Input, { placeholder: meth === 'check' ? 'Check no.' : 'Confirmation' })))),
+      h(C.Button, { variant: 'primary', size: 'lg', block: true, style: { marginTop: 16 }, onClick: () => this.recordPayment() }, meth === 'trust' ? 'Apply $8,125.00 from trust' : 'Record $8,125.00')) }; }
+    if (s === 'plan') { const n = st.planN, each = Math.round(812500 / n); const dates = ['Oct 6', 'Nov 6', 'Dec 6', 'Jan 6', 'Feb 6', 'Mar 6']; return { title: 'Offer a payment plan', headerRight: this.closeBtn(), children: h(React.Fragment, null,
+      h(C.Form, null,
+        h(C.Field, { label: 'Instalments' }, h(C.SegmentedControl, { block: true, value: String(n), onChange: (v) => this.set({ planN: Number(v) }), items: [2, 3, 4, 6].map((k) => ({ value: String(k), label: String(k) })) })),
+        h(C.Field, { label: 'Schedule', help: 'Monthly · first payment on acceptance' }, h(C.List, { footer: h(React.Fragment, null, h('span', null, 'Total'), h(C.Amount, { cents: 812500 })) }, Array.from({ length: n }, (_, i) => h(C.ListRow, { key: i, regular: true, title: dates[i], subtitle: i === 0 ? 'On acceptance' : 'Auto-charged', value: this.money(i === n - 1 ? 812500 - each * (n - 1) : each), style: { minHeight: 48 } })))),
+        h(C.OptionRow, { label: 'Auto-charge', hint: 'Bank account or card on file', control: h(C.Switch, { checked: true }), style: { padding: '4px 0' } }),
+        h(C.OptionRow, { label: 'Pause late fees', hint: 'While the plan is current', control: h(C.Switch, { checked: true }), style: { padding: '4px 0' } })),
+      h(C.Button, { variant: 'primary', size: 'lg', block: true, icon: 'send', style: { marginTop: 16 }, onClick: () => { this.close(); this.toast('Plan texted · ' + n + ' × ' + this.money(each)); } }, 'Text plan · ' + n + ' × ' + this.money(each))) }; }
+    if (s === 'newmatter') { const pb = st.playbook; const PB = [['probate', 'Probate', '6 stages · hourly · Prob. Code deadlines'], ['pi', 'Personal injury', '6 stages · contingency · discovery chain'], ['family', 'Family', '4 stages · flat fee · payment plan'], ['criminal', 'Criminal defense', '5 stages · flat fee earned on receipt'], ['immigration', 'Immigration', '4 stages · flat fee · RFE window']];
+      return { title: 'New matter', headerRight: this.closeBtn(), children: h(React.Fragment, null,
+        h(C.Form, null,
+          h(C.Field, { label: 'Playbook', help: 'Stages, deadlines and the billing model come from the playbook.' }, h(C.List, null, PB.map(([k, l, hint]) => h(C.OptionRow, { key: k, label: l, hint, controlPosition: 'start', control: h(C.Radio, { checked: pb === k }), onClick: () => this.set({ playbook: k }), style: { padding: '10px 16px' } })))),
+          h(C.Field, { label: 'Client', help: 'Conflict check runs as you type.' }, h(C.Input, { defaultValue: 'Priya Raman' })),
+          h(C.Field, { label: 'Matter name' }, h(C.Input, { defaultValue: pb === 'probate' ? 'Estate of Vikram Raman' : pb === 'pi' ? 'Raman v. Bay Transit' : pb === 'family' ? 'In re Marriage of Raman' : pb === 'criminal' ? 'People v. Raman' : 'Raman I-485 adjustment' }))),
+        h(C.Button, { variant: 'primary', size: 'lg', block: true, style: { marginTop: 16 }, onClick: () => { this.close(); this.toast('Matter 2026-0215 created from the ' + PB.find((p) => p[0] === pb)[1] + ' playbook'); } }, 'Create matter · 2026-0215')) }; }
+    return { title: s, children: null };
+  }
+  dialog(st) {
+    const C = window.Clepso, h = React.createElement;
+    if (st.dialog === 'textpay') return h(C.Dialog, { title: 'Text pay link for $8,125.00?', text: 'Margaret Bennett gets a text at (415) 555-0177 with a pay link. ACH is offered first; card adds 2.9%. She last opened a link on Sep 13.', actions: h(React.Fragment, null, h(C.Button, { variant: 'ghost', onClick: () => this.close() }, 'Not yet'), h(C.Button, { variant: 'primary', icon: 'send', onClick: () => this.textPayLink() }, 'Text pay link')) });
+    if (st.dialog === 'stoptimer') return h(C.Dialog, { title: 'Stop timer at ' + this.hm(Math.round(st.timer.seconds / 60)) + '?', text: 'The entry opens pre-filled with the matter and duration. Nothing is saved until you tap Save.', actions: h(React.Fragment, null, h(C.Button, { variant: 'ghost', onClick: () => this.close() }, 'Keep running'), h(C.Button, { variant: 'primary', onClick: () => this.stopTimer() }, 'Stop & log')) });
+    return null;
+  }
+
+  // ── frame ───────────────────────────────────────────────────
+  frame(st) {
+    const C = window.Clepso, h = React.createElement;
+    const map = { signin: 'scrSignIn', today: 'scrToday', matters: 'scrMatters', matter: 'scrMatter', calendar: 'scrCalendar', billing: 'scrBilling', invoice: 'scrInvoice', contacts: 'scrContacts', contact: 'scrContact', settings: 'scrSettings' };
+    const scr = this[map[st.screen] || 'scrToday'](st);
+    return h(C.PhoneFrame, { dark: st.dark, bottom: scr.bottom, overlay: this.overlay(st), bottomSurface: scr.bottomSurface || 'surface', fade: !scr.noFade && !st.sheet }, scr.noScroll ? scr.body : this.scroll(scr.body));
+  }
+  boardFrames() {
+    const D = this.defaults(); D.timer = Object.assign({}, D.timer, { seconds: 42 * 60 + 17 });
+    const mk = (over) => Object.assign({}, D, over);
+    const S = [
+      ['Sign in · default', mk({ screen: 'signin', timer: Object.assign({}, D.timer, { running: false }) })],
+      ['Today · default', mk({})],
+      ['Today · nothing to review', mk({ review: [] })],
+      ['Today · offline', mk({ offline: true })],
+      ['Today · timer paused', mk({ timer: Object.assign({}, D.timer, { paused: true }) })],
+      ['Capture · sheet', mk({ sheet: 'capture' })],
+      ['Capture · Start timer', mk({ sheet: 'timer' })],
+      ['Capture · Voice memo · transcribed', mk({ sheet: 'voice' })],
+      ['Capture · Log time · pre-filled from call', mk({ sheet: 'logtime' })],
+      ['Capture · Log time · AI cleanup applied', mk({ sheet: 'logtime', lt: Object.assign({}, D.lt, { ai: true }) })],
+      ['Capture · Expense', mk({ sheet: 'expense' })],
+      ['Capture · Task', mk({ sheet: 'task' })],
+      ['Capture · Note (dark: Quick note during hearing)', mk({ sheet: 'note', screen: 'today' })],
+      ['Matters · list', mk({ screen: 'matters' })],
+      ['Matters · New matter from a playbook', mk({ screen: 'matters', sheet: 'newmatter' })],
+      ['Matter detail · Overview · Estate of Bennett', mk({ screen: 'matter', matterId: 'bennett' })],
+      ['Matter detail · Overview · People v. Webb', mk({ screen: 'matter', matterId: 'webb' })],
+      ['Matter detail · Activity', mk({ screen: 'matter', matterTab: 'activity' })],
+      ['Matter detail · Time', mk({ screen: 'matter', matterTab: 'time' })],
+      ['Matter detail · Documents', mk({ screen: 'matter', matterTab: 'docs' })],
+      ['Matter detail · Billing', mk({ screen: 'matter', matterTab: 'billing' })],
+      ['Calendar · Agenda · conflict', mk({ screen: 'calendar' })],
+      ['Calendar · Month · deadline chains', mk({ screen: 'calendar', calView: 'month' })],
+      ['Billing · Invoices', mk({ screen: 'billing' })],
+      ['Billing · Unbilled · pre-bill review', mk({ screen: 'billing', billingTab: 'unbilled' })],
+      ['Billing · Payments', mk({ screen: 'billing', billingTab: 'payments' })],
+      ['Billing · Trust', mk({ screen: 'billing', billingTab: 'trust' })],
+      ['Invoice detail · overdue', mk({ screen: 'invoice' })],
+      ['Invoice detail · Text pay link', mk({ screen: 'invoice', dialog: 'textpay' })],
+      ['Invoice detail · Record payment', mk({ screen: 'invoice', sheet: 'record' })],
+      ['Invoice detail · Offer a payment plan', mk({ screen: 'invoice', sheet: 'plan' })],
+      ['Invoice detail · Payment received', mk({ screen: 'invoice', inv078: 'paid', paidAt: '9:52 AM', texted: true })],
+      ['Contacts · list', mk({ screen: 'contacts' })],
+      ['Contacts · card · conflict pre-check', mk({ screen: 'contact', contactId: 'mb' })],
+      ['Settings', mk({ screen: 'settings' })],
+    ];
+    return S.map(([label, st]) => ({ label: 'H1 · Mobile · ' + label, light: this.frame(Object.assign({}, st, { dark: false })), dark: this.frame(Object.assign({}, st, { dark: true })) }));
+  }
+
+  renderVals() {
+    if (!window.Clepso) return {};
+    const C = window.Clepso, h = React.createElement, st = this.state;
+    const dark = st.themeOverride ? st.themeOverride === 'dark' : (this.props.theme ?? 'light') === 'dark';
+    const live = Object.assign({}, st, { dark });
+    const steps = ['Open Today', 'Tap Bill 0.2h on the Alvarez call', 'Save 0.2h · $85.00', 'Go to Billing', 'Open INV-2026-078 from Who to nudge', 'Text pay link', 'Payment received'];
+    const flowSteps = steps.map((label, i) => {
+      const done = i < st.flow, cur = i === st.flow;
+      return { label, lead: h(C.Checkbox, { checked: done }), pill: cur ? h(C.Pill, { tone: 'accent' }, 'Next') : (done ? h(C.Pill, { tone: 'success' }, 'Done') : undefined) };
+    });
+    const isDefault = st.review.length === 3 && !st.offline && st.timer.running && !st.timer.paused;
+    const jumps = [['signin', 'Sign in'], ['today', 'Today'], ['matters', 'Matters'], ['matter', 'Matter detail'], ['calendar', 'Calendar'], ['billing', 'Billing'], ['invoice', 'Invoice'], ['contacts', 'Contacts'], ['settings', 'Settings']].map(([k, label]) => ({ label, active: st.screen === k, go: () => this.go(k) }));
+    jumps.push({ label: 'Capture sheet', active: st.sheet === 'capture', go: () => this.openSheet('capture') });
+    const show = this.props.showBoard ?? true;
+    return {
+      phone: this.frame(live),
+      themeValue: dark ? 'dark' : 'light', themeItems: [{ value: 'light', label: 'Light' }, { value: 'dark', label: 'Courthouse mode' }], setTheme: (v) => this.set({ themeOverride: v }),
+      flowSteps, resetFlow: () => this.setState(Object.assign(this.defaults(), { flow: 0, themeOverride: st.themeOverride })), clientPays: () => this.clientPays(),
+      isDefault, isEmptyReview: st.review.length === 0, isOffline: st.offline, isPaused: st.timer.paused, isNoTimer: !st.timer.running,
+      stDefault: () => this.setState({ screen: 'today', review: ['call', 'board', 'memo'], offline: false, timer: this.defaults().timer, sheet: null, dialog: null }),
+      stEmptyReview: () => this.setState({ screen: 'today', review: [], sheet: null, dialog: null }),
+      stOffline: () => this.setState({ screen: 'today', offline: !st.offline, sheet: null, dialog: null }),
+      stPaused: () => this.setState({ screen: 'today', timer: Object.assign({}, st.timer, { running: true, paused: true }), sheet: null, dialog: null }),
+      stNoTimer: () => this.setState({ screen: 'today', timer: Object.assign({}, st.timer, { running: false }), sheet: null, dialog: null }),
+      jumps, showBoard: show,
+      board: show ? this.boardFrames() : [],
+    };
+  }
+}
+
+const TABS = [{ key: 'today', label: 'Today', icon: 'home' }, { key: 'matters', label: 'Matters', icon: 'briefcase' }, { key: 'calendar', label: 'Calendar', icon: 'calendar' }, { key: 'billing', label: 'Billing', icon: 'receipt' }];
+const METHODS = { ach: 'ACH', card: 'card', check: 'check', trust: 'trust transfer' };
+const MATTERS = {
+  bennett: { number: '2026-0187', title: 'Estate of Harold Bennett', short: 'Estate of Bennett', client: 'Margaret Bennett', area: 'Probate', attorney: 'L. Tran', billing: 'Hourly · $325', status: 'Open', statusTone: 'accent', walled: true,
+    stages: [{ label: 'Intake', state: 'done' }, { label: 'Petition', state: 'done' }, { label: 'Inventory', state: 'current' }, { label: 'Creditors' }, { label: 'Distribution' }, { label: 'Close' }],
+    banner: { tone: 'warning', icon: 'alert', title: 'Inventory filing due Fri, Oct 3', text: 'Prob. Code §8800 · chained from letters issued Jun 3 · 4 days', primary: 'Mark filed' },
+    unbilled: 482500, unbilledShort: '$4,825', trust: 1824000, trustShort: '$18,240', hours: '42.6', entries: 18, pill: 'Filing · Oct 3', pillTone: 'warning', pillDot: true, meta: '$4,825.00 unbilled',
+    tasks: [{ title: 'File estate inventory with probate court', who: 'L. Tran', due: 'Oct 3', tone: 'warning' }, { title: 'Confirm appraiser invoice for disbursement', who: 'D. Okafor', due: 'Oct 7' }, { title: 'Send Margaret the appraiser summary', who: 'D. Okafor', due: 'Oct 2' }, { title: 'Publish notice to creditors', who: 'L. Tran', due: 'Oct 10' }],
+    time: [{ t: '1:36', d: 'Sep 29', title: 'Draft inventory schedules', code: 'L110', v: '$520.00', pill: 'Billable' }, { t: '0:30', d: 'Sep 26', title: 'Call with appraiser re: valuation', code: 'L120', v: '$162.50', pill: 'Billable' }, { t: '6:12', d: 'Sep 19', title: 'Prepare Inventory & Appraisal', code: 'L110', v: '$2,015.00', pill: 'Billable' }, { t: '7:00', d: 'Sep 8', title: 'Creditor claim review', code: 'L120', v: '$2,290.00', pill: 'Billable' }],
+    invoices: ['078'],
+    activity: [{ icon: 'clock', title: React.createElement(React.Fragment, null, React.createElement('b', null, 'L. Tran'), ' logged 1.6h · Draft inventory schedules'), meta: 'Today 8:52 AM' }, { icon: 'send', title: React.createElement(React.Fragment, null, 'Reminder texted for ', React.createElement('b', null, 'INV-2026-078'), ' · opened, not paid'), meta: 'Sep 13' }, { icon: 'file', title: React.createElement(React.Fragment, null, React.createElement('b', null, 'D. Okafor'), ' uploaded Appraisal report.pdf'), meta: 'Sep 8 · Client documents' }, { icon: 'message', title: React.createElement(React.Fragment, null, React.createElement('b', null, 'L. Tran'), ' sent a client update'), meta: 'Jun 4 · visible to client', quote: 'Letters were issued today. Next we prepare the estate inventory, due Oct 3.' }] },
+  alvarez: { number: '2026-0142', title: 'Alvarez v. Meridian Logistics', short: 'Alvarez v. Meridian', client: 'Sofia Alvarez', area: 'Personal injury', attorney: 'D. Okafor', billing: 'Contingency · 33%', status: 'Open', statusTone: 'accent',
+    stages: [{ label: 'Intake', state: 'done' }, { label: 'Investigation', state: 'done' }, { label: 'Discovery', state: 'current' }, { label: 'Mediation' }, { label: 'Trial' }, { label: 'Resolution' }],
+    banner: { tone: 'neutral', icon: 'alert', title: 'Discovery cutoff Fri, Oct 24', text: 'CCP §2024.020 · 25 days · expert disclosure follows Nov 14', primary: 'Mark complete' },
+    unbilled: 0, unbilledShort: '$0', trust: 0, trustShort: '$0', hours: '61.2', entries: 27, pill: 'Discovery', pillTone: 'accent', meta: 'Cutoff Oct 24',
+    tasks: [{ title: 'Draft motion to compel discovery', who: 'D. Okafor', due: 'Oct 10' }, { title: 'Schedule IME with Dr. Patel', who: 'D. Okafor', due: 'Oct 3', tone: 'warning' }],
+    time: [{ t: '2:12', d: 'Sep 29', title: 'Review medical records batch 3', code: 'L310', v: '—', pill: 'No charge' }, { t: '0:12', d: 'Sep 29', title: 'Call with client re: IME', code: 'L120', v: '—', pill: 'No charge' }],
+    invoices: [], activity: [{ icon: 'phone', title: React.createElement(React.Fragment, null, 'Call with ', React.createElement('b', null, 'Sofia Alvarez'), ' · 12 min · unbilled'), meta: 'Today 10:12 AM' }] },
+  kessler: { number: '2026-0201', title: 'Kessler Holdings — Series B', short: 'Kessler', client: 'Kessler Holdings LLC', area: 'Corporate', attorney: 'D. Okafor', billing: 'Flat fee · $37,500', status: 'Open', statusTone: 'accent',
+    stages: [{ label: 'Engagement', state: 'done' }, { label: 'Diligence', state: 'current' }, { label: 'Closing' }],
+    banner: null, unbilled: 1250000, unbilledShort: '$12,500', trust: 0, trustShort: '$0', hours: '38.4', entries: 14, pill: 'Diligence', pillTone: 'accent', meta: '$12,500.00 unbilled',
+    tasks: [{ title: 'Review Series B term sheet redlines', who: 'D. Okafor', due: 'Oct 2', tone: 'warning' }], time: [{ t: '0:45', d: 'Sep 26', title: 'Call with opposing counsel re: warranties', code: 'L120', v: '$318.75', pill: 'Billable' }], invoices: ['092'],
+    activity: [{ icon: 'receipt', title: React.createElement(React.Fragment, null, React.createElement('b', null, 'INV-2026-092'), ' sent · $25,000.00 · due Oct 9'), meta: 'Sep 9' }] },
+  webb: { number: '2026-0119', title: 'People v. Marcus Webb', short: 'People v. Webb', client: 'Marcus Webb', area: 'Criminal defense', attorney: 'J. Whitfield', billing: 'Flat fee · earned on receipt', status: 'Pending', statusTone: 'warning',
+    stages: [{ label: 'Arraignment', state: 'done' }, { label: 'Pretrial', state: 'current' }, { label: 'Motions' }, { label: 'Trial' }, { label: 'Disposition' }],
+    banner: { tone: 'info', icon: 'gavel', title: 'Pretrial conference today · 9:30 AM', text: 'SF Superior · Dept. 22 · Hon. R. Castellanos', primary: 'Quick note' },
+    unbilled: 300000, unbilledShort: '$3,000', trust: 0, trustShort: '$0', hours: '22.5', entries: 9, pill: 'Hearing 9:30', pillTone: 'danger', pillDot: true, meta: 'Pretrial',
+    tasks: [{ title: 'Prep witness outline for pretrial', who: 'J. Whitfield', due: 'Today', tone: 'danger' }], time: [{ t: '2:30', d: 'Sep 26', title: 'Pretrial motion research', code: 'L230', v: '$750.00', pill: 'Billable' }], invoices: ['095'],
+    activity: [{ icon: 'gavel', title: React.createElement(React.Fragment, null, 'Pretrial conference set · ', React.createElement('b', null, 'Sep 29, 9:30 AM'), ' · Dept. 22'), meta: 'Sep 2 · from court notice' }] },
+  delgado: { number: '2026-0210', title: 'In re Marriage of Delgado', short: 'Delgado', client: 'Elena Delgado', area: 'Family', attorney: 'L. Tran', billing: 'Flat fee · plan 2 of 4', status: 'Open', statusTone: 'accent',
+    stages: [{ label: 'Petition', state: 'done' }, { label: 'Disclosures', state: 'current' }, { label: 'Settlement' }, { label: 'Judgment' }],
+    banner: null, unbilled: 0, unbilledShort: '$0', trust: 325000, trustShort: '$3,250', hours: '11.0', entries: 6, pill: 'Disclosures', pillTone: 'accent', meta: 'Plan 2 of 4',
+    tasks: [{ title: 'Serve preliminary disclosures', who: 'L. Tran', due: 'Oct 8' }], time: [], invoices: ['094'], activity: [] },
+  okonkwo: { number: '2026-0214', title: 'Okonkwo I-130 petition', short: 'Okonkwo', client: 'Chidi Okonkwo', area: 'Immigration', attorney: 'D. Okafor', billing: 'Flat fee · $4,000', status: 'Open', statusTone: 'accent',
+    stages: [{ label: 'Intake', state: 'done' }, { label: 'Filed', state: 'current' }, { label: 'RFE' }, { label: 'Approval' }],
+    banner: { tone: 'neutral', icon: 'alert', title: 'RFE response window closes Sat, Oct 11', text: 'USCIS receipt Aug 12 · 12 days', primary: 'Mark responded' },
+    unbilled: 0, unbilledShort: '$0', trust: 1151000, trustShort: '$11,510', hours: '9.8', entries: 5, pill: 'Filed', pillTone: 'accent', meta: 'RFE window Oct 11',
+    tasks: [{ title: 'Gather RFE evidence · joint lease, photos', who: 'D. Okafor', due: 'Oct 9' }], time: [], invoices: [], activity: [] },
+};
+const INVOICES = {
+  '078': { number: 'INV-2026-078', client: 'Margaret Bennett', matterShort: 'Estate of Bennett', total: 812500, lines: [{ title: 'Draft petition and schedules', sub: 'L. Tran · 9.5h × $325.00', v: '$3,087.50' }, { title: 'Court appearance · letters', sub: 'L. Tran · 4.0h × $325.00', v: '$1,300.00' }, { title: 'Filing fees & appraisal', sub: 'Costs advanced', v: '$3,737.50' }] },
+  '092': { number: 'INV-2026-092', client: 'Kessler Holdings LLC', matterShort: 'Series B', total: 2500000, pill: { tone: 'info', label: 'Sent · due Oct 9' } },
+  '095': { number: 'INV-2026-095', client: 'Marcus Webb', matterShort: 'People v. Webb', total: 300000, pill: { tone: 'neutral', label: 'Draft' } },
+  '094': { number: 'INV-2026-094', client: 'Elena Delgado', matterShort: 'Delgado · plan 2 of 4', total: 162500, pill: { tone: 'warning', dot: true, label: 'Partial' } },
+  '061': { number: 'INV-2026-061', client: 'Thanh Nguyen', matterShort: 'Nguyen v. Cascade', total: 445000, pill: { tone: 'success', dot: true, label: 'Paid Jul 18' } },
+};
+const CONTACTS = [
+  { id: 'sa', name: 'Sofia Alvarez', kind: 'person', role: 'Client', group: 'client', matter: 'Alvarez v. Meridian', matterFull: 'Alvarez v. Meridian Logistics', matterNo: '2026-0142', matterId: 'alvarez', email: 'sofia.alvarez@mail.com', phone: '(415) 555-0132' },
+  { id: 'mb', name: 'Margaret Bennett', kind: 'person', role: 'Client · Executor', group: 'client', matter: 'Estate of Bennett', matterFull: 'Estate of Harold Bennett', matterNo: '2026-0187', matterId: 'bennett', email: 'mbennett@mail.com', phone: '(415) 555-0177' },
+  { id: 'kh', name: 'Kessler Holdings LLC', kind: 'org', role: 'Client', group: 'client', matter: 'Series B', matterFull: 'Kessler Holdings — Series B', matterNo: '2026-0201', matterId: 'kessler', email: 'legal@kesslerholdings.com', phone: '(628) 555-0200' },
+  { id: 'mw', name: 'Marcus Webb', kind: 'person', role: 'Client', group: 'client', matter: 'People v. Webb', matterFull: 'People v. Marcus Webb', matterNo: '2026-0119', matterId: 'webb', email: 'm.webb@mail.com', phone: '(415) 555-0148' },
+  { id: 'ed', name: 'Elena Delgado', kind: 'person', role: 'Client', group: 'client', matter: 'Delgado', matterFull: 'In re Marriage of Delgado', matterNo: '2026-0210', matterId: 'delgado', email: 'elena.d@mail.com', phone: '(415) 555-0163' },
+  { id: 'co', name: 'Chidi Okonkwo', kind: 'person', role: 'Client', group: 'client', matter: 'Okonkwo I-130', matterFull: 'Okonkwo I-130 petition', matterNo: '2026-0214', matterId: 'okonkwo', email: 'c.okonkwo@mail.com', phone: '(510) 555-0119' },
+  { id: 'ml', name: 'Meridian Logistics Inc.', kind: 'org', role: 'Opposing party', group: 'other', matter: 'Alvarez v. Meridian', matterFull: 'Alvarez v. Meridian Logistics', matterNo: '2026-0142', matterId: 'alvarez', email: 'counsel@meridianlog.com', phone: '(510) 555-0166' },
+  { id: 'ap', name: 'Dr. Anand Patel', kind: 'person', role: 'Expert witness', group: 'other', matter: 'Alvarez v. Meridian', matterFull: 'Alvarez v. Meridian Logistics', matterNo: '2026-0142', matterId: 'alvarez', email: 'apatel@sfmedexperts.com', phone: '(415) 555-0191' },
+  { id: 'sf', name: 'SF Superior Court · Dept. 22', kind: 'org', role: 'Court', group: 'other', matter: 'People v. Webb', matterFull: 'People v. Marcus Webb', matterNo: '2026-0119', matterId: 'webb', email: 'dept22@sfsuperiorcourt.org', phone: '(415) 551-4000' },
+];
+</script>
+</body>
+</html>
+

@@ -40,9 +40,29 @@ export function SegmentedControl({
           key={it.value}
           type="button"
           role="tab"
+          tabIndex={it.value === value ? 0 : -1}
           aria-selected={it.value === value}
           className={cx('cl-seg__item', it.value === value && 'is-active')}
           onClick={() => onChange?.(it.value)}
+          onKeyDown={(event) => {
+            const index = items.findIndex((item) => item.value === it.value);
+            const next =
+              event.key === 'ArrowRight'
+                ? (index + 1) % items.length
+                : event.key === 'ArrowLeft'
+                  ? (index + items.length - 1) % items.length
+                  : event.key === 'Home'
+                    ? 0
+                    : event.key === 'End'
+                      ? items.length - 1
+                      : -1;
+            if (next < 0) return;
+            event.preventDefault();
+            onChange?.(items[next]!.value);
+            (
+              event.currentTarget.parentElement?.children[next] as HTMLButtonElement | undefined
+            )?.focus();
+          }}
         >
           {it.label}
           {it.count !== undefined ? <span className="cl-chip__count">{it.count}</span> : null}

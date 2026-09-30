@@ -5,7 +5,8 @@ import type { IconName } from './icons';
 import { Text, type TextTone } from './Text';
 import type { ColorToken } from '@lawfirm/ui';
 
-export type PillTone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'info' | 'ink' | 'outline';
+export type PillTone =
+  'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'info' | 'ink' | 'outline';
 
 const BG: Record<PillTone, string> = {
   neutral: 'bg-surface-2',
@@ -77,7 +78,9 @@ export function Pill({ tone = 'neutral', dot, icon, size = 'md', children, class
         variant={size === 'lg' ? 'label' : 'caption'}
         weight="semibold"
         tone={textTone}
-        className={tone === 'accent' ? 'text-accent-ink' : tone === 'info' ? 'text-info-ink' : undefined}
+        className={
+          tone === 'accent' ? 'text-accent-ink' : tone === 'info' ? 'text-info-ink' : undefined
+        }
         numberOfLines={1}
       >
         {children}
@@ -86,6 +89,12 @@ export function Pill({ tone = 'neutral', dot, icon, size = 'md', children, class
   );
 }
 
-export function Dot({ tone = 'neutral', className }: { tone?: 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'info'; className?: string }) {
+export function Dot({
+  tone = 'neutral',
+  className,
+}: {
+  tone?: 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'info';
+  className?: string;
+}) {
   return <View className={cn('h-2 w-2 rounded-full', DOT[tone], className)} />;
 }

@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "H1: Start iOS Simulator preview",
+      "type": "shell",
+      "command": "npx",
+      "args": ["--yes", "serve-sim@0.1.47", "--port", "3200", "--fit"],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "DEVELOPER_DIR": "/Applications/Xcode.app/Contents/Developer"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

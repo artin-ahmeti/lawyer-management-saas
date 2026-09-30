@@ -42,6 +42,7 @@ export function Table({ columns, rows, compact, className, ...rest }: TableProps
             {columns.map((c) => (
               <th
                 key={c.key}
+                scope="col"
                 className={cx(c.align === 'right' && 'num')}
                 style={c.width ? { width: c.width } : undefined}
               >
@@ -59,7 +60,10 @@ export function Table({ columns, rows, compact, className, ...rest }: TableProps
                     r.cells.map((cell, i) => (
                       <td
                         key={i}
-                        className={cx(columns[i]?.align === 'right' && 'num')}
+                        className={cx(
+                          columns[i === 0 ? 0 : columns.length - r.cells.length + i]?.align ===
+                            'right' && 'num',
+                        )}
                         colSpan={i === 0 ? columns.length - r.cells.length + 1 : 1}
                       >
                         {cell}
@@ -75,7 +79,22 @@ export function Table({ columns, rows, compact, className, ...rest }: TableProps
               <tr
                 key={r.id}
                 className={cx(r.kind === 'foot' && 'cl-table__foot', r.selected && 'is-selected')}
-                onClick={r.onClick}
+                tabIndex={r.onClick ? 0 : undefined}
+                aria-selected={r.selected || undefined}
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('a,button,input,select,textarea')) return;
+                  r.onClick?.();
+                }}
+                onKeyDown={(e) => {
+                  if (
+                    e.target === e.currentTarget &&
+                    r.onClick &&
+                    (e.key === 'Enter' || e.key === ' ')
+                  ) {
+                    e.preventDefault();
+                    r.onClick();
+                  }
+                }}
               >
                 {r.cells.map((cell, i) => (
                   <td
