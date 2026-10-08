@@ -79,6 +79,18 @@ describe('practice field definitions', () => {
     ).toBe(true);
   });
 
+  it('refuses unstorable characters in names, labels, options and help', () => {
+    const text = { key: 'a', label: 'A', type: 'text', required: false };
+    for (const bad of [
+      { name: 'De\u0000als', fields: [] },
+      { name: 'Deals', description: 'x\ud800', fields: [] },
+      { name: 'Deals', fields: [{ ...text, label: 'A\u0000' }] },
+      { name: 'Deals', fields: [{ ...text, help: '\udc00' }] },
+      { name: 'Deals', fields: [{ ...text, type: 'choice', options: ['Yes\u0000'] }] },
+    ])
+      expect(createPracticeProfileSchema.safeParse(bad).success).toBe(false);
+  });
+
   it('accepts only primitive values keyed by field keys in a matter edit', () => {
     expect(
       updateMatterFieldsSchema.safeParse({ expectedRevision: 1, values: { a: { nested: 1 } } })
@@ -174,6 +186,43 @@ describe('applyFieldValues', () => {
       ok: true,
       values: { entity_name: 'A' },
       changed: [],
+    });
+  });
+
+  it('refuses a value set larger than the stored byte budget, counted in UTF-8', () => {
+    const many: PracticeFieldDefinition[] = Array.from({ length: 30 }, (_, i) => ({
+      key: `notes_${i}`,
+      label: `Notes ${i}`,
+      type: 'long_text',
+      required: false,
+    }));
+    // 30 × 5000 three-byte characters passes each field's limit but not the total budget.
+    const wide = Object.fromEntries(many.map((f) => [f.key, '漢'.repeat(5000)]));
+    expect(applyFieldValues(many, {}, wide)).toEqual({
+      ok: false,
+      issues: [{ key: '*', message: 'These values are too long to save together.' }],
+    });
+    const fits = Object.fromEntries(many.slice(0, 10).map((f) => [f.key, '漢'.repeat(5000)]));
+    expect(applyFieldValues(many, {}, fits).ok).toBe(true);
+  });
+
+  it('refuses text the database cannot store: NUL and lone surrogates', () => {
+    for (const bad of ['a\u0000b', 'a\ud800', '\udc00z'])
+      expect(applyFieldValues(fields, {}, { entity_name: bad }).ok).toBe(false);
+    expect(applyFieldValues(fields, {}, { entity_name: 'Café 漢 😀' }).ok).toBe(true);
+  });
+
+  it('enforces required fields whose keys match inherited object properties', () => {
+    const inherited: PracticeFieldDefinition[] = [
+      { key: 'constructor', label: 'Constructor', type: 'text', required: true },
+    ];
+    expect(applyFieldValues(inherited, {}, {})).toEqual({
+      ok: false,
+      issues: [{ key: 'constructor', message: 'Constructor is required.' }],
+    });
+    expect(applyFieldValues(inherited, {}, { constructor: 'Set' })).toMatchObject({
+      ok: true,
+      changed: ['constructor'],
     });
   });
 

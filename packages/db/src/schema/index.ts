@@ -8,5 +8,6 @@ export * from './tenancy.js';
 export * from './execution.js';
 export * from './staff-invitations.js';
 export * from './staff-session-contexts.js';
+export * from './practice-profiles.js';
 export * from './matters.js';
 export * from './contacts.js';

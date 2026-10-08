@@ -67,6 +67,30 @@ export type EndMatterParty = NonNullable<
 >['content']['application/json'];
 export type MatterPartyResult =
   paths['/matters/{matterId}/parties']['post']['responses'][201]['content']['application/json'];
+export type PracticeProfileList =
+  paths['/practice-profiles']['get']['responses'][200]['content']['application/json'];
+export type PracticeProfileListQuery = {
+  status?: 'active' | 'archived';
+  afterName?: string;
+  afterId?: string;
+};
+export type PracticeProfileDetail =
+  paths['/practice-profiles/{profileId}']['get']['responses'][200]['content']['application/json'];
+export type CreatePracticeProfile = NonNullable<
+  paths['/practice-profiles']['post']['requestBody']
+>['content']['application/json'];
+export type RevisePracticeProfile = NonNullable<
+  paths['/practice-profiles/{profileId}']['patch']['requestBody']
+>['content']['application/json'];
+export type PracticeProfileResult =
+  paths['/practice-profiles']['post']['responses'][201]['content']['application/json'];
+export type MatterFields =
+  paths['/matters/{matterId}/fields']['get']['responses'][200]['content']['application/json'];
+export type UpdateMatterFields = NonNullable<
+  paths['/matters/{matterId}/fields']['patch']['requestBody']
+>['content']['application/json'];
+export type MatterFieldsResult =
+  paths['/matters/{matterId}/fields']['patch']['responses'][200]['content']['application/json'];
 export type StaffInvitationList =
   paths['/firms/current/staff-invitations']['get']['responses'][200]['content']['application/json'];
 export type ReceivedInvitationList =
@@ -314,6 +338,34 @@ export function createApiClient(options: ClientOptions) {
       keyed<MatterPartyResult>(
         `/matters/${encodeURIComponent(id)}/party-endings`,
         'POST',
+        input,
+        action,
+      ),
+    practiceProfiles: (query: PracticeProfileListQuery = {}, signal?: AbortSignal) => {
+      const params = new URLSearchParams(
+        Object.entries(query).filter((entry): entry is [string, string] => Boolean(entry[1])),
+      );
+      return request<PracticeProfileList>(`/practice-profiles${params.size ? `?${params}` : ''}`, {
+        signal,
+      });
+    },
+    practiceProfile: (id: string, signal?: AbortSignal) =>
+      request<PracticeProfileDetail>(`/practice-profiles/${encodeURIComponent(id)}`, { signal }),
+    createPracticeProfile: (input: CreatePracticeProfile, action: Action) =>
+      keyed<PracticeProfileResult>('/practice-profiles', 'POST', input, action),
+    revisePracticeProfile: (id: string, input: RevisePracticeProfile, action: Action) =>
+      keyed<PracticeProfileResult>(
+        `/practice-profiles/${encodeURIComponent(id)}`,
+        'PATCH',
+        input,
+        action,
+      ),
+    matterFields: (id: string, signal?: AbortSignal) =>
+      request<MatterFields>(`/matters/${encodeURIComponent(id)}/fields`, { signal }),
+    updateMatterFields: (id: string, input: UpdateMatterFields, action: Action) =>
+      keyed<MatterFieldsResult>(
+        `/matters/${encodeURIComponent(id)}/fields`,
+        'PATCH',
         input,
         action,
       ),

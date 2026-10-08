@@ -9,6 +9,7 @@ import { FirmModule } from './modules/firms/firm.module';
 import { StaffInvitationModule } from './modules/staff-invitations/staff-invitation.module';
 import { MatterModule } from './modules/matters/matter.module';
 import { ContactModule } from './modules/contacts/contact.module';
+import { PracticeProfileModule } from './modules/practice-profiles/practice-profile.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ContactModule } from './modules/contacts/contact.module';
     StaffInvitationModule,
     MatterModule,
     ContactModule,
+    PracticeProfileModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

@@ -605,6 +605,39 @@ it('archives a profile for new work while existing matters keep showing and edit
   deals = restored;
 });
 
+it('refuses unstorable text before the database and replays a reordered retry', async () => {
+  const before = await get(matterFieldsSchema, `/matters/${dealMatter}/fields`);
+  const nul = await api('PATCH', `/matters/${dealMatter}/fields`, 0, {
+    expectedRevision: before.revision,
+    values: { scope: 'Client SSN 123-45-6789 \u0000 pasted' },
+  });
+  expect(nul.status).toBe(422);
+  const surrogate = await api('POST', '/practice-profiles', 0, {
+    name: 'Deals \ud800',
+    fields: [],
+  });
+  expect(surrogate.status).toBe(422);
+  const current = await get(matterFieldsSchema, `/matters/${dealMatter}/fields`);
+  const key = randomUUID();
+  const first = await api(
+    'PATCH',
+    `/matters/${dealMatter}/fields`,
+    0,
+    { expectedRevision: current.revision, values: { scope: 'Reordered', board_approved: true } },
+    key,
+  );
+  expect(first.status).toBe(200);
+  const retry = await api(
+    'PATCH',
+    `/matters/${dealMatter}/fields`,
+    0,
+    { values: { board_approved: true, scope: 'Reordered' }, expectedRevision: current.revision },
+    key,
+  );
+  expect(retry.status).toBe(200);
+  expect(await retry.json()).toEqual(await first.json());
+});
+
 it('replays a matter creation recorded before practice profiles existed', async () => {
   const key = randomUUID();
   const created = await parse(

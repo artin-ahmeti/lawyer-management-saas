@@ -4,6 +4,7 @@ import {
   foreignKey,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -11,6 +12,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { firmMembers, firms, profiles } from './tenancy.js';
+import { practiceProfileVersions } from './practice-profiles.js';
 
 const timestamps = () => ({
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -30,6 +32,11 @@ export const matters = pgTable(
     reference: text('reference'),
     revision: integer('revision').notNull().default(1),
     accessRevision: integer('access_revision').notNull().default(1),
+    /** Pinned practice profile version (D022); set once, never re-pinned in place. */
+    profileVersionId: uuid('profile_version_id'),
+    fieldValues: jsonb('field_values')
+      .notNull()
+      .default(sql`'{}'::jsonb`),
     createdBy: uuid('created_by')
       .notNull()
       .references(() => profiles.id),
@@ -48,6 +55,19 @@ export const matters = pgTable(
     ),
     check('matters_revision', sql`${t.revision} >= 1`),
     check('matters_access_revision', sql`${t.accessRevision} >= 1`),
+    foreignKey({
+      name: 'matters_profile_version_fk',
+      columns: [t.firmId, t.profileVersionId],
+      foreignColumns: [practiceProfileVersions.firmId, practiceProfileVersions.id],
+    }),
+    // Cheap on every row update; type and size are checked by a trigger on field_values writes.
+    check(
+      'matters_field_values',
+      sql`${t.profileVersionId} is not null or ${t.fieldValues} = '{}'::jsonb`,
+    ),
+    index('matters_profile_version_idx')
+      .on(t.firmId, t.profileVersionId)
+      .where(sql`${t.profileVersionId} is not null`),
   ],
 );
 /** Every matter is explicitly granted; a firm owner has no implicit ethical-wall bypass. */

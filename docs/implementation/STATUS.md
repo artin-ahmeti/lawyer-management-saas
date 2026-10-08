@@ -37,7 +37,7 @@ Slice tasks:
        revision, replay and stale refusal; values unreadable without a matter grant
        or across firms; archived profiles refused for new matters but still shown on
        existing ones.
-2. [ ] Add reversible `practice_profiles`/`practice_profile_versions` migration and
+2. [x] Add reversible `practice_profiles`/`practice_profile_versions` migration and
        matter profile-version/field-value columns (same-firm composite keys, forced
        RLS, select-only client role, immutable versions); shared Zod field
        definitions, value-schema builder and starter catalog in `@lawfirm/core`;

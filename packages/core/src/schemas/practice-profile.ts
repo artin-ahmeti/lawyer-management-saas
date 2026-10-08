@@ -16,12 +16,30 @@ export const practiceFieldTypeSchema = z.enum([
 ]);
 export const practiceFieldKeySchema = z.string().regex(/^[a-z][a-z0-9_]{0,39}$/);
 export const MAX_PRACTICE_FIELDS = 50;
-const label = z.string().trim().min(1).max(80);
+/** Postgres text and jsonb refuse NUL and unpaired surrogates; refuse them here first. */
+const unstorable = /\u0000|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/;
+export const storableText = (schema: z.ZodString) =>
+  schema.refine((v) => !unstorable.test(v), { message: 'Contains unsupported characters.' });
+/** UTF-8 length without platform encoders, so the rule runs the same on every device. */
+const utf8Length = (text: string) => {
+  let bytes = 0;
+  for (const char of text) {
+    const code = char.codePointAt(0)!;
+    bytes += code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
+  }
+  return bytes;
+};
+/**
+ * UTF-8 bytes of one matter's serialized values. The database allows 400000 bytes of jsonb
+ * text, which leaves room for its extra spacing, so a value set accepted here always stores.
+ */
+export const MAX_FIELD_VALUES_BYTES = 256_000;
+const label = storableText(z.string().trim().min(1).max(80));
 const fieldBase = {
   key: practiceFieldKeySchema,
   label,
   required: z.boolean(),
-  help: z.string().trim().min(1).max(200).optional(),
+  help: storableText(z.string().trim().min(1).max(200)).optional(),
 };
 export const practiceFieldDefinitionSchema = z.discriminatedUnion('type', [
   z.strictObject({
@@ -66,8 +84,8 @@ const basedOn = z.strictObject({
   key: practiceStarterKeySchema,
   version: z.number().int().min(1).max(1000),
 });
-const name = z.string().trim().min(1).max(80);
-const description = z.string().trim().min(1).max(300);
+const name = storableText(z.string().trim().min(1).max(80));
+const description = storableText(z.string().trim().min(1).max(300));
 const revision = z.number().int().min(1).max(2_147_483_646);
 
 export const createPracticeProfileSchema = z.strictObject({
@@ -97,7 +115,7 @@ export const practiceProfileParamsSchema = z.strictObject({ profileId: uuidSchem
 export const practiceProfileListQuerySchema = z
   .strictObject({
     status: z.enum(['active', 'archived']).default('active'),
-    afterName: z.string().min(1).max(80).optional(),
+    afterName: storableText(z.string().min(1).max(80)).optional(),
     afterId: uuidSchema.optional(),
   })
   .refine((v) => (v.afterName === undefined) === (v.afterId === undefined), {
@@ -202,9 +220,9 @@ export type FieldValueIssue = { key: string; message: string };
 const fieldValueSchema = (field: PracticeFieldDefinition): z.ZodType<PracticeFieldValue> => {
   switch (field.type) {
     case 'text':
-      return z.string().trim().min(1).max(500);
+      return storableText(z.string().trim().min(1).max(500));
     case 'long_text':
-      return z.string().trim().min(1).max(5000);
+      return storableText(z.string().trim().min(1).max(5000));
     case 'number':
       return z.number().finite().min(-1e12).max(1e12);
     case 'date':
@@ -239,6 +257,8 @@ export function applyFieldValues(
   const byKey = new Map(fields.map((f) => [f.key, f]));
   const issues: FieldValueIssue[] = [];
   const values: PracticeFieldValues = { ...current };
+  // Own properties only: a field keyed like an Object.prototype member is still a field.
+  const has = (key: string) => Object.hasOwn(values, key);
   for (const [key, raw] of Object.entries(patch)) {
     const field = byKey.get(key);
     if (!field) {
@@ -254,15 +274,16 @@ export function applyFieldValues(
     else issues.push({ key, message: messageFor(field) });
   }
   for (const field of fields)
-    if (
-      field.required &&
-      values[field.key] === undefined &&
-      !issues.some((i) => i.key === field.key)
-    )
+    if (field.required && !has(field.key) && !issues.some((i) => i.key === field.key))
       issues.push({ key: field.key, message: `${field.label} is required.` });
   if (issues.length) return { ok: false, issues };
+  if (utf8Length(JSON.stringify(values)) > MAX_FIELD_VALUES_BYTES)
+    return {
+      ok: false,
+      issues: [{ key: '*', message: 'These values are too long to save together.' }],
+    };
   const changed = [...new Set([...Object.keys(current), ...Object.keys(values)])]
-    .filter((k) => current[k] !== values[k])
+    .filter((k) => !Object.hasOwn(current, k) || !has(k) || current[k] !== values[k])
     .sort();
   return { ok: true, values, changed };
 }

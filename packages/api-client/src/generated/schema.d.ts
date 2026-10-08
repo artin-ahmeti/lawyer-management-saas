@@ -542,6 +542,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/practice-profiles': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['PracticeProfileController_list'];
+    put?: never;
+    post: operations['PracticeProfileController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/practice-profiles/{profileId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['PracticeProfileController_read'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['PracticeProfileController_revise'];
+    trace?: never;
+  };
+  '/matters/{matterId}/fields': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['MatterFieldsController_read'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['MatterFieldsController_update'];
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1009,6 +1057,12 @@ export interface components {
         createdAt: string;
         /** @enum {string} */
         accessRole: 'reader' | 'manager';
+        profile: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          version: number;
+        } | null;
       }[];
       /** Format: uuid */
       nextCursor: string | null;
@@ -1026,10 +1080,21 @@ export interface components {
       createdAt: string;
       /** @enum {string} */
       accessRole: 'reader' | 'manager';
+      profile: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        version: number;
+      } | null;
     };
     CreateMatterDto: {
       title: string;
       reference?: string;
+      /** Format: uuid */
+      profileVersionId?: string;
+      fieldValues?: {
+        [key: string]: string | number | boolean;
+      };
     };
     CreateMatterResultDto_Output: {
       matter: {
@@ -1044,6 +1109,12 @@ export interface components {
         createdAt: string;
         /** @enum {string} */
         accessRole: 'reader' | 'manager';
+        profile: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          version: number;
+        } | null;
       };
       /** Format: uuid */
       commandId: string;
@@ -1297,6 +1368,327 @@ export interface components {
     EndMatterPartyDto: {
       /** Format: uuid */
       partyId: string;
+    };
+    PracticeProfileListDto_Output: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        firmId: string;
+        name: string;
+        description: string | null;
+        basedOn: {
+          /** @enum {string} */
+          key:
+            | 'civil_litigation'
+            | 'injury_insurance'
+            | 'family'
+            | 'criminal_defense'
+            | 'estates_probate'
+            | 'immigration'
+            | 'bankruptcy'
+            | 'corporate_transactional'
+            | 'real_estate'
+            | 'employment'
+            | 'intellectual_property'
+            | 'regulatory_appellate';
+          version: number;
+        } | null;
+        archived: boolean;
+        revision: number;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+        currentVersion: number;
+        fieldCount: number;
+      }[];
+      nextCursor: {
+        afterName: string;
+        /** Format: uuid */
+        afterId: string;
+      } | null;
+      canManage: boolean;
+    };
+    PracticeProfileDetailDto_Output: {
+      profile: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        firmId: string;
+        name: string;
+        description: string | null;
+        basedOn: {
+          /** @enum {string} */
+          key:
+            | 'civil_litigation'
+            | 'injury_insurance'
+            | 'family'
+            | 'criminal_defense'
+            | 'estates_probate'
+            | 'immigration'
+            | 'bankruptcy'
+            | 'corporate_transactional'
+            | 'real_estate'
+            | 'employment'
+            | 'intellectual_property'
+            | 'regulatory_appellate';
+          version: number;
+        } | null;
+        archived: boolean;
+        revision: number;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+        currentVersion: {
+          /** Format: uuid */
+          id: string;
+          version: number;
+          fields: (
+            | {
+                key: string;
+                label: string;
+                required: boolean;
+                help?: string;
+                /** @enum {string} */
+                type: 'text' | 'long_text' | 'number' | 'date' | 'yes_no';
+              }
+            | {
+                key: string;
+                label: string;
+                required: boolean;
+                help?: string;
+                /** @enum {string} */
+                type: 'choice';
+                options: string[];
+              }
+          )[];
+          /** Format: date-time */
+          createdAt: string;
+        };
+      };
+      canManage: boolean;
+    };
+    CreatePracticeProfileDto: {
+      name: string;
+      description?: string;
+      basedOn?: {
+        /** @enum {string} */
+        key:
+          | 'civil_litigation'
+          | 'injury_insurance'
+          | 'family'
+          | 'criminal_defense'
+          | 'estates_probate'
+          | 'immigration'
+          | 'bankruptcy'
+          | 'corporate_transactional'
+          | 'real_estate'
+          | 'employment'
+          | 'intellectual_property'
+          | 'regulatory_appellate';
+        version: number;
+      };
+      fields: (
+        | {
+            key: string;
+            label: string;
+            required: boolean;
+            help?: string;
+            /** @enum {string} */
+            type: 'text' | 'long_text' | 'number' | 'date' | 'yes_no';
+          }
+        | {
+            key: string;
+            label: string;
+            required: boolean;
+            help?: string;
+            /** @enum {string} */
+            type: 'choice';
+            options: string[];
+          }
+      )[];
+    };
+    PracticeProfileResultDto_Output: {
+      profile: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        firmId: string;
+        name: string;
+        description: string | null;
+        basedOn: {
+          /** @enum {string} */
+          key:
+            | 'civil_litigation'
+            | 'injury_insurance'
+            | 'family'
+            | 'criminal_defense'
+            | 'estates_probate'
+            | 'immigration'
+            | 'bankruptcy'
+            | 'corporate_transactional'
+            | 'real_estate'
+            | 'employment'
+            | 'intellectual_property'
+            | 'regulatory_appellate';
+          version: number;
+        } | null;
+        archived: boolean;
+        revision: number;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+        currentVersion: {
+          /** Format: uuid */
+          id: string;
+          version: number;
+          fields: (
+            | {
+                key: string;
+                label: string;
+                required: boolean;
+                help?: string;
+                /** @enum {string} */
+                type: 'text' | 'long_text' | 'number' | 'date' | 'yes_no';
+              }
+            | {
+                key: string;
+                label: string;
+                required: boolean;
+                help?: string;
+                /** @enum {string} */
+                type: 'choice';
+                options: string[];
+              }
+          )[];
+          /** Format: date-time */
+          createdAt: string;
+        };
+      };
+      /** Format: uuid */
+      commandId: string;
+    };
+    RevisePracticeProfileDto: {
+      expectedRevision: number;
+      name?: string;
+      description?: string | null;
+      fields?: (
+        | {
+            key: string;
+            label: string;
+            required: boolean;
+            help?: string;
+            /** @enum {string} */
+            type: 'text' | 'long_text' | 'number' | 'date' | 'yes_no';
+          }
+        | {
+            key: string;
+            label: string;
+            required: boolean;
+            help?: string;
+            /** @enum {string} */
+            type: 'choice';
+            options: string[];
+          }
+      )[];
+      archived?: boolean;
+    };
+    MatterFieldsDto_Output: {
+      /** Format: uuid */
+      matterId: string;
+      revision: number;
+      profile: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        archived: boolean;
+        version: {
+          /** Format: uuid */
+          id: string;
+          version: number;
+          fields: (
+            | {
+                key: string;
+                label: string;
+                required: boolean;
+                help?: string;
+                /** @enum {string} */
+                type: 'text' | 'long_text' | 'number' | 'date' | 'yes_no';
+              }
+            | {
+                key: string;
+                label: string;
+                required: boolean;
+                help?: string;
+                /** @enum {string} */
+                type: 'choice';
+                options: string[];
+              }
+          )[];
+          /** Format: date-time */
+          createdAt: string;
+        };
+      } | null;
+      values: {
+        [key: string]: string | number | boolean;
+      };
+      canEdit: boolean;
+    };
+    UpdateMatterFieldsDto: {
+      expectedRevision: number;
+      /** Format: uuid */
+      profileVersionId?: string;
+      values: {
+        [key: string]: (string | number | boolean) | null;
+      };
+    };
+    MatterFieldsResultDto_Output: {
+      fields: {
+        /** Format: uuid */
+        matterId: string;
+        revision: number;
+        profile: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          archived: boolean;
+          version: {
+            /** Format: uuid */
+            id: string;
+            version: number;
+            fields: (
+              | {
+                  key: string;
+                  label: string;
+                  required: boolean;
+                  help?: string;
+                  /** @enum {string} */
+                  type: 'text' | 'long_text' | 'number' | 'date' | 'yes_no';
+                }
+              | {
+                  key: string;
+                  label: string;
+                  required: boolean;
+                  help?: string;
+                  /** @enum {string} */
+                  type: 'choice';
+                  options: string[];
+                }
+            )[];
+            /** Format: date-time */
+            createdAt: string;
+          };
+        } | null;
+        values: {
+          [key: string]: string | number | boolean;
+        };
+        canEdit: boolean;
+      };
+      /** Format: uuid */
+      commandId: string;
     };
   };
   responses: never;
@@ -3386,6 +3778,350 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['MatterPartyResultDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PracticeProfileController_list: {
+    parameters: {
+      query?: {
+        status?: 'active' | 'archived';
+        afterName?: string;
+        afterId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PracticeProfileListDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PracticeProfileController_create: {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreatePracticeProfileDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PracticeProfileResultDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PracticeProfileController_read: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        profileId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PracticeProfileDetailDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  PracticeProfileController_revise: {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+      };
+      path: {
+        profileId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RevisePracticeProfileDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PracticeProfileResultDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  MatterFieldsController_read: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        matterId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MatterFieldsDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  MatterFieldsController_update: {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+      };
+      path: {
+        matterId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateMatterFieldsDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MatterFieldsResultDto_Output'];
         };
       };
       401: {

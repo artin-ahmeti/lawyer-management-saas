@@ -28,6 +28,10 @@ const MATTER_A = randomUUID(),
   MATTER_B = randomUUID();
 const CONTACT_A = randomUUID(),
   CONTACT_B = randomUUID();
+const PROFILE_A = randomUUID(),
+  PROFILE_B = randomUUID(),
+  VERSION_A = randomUUID(),
+  VERSION_B = randomUUID();
 
 async function signToken(claims: Record<string, unknown>): Promise<string> {
   return new SignJWT({ aud: 'authenticated', iss: `${SUPABASE_URL}/auth/v1`, ...claims })
@@ -73,6 +77,14 @@ beforeAll(async () => {
     (${FIRM_A}, ${USER_A}, 'owner'), (${FIRM_B}, ${USER_B}, 'owner')`;
   await sql`insert into public.practice_areas (firm_id, name) values
     (${FIRM_A}, 'Personal Injury'), (${FIRM_B}, 'Immigration')`;
+  // A profile and its current version are written together (deferred key).
+  await sql.begin(async (tx) => {
+    await tx`insert into public.practice_profiles(id,firm_id,name,created_by) values
+      (${PROFILE_A},${FIRM_A},'Deals',${USER_A}),(${PROFILE_B},${FIRM_B},'Deals',${USER_B})`;
+    await tx`insert into public.practice_profile_versions(id,firm_id,profile_id,version,fields,created_by) values
+      (${VERSION_A},${FIRM_A},${PROFILE_A},1,'[{"key":"entity_name","label":"Entity","type":"text","required":false}]'::jsonb,${USER_A}),
+      (${VERSION_B},${FIRM_B},${PROFILE_B},1,'[]'::jsonb,${USER_B})`;
+  });
   await sql`insert into public.matters(id,firm_id,title,created_by) values
     (${MATTER_A},${FIRM_A},'Granted engagement',${USER_A}),
     (${MATTER_RESTRICTED},${FIRM_A},'Restricted engagement',${USER_A}),
@@ -80,6 +92,8 @@ beforeAll(async () => {
   await sql`insert into public.matter_access(firm_id,matter_id,user_id,role,created_by) values
     (${FIRM_A},${MATTER_A},${USER_A},'manager',${USER_A}),
     (${FIRM_B},${MATTER_B},${USER_B},'manager',${USER_B})`;
+  await sql`update public.matters set profile_version_id=${VERSION_A},
+    field_values=jsonb_build_object('entity_name',title) where id in (${MATTER_A},${MATTER_RESTRICTED})`;
   await sql`insert into public.contacts(id,firm_id,kind,display_name,created_by) values
     (${CONTACT_A},${FIRM_A},'person','Firm A client',${USER_A}),
     (${CONTACT_B},${FIRM_B},'organization','Firm B client',${USER_B})`;
@@ -99,6 +113,12 @@ async function cleanup(): Promise<void> {
   await sql`delete from public.contacts where firm_id in (${FIRM_A}, ${FIRM_B})`;
   await sql`delete from public.matter_access where firm_id in (${FIRM_A}, ${FIRM_B})`;
   await sql`delete from public.matters where firm_id in (${FIRM_A}, ${FIRM_B})`;
+  // Profile history refuses deletion; fixtures are removed with triggers suspended.
+  await sql.begin(async (tx) => {
+    await tx`set local session_replication_role=replica`;
+    await tx`delete from public.practice_profile_versions where firm_id in (${FIRM_A}, ${FIRM_B})`;
+    await tx`delete from public.practice_profiles where firm_id in (${FIRM_A}, ${FIRM_B})`;
+  });
   await sql`delete from public.practice_areas where firm_id in (${FIRM_A}, ${FIRM_B})`;
   await sql`delete from public.firm_members where firm_id in (${FIRM_A}, ${FIRM_B})`;
   await sql`delete from public.firms where id in (${FIRM_A}, ${FIRM_B})`;
@@ -222,6 +242,63 @@ describe('cross-firm read isolation', () => {
       auth: { persistSession: false },
     });
     for (const table of ['contacts', 'matter_parties'])
+      expect((await anon.from(table).select('id')).error?.code).toBe('42501');
+  });
+  it('scopes practice profiles to the firm and matter field values to granted matters', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'readonly');
+    const profiles = await a.from('practice_profiles').select('id', { count: 'exact' });
+    expect(profiles.error).toBeNull();
+    expect(profiles.data).toEqual([{ id: PROFILE_A }]);
+    const versions = await a.from('practice_profile_versions').select('id', { count: 'exact' });
+    expect(versions.error).toBeNull();
+    expect(versions.data).toEqual([{ id: VERSION_A }]);
+    const values = await a.from('matters').select('id,field_values');
+    expect(values.error).toBeNull();
+    expect(values.data).toEqual([
+      { id: MATTER_A, field_values: { entity_name: 'Granted engagement' } },
+    ]);
+    const forged = await clientFor(USER_A, FIRM_B, 'owner');
+    for (const table of ['practice_profiles', 'practice_profile_versions']) {
+      const foreign = await forged.from(table).select('id', { count: 'exact' });
+      expect(foreign.error).toBeNull();
+      expect(foreign.count).toBe(0);
+    }
+    await sql`update firm_members set deleted_at=now() where firm_id=${FIRM_A} and user_id=${USER_A}`;
+    try {
+      for (const table of ['practice_profiles', 'practice_profile_versions']) {
+        const removed = await a.from(table).select('id', { count: 'exact' });
+        expect(removed.error).toBeNull();
+        expect(removed.count).toBe(0);
+      }
+    } finally {
+      await sql`update firm_members set deleted_at=null where firm_id=${FIRM_A} and user_id=${USER_A}`;
+    }
+  });
+  it('rejects direct profile, version and field-value writes and anonymous reads', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'owner');
+    const create = await a
+      .from('practice_profiles')
+      .insert({ firm_id: FIRM_A, name: 'Forbidden', created_by: USER_A });
+    expect(create.error?.code).toBe('42501');
+    const archive = await a
+      .from('practice_profiles')
+      .update({ archived_at: new Date().toISOString() })
+      .eq('id', PROFILE_A);
+    expect(archive.error?.code).toBe('42501');
+    const publish = await a.from('practice_profile_versions').insert({
+      firm_id: FIRM_A,
+      profile_id: PROFILE_A,
+      version: 2,
+      fields: [],
+      created_by: USER_A,
+    });
+    expect(publish.error?.code).toBe('42501');
+    const values = await a.from('matters').update({ field_values: {} }).eq('id', MATTER_A);
+    expect(values.error?.code).toBe('42501');
+    const anon = createClient(SUPABASE_URL, await signToken({ role: 'anon' }), {
+      auth: { persistSession: false },
+    });
+    for (const table of ['practice_profiles', 'practice_profile_versions'])
       expect((await anon.from(table).select('id')).error?.code).toBe('42501');
   });
   it('keeps invitation identities and membership writes behind the API for members and anonymous clients', async () => {
