@@ -9,6 +9,7 @@ import { JurisdictionSelect } from './JurisdictionSelect';
 import {
   forumChanges,
   forumKindLabel,
+  jurisdictionFilter,
   loadForumList,
   prepareForumCommand,
   submitForumCommand,
@@ -39,12 +40,20 @@ export function Forums({
     [jurisdiction, setJurisdiction] = useState(''),
     [cursor, setCursor] = useState<Cursor>(),
     [adding, setAdding] = useState(false),
-    [saved, setSaved] = useState('');
+    [saved, setSaved] = useState(''),
+    // A row with an open rename or an unconfirmed change: refetching would unmount it.
+    [held, setHeld] = useState<string>();
   const list = useQuery({
     ...live,
+    refetchOnWindowFocus: held ? false : 'always',
     queryKey: ['server-forums', context, 'list', status, jurisdiction, cursor],
     queryFn: ({ signal }) =>
-      loadForumList(client, firmId, { status, jurisdiction, ...cursor }, signal),
+      loadForumList(
+        client,
+        firmId,
+        { status, jurisdiction: jurisdictionFilter(jurisdiction), ...cursor },
+        signal,
+      ),
   });
   const data = !list.isFetching && !list.isError ? list.data : undefined;
   const denied = list.error instanceof ApiError && [401, 403].includes(list.error.status);
@@ -57,9 +66,16 @@ export function Forums({
     setStatus(next);
     setCursor(undefined);
   };
-  const changed = (message: string) => {
+  /** After a change, show the list that holds the result and return focus to the card. */
+  const changed = (message: string, showActive = false) => {
     setSaved(message);
-    if (cursor) setCursor(undefined);
+    setHeld(undefined);
+    document.getElementById('forums-heading')?.focus();
+    if (showActive && (status !== 'active' || jurisdiction || cursor)) {
+      setStatus('active');
+      setJurisdiction('');
+      setCursor(undefined);
+    } else if (cursor) setCursor(undefined);
     else void list.refetch();
   };
   return (
@@ -76,6 +92,7 @@ export function Forums({
         !adding && (
           <Button
             variant="primary"
+            disabled={!!held}
             onClick={() => {
               setSaved('');
               setAdding(true);
@@ -95,8 +112,7 @@ export function Forums({
             onCancel={() => setAdding(false)}
             onSaved={(forum) => {
               setAdding(false);
-              show('active');
-              changed(`${forum.name} added.`);
+              changed(`${forum.name} added.`, true);
             }}
           />
         )}
@@ -108,6 +124,7 @@ export function Forums({
                 key={s}
                 variant={status === s ? 'primary' : 'secondary'}
                 aria-pressed={status === s}
+                disabled={!!held}
                 onClick={() => show(s)}
               >
                 {s === 'active' ? 'Active' : 'Archived'}
@@ -118,6 +135,7 @@ export function Forums({
             <JurisdictionSelect
               labelledBy="forum-filter-label"
               value={jurisdiction}
+              disabled={!!held}
               placeholder="All jurisdictions"
               onChange={(code) => {
                 setJurisdiction(code);
@@ -160,15 +178,23 @@ export function Forums({
                       firmId={firmId}
                       forum={f}
                       canManage={data.canManage}
+                      locked={!!held && held !== f.id}
+                      onHold={(on) => setHeld((h) => (on ? f.id : h === f.id ? undefined : h))}
                       onChanged={changed}
                     />
                   ))}
                 </ul>
               )}
               <div className={styles.actions}>
-                {cursor && <Button onClick={() => setCursor(undefined)}>First forums</Button>}
+                {cursor && (
+                  <Button disabled={!!held} onClick={() => setCursor(undefined)}>
+                    First forums
+                  </Button>
+                )}
                 {data.nextCursor && (
-                  <Button onClick={() => setCursor(data.nextCursor!)}>Next forums</Button>
+                  <Button disabled={!!held} onClick={() => setCursor(data.nextCursor!)}>
+                    Next forums
+                  </Button>
                 )}
               </div>
             </>
@@ -179,18 +205,26 @@ export function Forums({
   );
 }
 
-/** Rename or archive one forum against the loaded revision; one intent per change. */
+/**
+ * Rename, archive or restore one forum against the loaded revision; one intent per change.
+ * While a rename is open or a change is unconfirmed, the row holds the list so a refetch or
+ * another row's change cannot unmount it.
+ */
 function ForumRow({
   client,
   firmId,
   forum,
   canManage,
+  locked,
+  onHold,
   onChanged,
 }: {
   client: ReturnType<typeof createApiClient>;
   firmId: string;
   forum: ForumRecord;
   canManage: boolean;
+  locked: boolean;
+  onHold: (held: boolean) => void;
   onChanged: (message: string) => void;
 }) {
   const [renaming, setRenaming] = useState(false),
@@ -210,9 +244,14 @@ function ForumRow({
         setError('Enter a name of up to 200 characters.');
         return;
       }
-      if (!changes) return setRenaming(false);
+      if (!changes) {
+        setRenaming(false);
+        onHold(false);
+        return;
+      }
       current = prepareForumCommand({ kind: 'update', forumId: forum.id, input: changes });
       setIntent(current);
+      onHold(true);
     }
     running.current = true;
     setBusy(true);
@@ -226,7 +265,10 @@ function ForumRow({
       );
     } catch (e) {
       // A name clash is recoverable: the next attempt is a new intent with another name.
-      if (e instanceof ApiError && e.code === 'FORUM_NAME_TAKEN') setIntent(undefined);
+      if (e instanceof ApiError && e.code === 'FORUM_NAME_TAKEN') {
+        setIntent(undefined);
+        if (!renaming) onHold(false);
+      }
       setError(
         e instanceof ApiError && e.code === 'FORUM_NAME_TAKEN'
           ? 'An active forum in this jurisdiction already uses this name.'
@@ -244,26 +286,30 @@ function ForumRow({
     <li className={`${styles.item} cl-stack cl-stack--sm`}>
       <div className={styles.row}>
         <div className={styles.body}>
-          <p className="cl-t-title-3">{forum.name}</p>
+          <p className="cl-t-title-3">
+            <bdi>{forum.name}</bdi>
+          </p>
           <p className="cl-muted">{label}</p>
         </div>
         <div className={styles.actions}>
           {forum.archived && <Pill tone="warning">Archived</Pill>}
           {canManage && !renaming && (
             <>
-              {!forum.archived && (
-                <Button
-                  variant="secondary"
-                  disabled={busy || !!intent}
-                  aria-label={`Rename ${forum.name}`}
-                  onClick={() => setRenaming(true)}
-                >
-                  Rename
-                </Button>
-              )}
+              {/* Archived forums can be renamed too, so one whose name was reused can return. */}
               <Button
                 variant="secondary"
-                disabled={busy}
+                disabled={busy || !!intent || locked}
+                aria-label={`Rename ${forum.name}`}
+                onClick={() => {
+                  setRenaming(true);
+                  onHold(true);
+                }}
+              >
+                Rename
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={busy || locked}
                 aria-label={`${forum.archived ? 'Restore' : 'Archive'} ${forum.name}`}
                 onClick={() => void run({ name: forum.name, archived: !forum.archived })}
               >
@@ -311,6 +357,7 @@ function ForumRow({
                 setIntent(undefined);
                 setName(forum.name);
                 setError('');
+                onHold(false);
               }}
             >
               Cancel

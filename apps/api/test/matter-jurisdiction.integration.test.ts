@@ -499,11 +499,18 @@ it('ends references for managers with an editing role and keeps them as history'
   const [audit] = await sql`select before,after from audit_logs
     where firm_id=${firm} and command_id=${ended.commandId}`;
   expect(audit).toEqual({
-    before: { referenceId: target.id, purpose: 'other', jurisdiction: 'NY', endedAt: null },
+    before: {
+      referenceId: target.id,
+      purpose: 'other',
+      jurisdiction: 'NY',
+      forumId: null,
+      endedAt: null,
+    },
     after: {
       referenceId: target.id,
       purpose: 'other',
       jurisdiction: 'NY',
+      forumId: null,
       endedAt: ended.reference.endedAt,
     },
   });
@@ -546,4 +553,20 @@ it('caps current references per matter', async () => {
   expect(over.status).toBe(409);
   expect(await code(over)).toBe('REFERENCE_LIMIT');
   expect((await references(matterB)).items).toHaveLength(50);
+});
+
+it('caps reference history per matter and answers with the canonical matter id', async () => {
+  const matterC = randomUUID();
+  await sql`insert into matters(id,firm_id,title,created_by) values (${matterC},${firm},'Long-running regulatory file',${users[0]!})`;
+  await sql`insert into matter_access(firm_id,matter_id,user_id,role,created_by) values (${firm},${matterC},${users[0]!},'manager',${users[0]!})`;
+  expect((await references(matterC.toUpperCase())).matterId).toBe(matterC);
+  await sql`insert into matter_jurisdictions(firm_id,matter_id,purpose,jurisdiction,docket_number,created_by)
+    select ${firm},${matterC},'agency','US','history-' || n,${users[0]!} from generate_series(1,500) n`;
+  await sql`update matter_jurisdictions set deleted_at=clock_timestamp() where matter_id=${matterC}`;
+  const over = await api('POST', `/matters/${matterC}/jurisdictions`, 0, {
+    purpose: 'governing_law',
+    jurisdiction: 'VT',
+  });
+  expect(over.status).toBe(409);
+  expect(await code(over)).toBe('REFERENCE_HISTORY_LIMIT');
 });

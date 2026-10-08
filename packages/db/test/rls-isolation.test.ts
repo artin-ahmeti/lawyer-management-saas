@@ -104,10 +104,11 @@ beforeAll(async () => {
     (${FIRM_A},${MATTER_A},${CONTACT_A},'client',${USER_A}),
     (${FIRM_A},${MATTER_RESTRICTED},${CONTACT_A},'client',${USER_A}),
     (${FIRM_B},${MATTER_B},${CONTACT_B},'client',${USER_B})`;
-  await sql`insert into public.forums(id,firm_id,name,kind,jurisdiction,archived_at,created_by) values
-    (${FORUM_A},${FIRM_A},'Superior Court','court','CA',null,${USER_A}),
-    (${FORUM_ARCHIVED},${FIRM_A},'Labor Board','agency','CA',now(),${USER_A}),
-    (${FORUM_B},${FIRM_B},'Superior Court','court','CA',null,${USER_B})`;
+  await sql`insert into public.forums(id,firm_id,name,kind,jurisdiction,created_by) values
+    (${FORUM_A},${FIRM_A},'Superior Court','court','CA',${USER_A}),
+    (${FORUM_ARCHIVED},${FIRM_A},'Labor Board','agency','CA',${USER_A}),
+    (${FORUM_B},${FIRM_B},'Superior Court','court','CA',${USER_B})`;
+  await sql`update public.forums set archived_at=now(),revision=2 where id=${FORUM_ARCHIVED}`;
   await sql`insert into public.matter_jurisdictions(firm_id,matter_id,purpose,jurisdiction,forum_id,docket_number,created_by) values
     (${FIRM_A},${MATTER_A},'venue','CA',${FORUM_A},'GRANTED-1',${USER_A}),
     (${FIRM_A},${MATTER_RESTRICTED},'venue','CA',${FORUM_A},'RESTRICTED-1',${USER_A}),
@@ -324,6 +325,10 @@ describe('cross-firm read isolation', () => {
     const forums = await a.from('forums').select('id', { count: 'exact' }).order('name');
     expect(forums.error).toBeNull();
     expect(forums.data).toEqual([{ id: FORUM_ARCHIVED }, { id: FORUM_A }]);
+    // Row-lock system columns would reveal when a walled matter used a forum.
+    for (const table of ['forums', 'matter_jurisdictions'])
+      expect((await a.from(table).select('id,xmax')).error?.code).toBe('42501');
+    expect((await a.from('forums').select('*')).error).toBeNull();
     const references = await a.from('matter_jurisdictions').select('matter_id,docket_number');
     expect(references.error).toBeNull();
     expect(references.data).toEqual([{ matter_id: MATTER_A, docket_number: 'GRANTED-1' }]);

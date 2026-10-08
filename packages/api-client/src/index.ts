@@ -92,12 +92,8 @@ export type UpdateMatterFields = NonNullable<
 export type MatterFieldsResult =
   paths['/matters/{matterId}/fields']['patch']['responses'][200]['content']['application/json'];
 export type ForumList = paths['/forums']['get']['responses'][200]['content']['application/json'];
-export type ForumListQuery = {
-  status?: 'active' | 'archived';
-  jurisdiction?: string;
-  afterName?: string;
-  afterId?: string;
-};
+/** The generated query, so the jurisdiction filter is the catalog enum, not any string. */
+export type ForumListQuery = NonNullable<paths['/forums']['get']['parameters']['query']>;
 export type CreateForum = NonNullable<
   paths['/forums']['post']['requestBody']
 >['content']['application/json'];

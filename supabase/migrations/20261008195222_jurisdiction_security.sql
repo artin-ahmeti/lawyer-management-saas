@@ -4,7 +4,12 @@ alter table public.forums force row level security;
 alter table public.matter_jurisdictions enable row level security;
 alter table public.matter_jurisdictions force row level security;
 revoke all on public.forums, public.matter_jurisdictions from public, anon, authenticated, service_role;
-grant select on public.forums, public.matter_jurisdictions to authenticated;
+-- Column grants, not table grants: PostgREST can select system columns such as xmax, whose row
+-- lock stamps would reveal when a walled matter used a firm-visible forum.
+grant select (id,firm_id,name,kind,jurisdiction,revision,archived_at,created_by,created_at,updated_at,deleted_at)
+  on public.forums to authenticated;
+grant select (id,firm_id,matter_id,purpose,jurisdiction,forum_id,docket_number,label,created_by,created_at,updated_at,deleted_at)
+  on public.matter_jurisdictions to authenticated;
 grant select, insert, update on public.forums, public.matter_jurisdictions to service_role;
 
 -- Forums are firm configuration: every live staff member of the selected firm reads them,
@@ -20,13 +25,23 @@ create trigger set_updated_at before update on public.forums
 create trigger set_updated_at before update on public.matter_jurisdictions
   for each row execute function app.set_updated_at();
 
--- An update cannot relocate a forum, change what kind of body it is or where it sits, or
--- rewrite who created it. Renaming and archiving are the only changes, and each advances the
--- revision by exactly one, so a reviewed edit can never be skipped silently.
+-- A forum starts active at revision 1, stamped now by a live member of its firm. An update
+-- cannot relocate it, change what kind of body it is or where it sits, or rewrite who created
+-- it. Renaming and archiving are the only changes, each advancing the revision by exactly one
+-- so a reviewed edit can never be skipped silently, and archiving is never post-dated.
 create function app.protect_forum_provenance()
 returns trigger language plpgsql set search_path='' as $$
 begin
-  if new.id is distinct from old.id or new.firm_id is distinct from old.firm_id
+  if tg_op='INSERT' then
+    if new.revision<>1 or new.archived_at is not null
+      or new.created_at not between now() and clock_timestamp()
+      or not exists(select 1 from public.firm_members fm where fm.firm_id=new.firm_id
+        and fm.user_id=new.created_by and fm.deleted_at is null) then
+      raise exception 'A forum starts active, now, by a firm member' using errcode='42501';
+    end if;
+    return new;
+  end if;
+  if new.archived_at > clock_timestamp() or new.id is distinct from old.id or new.firm_id is distinct from old.firm_id
     or new.kind is distinct from old.kind or new.jurisdiction is distinct from old.jurisdiction
     or new.revision <> old.revision + (case when new.name is distinct from old.name
       or new.archived_at is distinct from old.archived_at then 1 else 0 end)
@@ -37,17 +52,21 @@ begin
 end;
 $$;
 revoke all on function app.protect_forum_provenance() from public,anon,authenticated;
-create trigger protect_forum_provenance before update on public.forums
+create trigger protect_forum_provenance before insert or update on public.forums
   for each row execute function app.protect_forum_provenance();
 
--- A reference is history: it starts current, on a live matter, naming an active forum if any,
+-- A reference is history: it starts current, now, by a live member, on a live matter, naming an
+-- active forum if any,
 -- and may only be ended, once, between when it began and now.
 create function app.protect_matter_jurisdiction_history()
 returns trigger language plpgsql set search_path='' as $$
 begin
   if tg_op='INSERT' then
-    if new.deleted_at is not null or new.created_at > clock_timestamp() then
-      raise exception 'A matter jurisdiction reference starts current' using errcode='42501';
+    if new.deleted_at is not null or new.created_at not between now() and clock_timestamp()
+      or not exists(select 1 from public.firm_members fm where fm.firm_id=new.firm_id
+        and fm.user_id=new.created_by and fm.deleted_at is null) then
+      raise exception 'A matter jurisdiction reference starts current, now, by a firm member'
+        using errcode='42501';
     end if;
     if exists(select 1 from public.matters m where m.firm_id=new.firm_id and m.id=new.matter_id
         and m.deleted_at is not null)

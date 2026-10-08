@@ -128,3 +128,44 @@ describe('firm forums', () => {
     expect(forumListQuerySchema.safeParse({ jurisdiction: 'ZZ' }).success).toBe(false);
   });
 });
+
+describe('single-line text', () => {
+  it('refuses control, bidi and zero-width characters that spoof names or reorder a line', () => {
+    for (const bad of [
+      'Superior\u200B Court',
+      'Court \u202Etrohs',
+      'Line\nbreak',
+      'Bell\u0007',
+      'Iso\u2066late',
+      'Co\uFEFFurt',
+    ])
+      expect(
+        createForumSchema.safeParse({ name: bad, kind: 'court', jurisdiction: 'CA' }).success,
+      ).toBe(false);
+    expect(
+      addMatterJurisdictionSchema.safeParse({
+        purpose: 'venue',
+        jurisdiction: 'CA',
+        docketNumber: 'SECRET-\u202E1',
+      }).success,
+    ).toBe(false);
+    expect(
+      addMatterJurisdictionSchema.safeParse({
+        purpose: 'other',
+        jurisdiction: 'CA',
+        label: 'Seat\u200D',
+      }).success,
+    ).toBe(false);
+    // A leading byte-order mark is whitespace to trim, so nothing invisible is stored.
+    expect(
+      createForumSchema.parse({ name: '\uFEFFCourt', kind: 'court', jurisdiction: 'CA' }).name,
+    ).toBe('Court');
+    expect(
+      createForumSchema.safeParse({
+        name: 'Tribunal de Distrito \u2696\uFE0F',
+        kind: 'court',
+        jurisdiction: 'PR',
+      }).success,
+    ).toBe(true);
+  });
+});

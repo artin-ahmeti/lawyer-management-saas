@@ -5,6 +5,7 @@ import {
   endMatterJurisdictionSchema,
   forumListSchema,
   forumResultSchema,
+  jurisdictionCodeSchema,
   jurisdictionName,
   matterJurisdictionListSchema,
   matterJurisdictionResultSchema,
@@ -54,6 +55,10 @@ export function jurisdictionGroups() {
     { label: 'Territories', options: options('territory') },
   ];
 }
+
+/** A picker value as a list filter: empty means all jurisdictions; anything else must be a code. */
+export const jurisdictionFilter = (value: string) =>
+  value ? jurisdictionCodeSchema.parse(value) : undefined;
 
 export type ReferenceForm = {
   purpose: JurisdictionPurpose;
@@ -111,9 +116,10 @@ export async function loadMatterJurisdictions(
   const value = matterJurisdictionListSchema.parse(
     await client.matterJurisdictions(matterId, signal),
   );
+  const id = matterId.toLowerCase();
   if (
-    value.matterId !== matterId ||
-    value.items.some((r) => r.firmId !== firmId || r.matterId !== matterId)
+    value.matterId.toLowerCase() !== id ||
+    value.items.some((r) => r.firmId !== firmId || r.matterId !== id)
   )
     throw new Error('Unexpected matter jurisdiction record');
   return value;
@@ -181,7 +187,12 @@ export async function submitReferenceCommand(
       ? await client.addMatterJurisdiction(intent.matterId, intent.input, keys)
       : await client.endMatterJurisdiction(intent.matterId, intent.input, keys),
   );
-  if (value.reference.firmId !== firmId || value.reference.matterId !== intent.matterId)
+  if (
+    value.reference.firmId !== firmId ||
+    value.reference.matterId !== intent.matterId.toLowerCase() ||
+    (intent.kind === 'end' &&
+      (value.reference.id !== intent.input.referenceId.toLowerCase() || !value.reference.endedAt))
+  )
     throw new Error('Unexpected matter jurisdiction record');
   return value;
 }

@@ -109,7 +109,8 @@ export const matterJurisdictions = pgTable(
       columns: [t.firmId, t.forumId, t.jurisdiction],
       foreignColumns: [forums.firmId, forums.id, forums.jurisdiction],
     }),
-    // One current copy of an identical reference; docket and label are never empty strings.
+    // One current copy of an identical reference, ignoring letter case in docket and label
+    // (never empty strings, so coalescing to '' is unambiguous).
     uniqueIndex('matter_jurisdictions_current_uq')
       .on(
         t.firmId,
@@ -117,8 +118,8 @@ export const matterJurisdictions = pgTable(
         t.purpose,
         t.jurisdiction,
         sql`coalesce(${t.forumId},'00000000-0000-0000-0000-000000000000'::uuid)`,
-        sql`coalesce(${t.docketNumber},'')`,
-        sql`coalesce(${t.label},'')`,
+        sql`lower(coalesce(${t.docketNumber},''))`,
+        sql`lower(coalesce(${t.label},''))`,
       )
       .where(sql`${t.deletedAt} is null`),
     index('matter_jurisdictions_matter_idx').on(t.firmId, t.matterId, t.createdAt, t.id),

@@ -83,7 +83,17 @@ export const jurisdictionName = (code: JurisdictionCode) =>
   usJurisdictions.find((j) => j.code === code)!.name;
 
 export const forumKindSchema = z.enum(['court', 'agency', 'tribunal', 'other']);
-const forumName = storableText(z.string().trim().min(1).max(200));
+/**
+ * Names, dockets and labels are one line of display text: no control characters, bidi
+ * overrides or isolates (which reorder the rest of a rendered line) and no zero-width
+ * characters (which make lookalike names pass the uniqueness rule).
+ */
+const spoofing = /[\p{Cc}\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]/u;
+const singleLineText = (schema: z.ZodString) =>
+  storableText(schema).refine((v) => !spoofing.test(v), {
+    message: 'Contains control or invisible characters.',
+  });
+const forumName = singleLineText(z.string().trim().min(1).max(200));
 const revision = z.number().int().min(1).max(2_147_483_646);
 export const createForumSchema = z.strictObject({
   name: forumName,
@@ -134,13 +144,15 @@ export const forumResultSchema = z.strictObject({ forum: forumSchema, commandId:
 export const jurisdictionPurposeSchema = z.enum(['governing_law', 'venue', 'agency', 'other']);
 /** The most current references one matter may hold. */
 export const matterJurisdictionLimit = 50;
+/** All references a matter may ever hold, ended ones included, so history stays bounded. */
+export const matterJurisdictionHistoryLimit = 500;
 export const addMatterJurisdictionSchema = z
   .strictObject({
     purpose: jurisdictionPurposeSchema,
     jurisdiction: jurisdictionCodeSchema,
     forumId: uuidSchema.optional(),
-    docketNumber: storableText(z.string().trim().min(1).max(100)).optional(),
-    label: storableText(z.string().trim().min(1).max(80)).optional(),
+    docketNumber: singleLineText(z.string().trim().min(1).max(100)).optional(),
+    label: singleLineText(z.string().trim().min(1).max(80)).optional(),
   })
   .refine(
     (v) =>

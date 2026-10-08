@@ -50,6 +50,12 @@ export async function verifyJurisdictions({
         return !(named || el.labels?.length || el.getAttribute('aria-label'));
       }).length`);
   const count = async (query) => (await query)[0].n;
+  /** Returning to the window refetches live lists; open forms must keep what was typed. */
+  const returnToWindow = async () => {
+    // React Query listens for visibilitychange on window.
+    await evaluate(`window.dispatchEvent(new Event('visibilitychange')), true`);
+    await new Promise((r) => setTimeout(r, 800));
+  };
   /** Waits out a forum load, which keeps the add button disabled, then submits. */
   const addReference = async () => {
     await waitFor(
@@ -97,6 +103,20 @@ export async function verifyJurisdictions({
   await screenshot('04-forum-name-taken');
   await button('Cancel');
   const [sdny] = await sql`select id from forums where firm_id=${firm}`;
+  // An open rename survives a refetch on returning to the window.
+  await clickExpression(
+    `document.querySelector('button[aria-label="Rename U.S. District Court, S.D.N.Y."]')`,
+  );
+  await type(`input[aria-labelledby="forum-${sdny.id}-name"]`, 'Southern District of New York');
+  await returnToWindow();
+  assert.equal(
+    await evaluate(
+      `document.querySelector('input[aria-labelledby="forum-${sdny.id}-name"]')?.value`,
+    ),
+    'Southern District of New York',
+    'Typed rename survives a refetch',
+  );
+  await button('Cancel');
 
   // Matter: loading, a failed load with retry, then the empty state and the notice.
   let held;
@@ -168,12 +188,19 @@ export async function verifyJurisdictions({
   await choose(place, 'US');
   await choose(forumSelect, sdny.id);
   await type(docket, '1:26-cv-04410');
+  await returnToWindow();
+  assert.equal(
+    await evaluate(`document.querySelector(${JSON.stringify(docket)})?.value`),
+    '1:26-cv-04410',
+    'Typed docket survives returning to the window',
+  );
   await addReference();
   await waitFor(listed('No. 1:26-cv-04410'), 'federal venue');
   await choose(purpose, 'venue');
   await choose(place, 'NY');
   await waitFor(`!document.querySelector(${JSON.stringify(forumSelect)}).disabled`, 'NY forums');
   await button('New forum');
+  await waitFor(`document.activeElement?.id==='reference-forum-heading'`, 'inline forum focus');
   await type(
     'input[aria-labelledby="reference-forum-name-label"]',
     'Supreme Court of the State of New York, New York County',
@@ -211,10 +238,11 @@ export async function verifyJurisdictions({
   await waitFor(`!document.body.innerText.includes('already holds this reference')`, 'reset');
 
   // Ending keeps history and removes the reference from the current list.
-  await waitFor(
-    `Boolean(document.querySelector('button[aria-label^="End Agency"]'))`,
-    'list after start over',
-  );
+  // Start over refetches the list; click only once it has settled.
+  const settled = `Boolean(document.querySelector('button[aria-label^="End Agency"]')) && !document.querySelector('[aria-label="Loading jurisdictions"]')`;
+  await waitFor(settled, 'list after start over');
+  await new Promise((r) => setTimeout(r, 300));
+  await waitFor(settled, 'list still settled');
   await clickExpression(`document.querySelector('button[aria-label^="End Agency"]')`);
   await waitFor(`!document.body.innerText.includes('No. ADJ-123456')`, 'agency ended');
   assert.equal(
@@ -231,6 +259,7 @@ export async function verifyJurisdictions({
     `document.querySelector('button[aria-label="Archive U.S. District Court, S.D.N.Y."]')`,
   );
   await waitFor(hasText('U.S. District Court, S.D.N.Y. archived.'), 'forum archived');
+  await waitFor(`document.activeElement?.id==='forums-heading'`, 'focus after archive');
   await clickExpression(
     `[...document.querySelectorAll('[aria-label="Forum status"] button')].find(b => b.textContent.trim() === 'Archived')`,
   );

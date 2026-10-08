@@ -48,6 +48,9 @@ it('adds forums and matter jurisdiction references beside existing matters, guar
     await sql`insert into auth.users(id,email,email_confirmed_at) values (${user},'migration@jurisdiction.test',now())`;
     await sql`insert into firms(id,name) values (${firm},'Existing firm'),(${otherFirm},'Other firm')`;
     await sql`insert into firm_members(firm_id,user_id,role) values (${firm},${user},'owner')`;
+    const outsider = randomUUID();
+    await sql`insert into auth.users(id,email,email_confirmed_at) values (${outsider},'outsider@jurisdiction.test',now())`;
+    await sql`insert into firm_members(firm_id,user_id,role) values (${otherFirm},${outsider},'owner')`;
     await sql`insert into matters(id,firm_id,title,revision,created_by) values (${matter},${firm},'Existing advisory',3,${user})`;
     for (const file of slice) await apply(`migrations/${file}`);
     expect(await tables()).toBe(2);
@@ -63,7 +66,7 @@ it('adds forums and matter jurisdiction references beside existing matters, guar
 
     const forum = (jurisdiction: string, forumName: string, kind = 'court', firmId = firm) =>
       sql`insert into forums(firm_id,name,kind,jurisdiction,created_by)
-        values (${firmId},${forumName},${kind},${jurisdiction},${user}) returning id`;
+        values (${firmId},${forumName},${kind},${jurisdiction},${firmId === firm ? user : outsider}) returning id`;
     await expect(forum('XX', 'Unknown')).rejects.toMatchObject({ code: '23514' });
     await expect(forum('CA', 'Board', 'board')).rejects.toMatchObject({ code: '23514' });
     await expect(forum('CA', ' Padded ')).rejects.toMatchObject({ code: '23514' });
@@ -136,6 +139,28 @@ it('adds forums and matter jurisdiction references beside existing matters, guar
     await expect(
       sql`update matter_jurisdictions set deleted_at=null where id=${law!.id}`,
     ).rejects.toMatchObject({ code: '42501' });
+    // Inserts start fresh: revision 1, active, stamped now, by a live member of the firm.
+    for (const insert of [
+      sql`insert into forums(firm_id,name,kind,jurisdiction,created_by,archived_at) values (${firm},'Pre-archived','agency','TX',${user},now())`,
+      sql`insert into forums(firm_id,name,kind,jurisdiction,created_by,revision) values (${firm},'Pre-revised','agency','TX',${user},5)`,
+      sql`insert into forums(firm_id,name,kind,jurisdiction,created_by,created_at) values (${firm},'Backdated','agency','TX',${user},now() - interval '1 year')`,
+      sql`insert into forums(firm_id,name,kind,jurisdiction,created_by) values (${firm},'Outsider','agency','TX',${outsider})`,
+      sql`insert into matter_jurisdictions(firm_id,matter_id,purpose,jurisdiction,created_by) values (${firm},${matter},'agency','TX',${outsider})`,
+      sql`insert into matter_jurisdictions(firm_id,matter_id,purpose,jurisdiction,created_by,created_at) values (${firm},${matter},'agency','TX',${user},now() - interval '1 year')`,
+    ])
+      await expect(insert).rejects.toMatchObject({ code: '42501' });
+    await expect(
+      sql`update forums set archived_at=now() + interval '1 year',revision=revision+1 where id=${court!.id}`,
+    ).rejects.toMatchObject({ code: '42501' });
+    // Identical references differ only by letter case are duplicates.
+    await expect(
+      reference({
+        purpose: 'venue',
+        jurisdiction: 'US',
+        forumId: federal!.id,
+        docket: '1:26-CV-1',
+      }),
+    ).rejects.toMatchObject({ code: '23505' });
     // Times come from the database clock, and forum changes always advance the revision.
     await expect(
       sql`insert into matter_jurisdictions(firm_id,matter_id,purpose,jurisdiction,created_by,created_at)

@@ -3460,13 +3460,13 @@
               "nulls": "last"
             },
             {
-              "expression": "coalesce(\"docket_number\",'')",
+              "expression": "lower(coalesce(\"docket_number\",''))",
               "asc": true,
               "isExpression": true,
               "nulls": "last"
             },
             {
-              "expression": "coalesce(\"label\",'')",
+              "expression": "lower(coalesce(\"label\",''))",
               "asc": true,
               "isExpression": true,
               "nulls": "last"

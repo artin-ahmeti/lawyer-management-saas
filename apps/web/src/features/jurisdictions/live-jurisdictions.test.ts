@@ -172,3 +172,37 @@ it('retries one reference intent with the same keys', async () => {
     'Unexpected matter jurisdiction',
   );
 });
+
+it('compares identifiers as uuids, whatever their case in the route', async () => {
+  const matterJurisdictions = vi
+    .fn()
+    .mockResolvedValue({ matterId, items: [reference], canManage: true });
+  expect(
+    (await loadMatterJurisdictions({ matterJurisdictions }, firmId, matterId.toUpperCase())).items,
+  ).toEqual([reference]);
+});
+
+it('accepts an ending only for the reference it ended', async () => {
+  const intent = prepareReferenceCommand({
+    kind: 'end',
+    matterId,
+    input: { referenceId: reference.id },
+  });
+  const endMatterJurisdiction = vi.fn().mockResolvedValue({
+    reference: { ...reference, id: randomUUID(), endedAt: now },
+    commandId: randomUUID(),
+  });
+  const client = { addMatterJurisdiction: vi.fn(), endMatterJurisdiction };
+  await expect(submitReferenceCommand(client, intent, firmId)).rejects.toThrow(
+    'Unexpected matter jurisdiction',
+  );
+  endMatterJurisdiction.mockResolvedValue({ reference, commandId: randomUUID() });
+  await expect(submitReferenceCommand(client, intent, firmId)).rejects.toThrow(
+    'Unexpected matter jurisdiction',
+  );
+  endMatterJurisdiction.mockResolvedValue({
+    reference: { ...reference, endedAt: now },
+    commandId: randomUUID(),
+  });
+  expect((await submitReferenceCommand(client, intent, firmId)).reference.endedAt).toBe(now);
+});

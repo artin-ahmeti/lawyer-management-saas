@@ -1,6 +1,12 @@
 'use client';
 import { ApiError, type createApiClient } from '@lawfirm/api-client';
-import type { ForumKind, ForumRecord, JurisdictionPurpose } from '@lawfirm/core';
+import {
+  matterJurisdictionHistoryLimit,
+  matterJurisdictionLimit,
+  type ForumKind,
+  type ForumRecord,
+  type JurisdictionPurpose,
+} from '@lawfirm/core';
 import { Banner, Button, Field, Input } from '@lawfirm/ui-web';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
@@ -8,6 +14,7 @@ import { ForumForm } from './ForumForm';
 import { JurisdictionSelect } from './JurisdictionSelect';
 import {
   emptyReferenceForm,
+  jurisdictionFilter,
   loadForumList,
   prepareReferenceCommand,
   purposes,
@@ -34,7 +41,8 @@ const kindFor: Record<JurisdictionPurpose, ForumKind> = {
 };
 const messages: Record<string, string> = {
   REFERENCE_EXISTS: 'This matter already holds this reference.',
-  REFERENCE_LIMIT: 'This matter already holds 50 jurisdiction references. End one first.',
+  REFERENCE_LIMIT: `This matter already holds ${matterJurisdictionLimit} jurisdiction references. End one first.`,
+  REFERENCE_HISTORY_LIMIT: `This matter has recorded ${matterJurisdictionHistoryLimit} jurisdiction references. Contact your administrator.`,
   FORUM_ARCHIVED: 'That forum was archived. Choose an active forum.',
   FORUM_UNAVAILABLE: 'That forum is no longer available. Choose another.',
   FORUM_JURISDICTION_MISMATCH: 'That forum belongs to another jurisdiction.',
@@ -47,12 +55,15 @@ export function AddJurisdictionForm({
   firmId,
   matterId,
   onAdded,
+  onDirty,
 }: {
   client: ReturnType<typeof createApiClient>;
   context: string;
   firmId: string;
   matterId: string;
   onAdded: () => void;
+  /** True while there is typed input or an unconfirmed request, so the panel holds still. */
+  onDirty: (dirty: boolean) => void;
 }) {
   const [form, setForm] = useState<ReferenceForm>(emptyReferenceForm),
     [cursor, setCursor] = useState<Cursor>(),
@@ -70,6 +81,11 @@ export function AddJurisdictionForm({
       active.current = false;
     };
   }, []);
+  const dirty =
+    !!intent ||
+    creating ||
+    (Object.keys(form) as (keyof ReferenceForm)[]).some((k) => form[k] !== emptyReferenceForm[k]);
+  useEffect(() => onDirty(dirty), [dirty, onDirty]);
   const law = form.purpose === 'governing_law';
   const forums = useQuery({
     ...live,
@@ -79,7 +95,7 @@ export function AddJurisdictionForm({
       loadForumList(
         client,
         firmId,
-        { status: 'active', jurisdiction: form.jurisdiction, ...cursor },
+        { status: 'active', jurisdiction: jurisdictionFilter(form.jurisdiction), ...cursor },
         signal,
       ),
   });
@@ -93,6 +109,13 @@ export function AddJurisdictionForm({
     setCursor(next);
     if (form.forumId !== created?.id) set({ forumId: '' });
   };
+  /** After the inline forum form closes, focus returns to the forum picker it replaced. */
+  const refocus = () =>
+    requestAnimationFrame(() =>
+      (
+        document.querySelector('[aria-labelledby="reference-forum-label"]') as HTMLElement | null
+      )?.focus(),
+    );
   const reset = () => {
     setForm(emptyReferenceForm);
     setIntent(undefined);
@@ -147,11 +170,17 @@ export function AddJurisdictionForm({
         idPrefix="reference-forum"
         jurisdiction={form.jurisdiction}
         defaultKind={kindFor[form.purpose]}
-        onCancel={() => setCreating(false)}
+        onCancel={() => {
+          setCreating(false);
+          void forums.refetch();
+          refocus();
+        }}
+        onNameTaken={() => void forums.refetch()}
         onSaved={(forum) => {
           setCreated(forum);
           set({ forumId: forum.id });
           setCreating(false);
+          refocus();
         }}
       />
     );

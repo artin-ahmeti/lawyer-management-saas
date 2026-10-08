@@ -8,6 +8,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import {
+  matterJurisdictionHistoryLimit,
   matterJurisdictionLimit,
   matterJurisdictionListSchema,
   matterJurisdictionResultSchema,
@@ -143,7 +144,7 @@ export class MatterJurisdictionService {
         where r.firm_id=${scope.firmId} and r.matter_id=${matterId} and r.deleted_at is null
         order by r.created_at,r.id limit ${matterJurisdictionLimit}`;
       return matterJurisdictionListSchema.parse({
-        matterId,
+        matterId: matterId.toLowerCase(),
         items: rows.map(view),
         canManage: scope.canManage,
       });
@@ -186,13 +187,18 @@ export class MatterJurisdictionService {
               message: 'This forum belongs to another jurisdiction.',
             });
         }
-        const [current] = await tx<{ n: number }[]>`select count(*)::int as n
-          from matter_jurisdictions
-          where firm_id=${scope.firmId} and matter_id=${matterId} and deleted_at is null`;
-        if (current!.n >= matterJurisdictionLimit)
+        const [held] = await tx<{ current: number; total: number }[]>`select
+            count(*) filter (where deleted_at is null)::int as current,count(*)::int as total
+          from matter_jurisdictions where firm_id=${scope.firmId} and matter_id=${matterId}`;
+        if (held!.current >= matterJurisdictionLimit)
           throw conflict(
             'REFERENCE_LIMIT',
             `A matter holds at most ${matterJurisdictionLimit} current jurisdiction references.`,
+          );
+        if (held!.total >= matterJurisdictionHistoryLimit)
+          throw conflict(
+            'REFERENCE_HISTORY_LIMIT',
+            'This matter has reached its jurisdiction history limit. Contact your administrator.',
           );
         const commandId = randomUUID();
         const [inserted] = await tx<{ id: string }[]>`insert into matter_jurisdictions
@@ -263,6 +269,7 @@ export class MatterJurisdictionService {
         referenceId: current.id,
         purpose: current.purpose,
         jurisdiction: current.jurisdiction,
+        forumId: current.forum_id,
       };
       await this.record(
         tx,

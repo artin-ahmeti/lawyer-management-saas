@@ -29,6 +29,7 @@ export function ForumForm({
   defaultKind = 'court',
   onSaved,
   onCancel,
+  onNameTaken,
 }: {
   client: ReturnType<typeof createApiClient>;
   firmId: string;
@@ -37,6 +38,8 @@ export function ForumForm({
   defaultKind?: ForumKind;
   onSaved: (forum: ForumRecord) => void;
   onCancel: () => void;
+  /** The existing forum may be missing from a list loaded earlier; let the caller refresh it. */
+  onNameTaken?: () => void;
 }) {
   const [name, setName] = useState(''),
     [kind, setKind] = useState<ForumKind>(defaultKind),
@@ -49,10 +52,12 @@ export function ForumForm({
     running = useRef(false);
   useEffect(() => {
     active.current = true;
+    // The form replaces the control that opened it, so focus moves to its heading.
+    document.getElementById(`${idPrefix}-heading`)?.focus();
     return () => {
       active.current = false;
     };
-  }, []);
+  }, [idPrefix]);
   const submit = async () => {
     if (running.current || terminal) return;
     let current = intent;
@@ -82,6 +87,7 @@ export function ForumForm({
         setError(
           'An active forum in this jurisdiction already uses this name. Choose it from the list or use another name.',
         );
+        onNameTaken?.();
         return;
       }
       const final = e instanceof ApiError && [401, 403, 404, 409, 422].includes(e.status);
@@ -106,7 +112,7 @@ export function ForumForm({
         void submit();
       }}
     >
-      <h3 id={`${idPrefix}-heading`} className="cl-t-title-3">
+      <h3 id={`${idPrefix}-heading`} tabIndex={-1} className="cl-t-title-3">
         New forum{jurisdiction ? ` in ${jurisdictionName(jurisdiction as JurisdictionCode)}` : ''}
       </h3>
       <div className={styles.grid}>

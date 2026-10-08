@@ -3,7 +3,7 @@ import { ApiError, type createApiClient } from '@lawfirm/api-client';
 import type { MatterJurisdictionRecord } from '@lawfirm/core';
 import { Banner, Button, Card, Skeleton } from '@lawfirm/ui-web';
 import { useQuery } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 import { useLiveMatterClient } from '@/features/matters/use-live-matter-client';
 import { AddJurisdictionForm } from './AddJurisdictionForm';
 import {
@@ -25,12 +25,23 @@ const live = {
 };
 const title = (r: MatterJurisdictionRecord) =>
   r.label ? `${purposeLabel(r.purpose)} · ${r.label}` : purposeLabel(r.purpose);
+/** Each user-entered part is isolated, so right-to-left text cannot reorder the line. */
+const isolated = (parts: string[]) =>
+  parts.map((part, i) => (
+    <Fragment key={i}>
+      {i > 0 && ' · '}
+      <bdi>{part}</bdi>
+    </Fragment>
+  ));
 
 /** Jurisdiction references on one matter: readable with any grant, changed only by managers. */
 export function MatterJurisdictions({ id }: { id: string }) {
   const { client, context, firmId } = useLiveMatterClient();
+  // Typed input in the add form must not be hidden by a focus refetch.
+  const [dirty, setDirty] = useState(false);
   const references = useQuery({
     ...live,
+    refetchOnWindowFocus: dirty ? false : 'always',
     queryKey: ['server-matter-jurisdictions', context, id],
     enabled: !!firmId,
     queryFn: ({ signal }) => loadMatterJurisdictions(client, firmId!, id, signal),
@@ -79,9 +90,11 @@ export function MatterJurisdictions({ id }: { id: string }) {
               {data.items.map((r) => (
                 <li key={r.id} className={`${styles.item} ${styles.row}`}>
                   <div className={styles.body}>
-                    <p className="cl-t-title-3">{title(r)}</p>
+                    <p className="cl-t-title-3">
+                      {r.label ? isolated([purposeLabel(r.purpose), r.label]) : title(r)}
+                    </p>
                     <p className="cl-muted">
-                      {referenceDetails(r).join(' · ')} · since{' '}
+                      {isolated(referenceDetails(r))} · since{' '}
                       {new Date(r.createdAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -102,6 +115,7 @@ export function MatterJurisdictions({ id }: { id: string }) {
               firmId={firmId}
               matterId={id}
               onAdded={changed}
+              onDirty={setDirty}
             />
           </div>
         )}
