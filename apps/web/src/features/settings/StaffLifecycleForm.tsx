@@ -74,7 +74,7 @@ export function StaffLifecycleForm({
   const text = copy[mode],
     id = (field: string) => `staff-${mode}-${field}`;
   const [person, setPerson] = useState<Person>(),
-    [role, setRole] = useState<string>('attorney'),
+    [role, setRole] = useState(''),
     [reason, setReason] = useState(''),
     [confirmed, setConfirmed] = useState(false);
   const [intent, setIntent] = useState<StaffMembershipIntent>(),
@@ -99,7 +99,7 @@ export function StaffLifecycleForm({
     setIntent(undefined);
     setPerson(undefined);
     setReason('');
-    setRole('attorney');
+    setRole('');
     setConfirmed(false);
   };
   const submit = async () => {
@@ -173,7 +173,7 @@ export function StaffLifecycleForm({
           onChange={(e) => {
             const selected = people.find((p) => p.userId === e.target.value);
             setPerson(selected);
-            if (selected && assignableRoles.includes(selected.role)) setRole(selected.role);
+            setRole('');
           }}
           disabled={!!intent}
         >
@@ -184,7 +184,7 @@ export function StaffLifecycleForm({
               value={p.userId}
               disabled={
                 (mode === 'restore' && !p.isAvailable) ||
-                (mode === 'remove' && p.role === 'owner' && !assignableRoles.includes('owner'))
+                (p.role === 'owner' && !assignableRoles.includes('owner'))
               }
             >
               {p.name ?? p.email ?? 'Unnamed account'} · {p.role}
@@ -201,10 +201,12 @@ export function StaffLifecycleForm({
           <select
             id={id('role')}
             className={`cl-input ${styles.select}`}
+            required
             value={role}
             onChange={(e) => setRole(e.target.value)}
             disabled={!!intent}
           >
+            <option value="">Choose a role to review</option>
             {assignableRoles.map((value) => (
               <option key={value} value={value}>
                 {value}

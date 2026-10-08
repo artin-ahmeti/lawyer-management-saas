@@ -76,10 +76,27 @@ it('binds a restoration receipt to the reviewed role and an active membership', 
     status: 'active',
     commandId: randomUUID(),
   };
-  expect(await submitStaffMembershipChange(respond(result), firm, intent)).toEqual(result);
-  await expect(
-    submitStaffMembershipChange(respond({ ...result, role: 'owner' }), firm, intent),
-  ).rejects.toThrow('Unexpected staff receipt');
+  const urls: string[] = [];
+  const client = createApiClient({
+    baseUrl: 'http://example.test',
+    accessToken: async () => 'test',
+    fetch: async (url) => {
+      urls.push(String(url));
+      return Response.json(result);
+    },
+  });
+  expect(await submitStaffMembershipChange(client, firm, intent)).toEqual(result);
+  expect(urls).toEqual(['http://example.test/firms/current/staff/restorations']);
+  for (const mismatch of [
+    { role: 'owner' },
+    { firmId: randomUUID() },
+    { userId: randomUUID() },
+    { revision: 4 },
+    { status: 'removed' },
+  ])
+    await expect(
+      submitStaffMembershipChange(respond({ ...result, ...mismatch }), firm, intent),
+    ).rejects.toThrow('Unexpected staff receipt');
   expect(() =>
     prepareStaffMembershipChange({
       action: 'restore',

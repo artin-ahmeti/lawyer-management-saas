@@ -79,6 +79,7 @@ const grant = (id: string, userId: string, role: 'reader' | 'manager' | null, re
     reason: 'Assignment reviewed',
   });
 const count = async (query: postgres.PendingQuery<postgres.Row[]>) => (await query)[0]?.n as number;
+const code = async (response: Response) => ((await response.json()) as { code?: string }).code;
 const membership = async (i: number) =>
   (
     await sql`select role,revision,deleted_at is not null as removed from firm_members where firm_id=${firm} and user_id=${users[i]!}`
@@ -105,6 +106,7 @@ afterAll(async () => {
   await sql.begin(async (tx) => {
     await tx`set local session_replication_role=replica`;
     await tx`delete from audit_logs where firm_id in (${firm},${foreign})`;
+    await tx`delete from outbox_events where firm_id in (${firm},${foreign})`;
     await tx`delete from command_receipts where firm_id in (${firm},${foreign})`;
     await tx`delete from staff_invitations where firm_id in (${firm},${foreign})`;
     await tx`delete from matter_access where firm_id in (${firm},${foreign})`;
@@ -119,11 +121,14 @@ beforeEach(async () => {
   await sql.begin(async (tx) => {
     await tx`set local session_replication_role=replica`;
     await tx`delete from audit_logs where firm_id=${firm}`;
+    await tx`delete from outbox_events where firm_id=${firm}`;
     await tx`delete from command_receipts where firm_id=${firm}`;
     await tx`delete from staff_invitations where firm_id=${firm}`;
     await tx`delete from matter_access where firm_id=${firm}`;
     await tx`delete from matters where firm_id=${firm}`;
   });
+  // Members added by earlier tests would otherwise leak into later list assertions.
+  if (extraUsers.length) await sql`delete from firm_members where user_id in ${sql(extraUsers)}`;
   for (const [i, user] of users.entries()) {
     await sql`update auth.users set banned_until=null,deleted_at=null,email_confirmed_at=now() where id=${user}`;
     await sql`update auth.sessions set not_after=null where id=${sessions[i]!}`;
@@ -150,17 +155,58 @@ it('removes and restores a membership once under concurrent replay and rejects c
       sql`select count(*)::int as n from audit_logs where firm_id=${firm} and action='staff.membership.remove.v1'`,
     ),
   ).toBe(1);
-  expect((await remove(2, 1, 0, key, 'Another reason')).status).toBe(409);
-  const again = await remove(2, 2);
-  expect(again.status).toBe(409);
-  expect(await again.json()).toMatchObject({ code: 'STAFF_MEMBERSHIP_UNCHANGED' });
-  expect((await restore(2, 'paralegal', 1)).status).toBe(409);
-  const restored = await restore(2, 'paralegal', 2);
-  expect(restored.status).toBe(200);
-  expect(await restored.json()).toMatchObject({ role: 'paralegal', revision: 3, status: 'active' });
+  expect(await code(await remove(2, 1, 0, key, 'Another reason'))).toBe('IDEMPOTENCY_CONFLICT');
+  expect(await code(await remove(2, 2))).toBe('STAFF_MEMBERSHIP_UNCHANGED');
+  expect(await code(await restore(2, 'paralegal', 1))).toBe('STAFF_MEMBERSHIP_CHANGED');
+  const restoreKey = randomUUID();
+  const restorations = await Promise.all([
+    restore(2, 'paralegal', 2, 0, restoreKey),
+    restore(2, 'paralegal', 2, 0, restoreKey),
+  ]);
+  expect(restorations.map((r) => r.status)).toEqual([200, 200]);
+  const restored = await restorations[0]!.json();
+  expect(await restorations[1]!.json()).toEqual(restored);
+  expect(restored).toMatchObject({ role: 'paralegal', revision: 3, status: 'active' });
+  expect(await (await restore(2, 'paralegal', 2, 0, restoreKey)).json()).toEqual(restored);
+  expect(await code(await restore(2, 'billing', 2, 0, restoreKey))).toBe('IDEMPOTENCY_CONFLICT');
   expect(await membership(2)).toEqual({ role: 'paralegal', revision: 3, removed: false });
-  expect((await remove(2, 1, 0, key)).status).toBe(409);
-  expect((await restore(2, 'attorney', 3)).status).toBe(409);
+  expect(
+    await count(
+      sql`select count(*)::int as n from audit_logs where firm_id=${firm} and action='staff.membership.restore.v1'`,
+    ),
+  ).toBe(1);
+  expect(await code(await remove(2, 1, 0, key))).toBe('STAFF_MEMBERSHIP_CHANGED');
+  expect(await code(await restore(2, 'attorney', 3))).toBe('STAFF_MEMBERSHIP_UNCHANGED');
+  const history = staffMembershipHistorySchema.parse(
+    await (await call('/firms/current/staff/membership-history')).json(),
+  );
+  expect(history.items.map(({ id: _id, commandId: _c, createdAt: _t, ...entry }) => entry)).toEqual(
+    [
+      {
+        actorId: users[0],
+        userId: users[2],
+        change: 'restored',
+        previousRole: 'attorney',
+        role: 'paralegal',
+        revision: 3,
+        reason: 'Rejoined the firm',
+      },
+      {
+        actorId: users[0],
+        userId: users[2],
+        change: 'removed',
+        previousRole: 'attorney',
+        role: 'attorney',
+        revision: 2,
+        reason: 'Left the firm',
+      },
+    ],
+  );
+  // An out-of-band role change after restoration invalidates the restore receipt.
+  await sql`update firm_members set role='billing' where firm_id=${firm} and user_id=${users[2]!}`;
+  expect(await code(await restore(2, 'paralegal', 2, 0, restoreKey))).toBe(
+    'STAFF_MEMBERSHIP_CHANGED',
+  );
 });
 
 it('checks live capabilities and same-firm targets without trusting owner claims', async () => {
@@ -172,8 +218,32 @@ it('checks live capabilities and same-firm targets without trusting owner claims
     expect((await remove(1, 1, 2)).status).toBe(403);
     expect((await restore(3, 'attorney', 2, 2)).status).toBe(403);
   }
-  expect((await remove(4)).status).toBe(404);
-  expect((await restore(4, 'attorney', 1)).status).toBe(404);
+  for (const response of [await remove(4), await restore(4, 'attorney', 1)]) {
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({
+      code: 'STAFF_UNAVAILABLE',
+      message: 'This staff membership is unavailable.',
+      requestId: expect.any(String),
+    });
+  }
+  for (const path of ['removals', 'restorations'])
+    for (const key of [undefined, 'not-a-uuid']) {
+      const response = await fetch(`${base}/firms/current/staff/${path}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${await token(0)}`,
+          'Content-Type': 'application/json',
+          ...(key ? { 'Idempotency-Key': key } : {}),
+        },
+        body: JSON.stringify({
+          userId: users[3],
+          role: 'attorney',
+          expectedRevision: 2,
+          reason: 'x',
+        }),
+      });
+      expect(response.status).toBe(422);
+    }
   const foreignRead = await call('/firms/current/staff/removed', 4);
   expect(foreignRead.status).toBe(200);
   expect(JSON.stringify(await foreignRead.json())).not.toContain(users[3]!);
@@ -185,6 +255,12 @@ it('checks live capabilities and same-firm targets without trusting owner claims
   ] as const)
     expect((await call(`/firms/current/staff/${path}`, 0, body)).status).toBe(422);
   expect((await call('/firms/current/staff/removed?afterId=invalid')).status).toBe(422);
+  await sql`update firm_members set role='attorney' where firm_id=${firm} and user_id=${users[2]!}`;
+  const roles = async (i: number) =>
+    removedStaffListSchema.parse(await (await call('/firms/current/staff/removed', i)).json())
+      .assignableRoles;
+  expect(await roles(0)).toContain('owner');
+  expect(await roles(1)).not.toContain('owner');
 });
 
 it('requires current owner authority for owner targets and protects the last available owner', async () => {
@@ -192,9 +268,13 @@ it('requires current owner authority for owner targets and protects the last ava
   expect(denied.status).toBe(403);
   expect(await denied.json()).toMatchObject({ code: 'OWNER_REQUIRED' });
   expect((await remove(3)).status).toBe(200);
-  expect((await restore(3, 'owner', 2, 1)).status).toBe(403);
-  expect((await restore(3, 'attorney', 2, 1)).status).toBe(200);
-  await sql`update firm_members set role='owner' where firm_id=${firm} and user_id=${users[3]!}`;
+  // A removed owner stays an owner decision, whatever role an admin proposes.
+  expect(await code(await restore(3, 'owner', 2, 1))).toBe('OWNER_REQUIRED');
+  expect(await code(await restore(3, 'attorney', 2, 1))).toBe('OWNER_REQUIRED');
+  expect((await restore(3, 'attorney', 2)).status).toBe(200);
+  expect((await remove(3, 3, 1)).status).toBe(200);
+  expect((await restore(3, 'owner', 4)).status).toBe(200);
+  expect(await membership(3)).toEqual({ role: 'owner', revision: 5, removed: false });
   await sql`update auth.users set banned_until=now()+interval '1 hour' where id=${users[3]!}`;
   const last = await remove(0, 1, 0);
   expect(last.status).toBe(409);
@@ -206,10 +286,11 @@ it('refuses to strand a restricted matter without disclosing it, then revokes gr
   const id = await createMatter('Confidential merger advice');
   const denied = await remove(2);
   expect(denied.status).toBe(409);
-  const text = await denied.text();
-  expect(text).toContain('MATTER_HANDOFF_REQUIRED');
-  expect(text).not.toContain(id);
-  expect(text).not.toContain('Confidential merger advice');
+  expect(await denied.json()).toEqual({
+    code: 'MATTER_HANDOFF_REQUIRED',
+    message: 'An authorized matter manager must complete a handoff before this removal.',
+    requestId: expect.any(String),
+  });
   expect((await grant(id, users[1]!, 'manager', 1)).status).toBe(200);
   const removed = await remove(2, 1, 0, randomUUID(), 'Private personnel detail');
   expect(removed.status).toBe(200);
@@ -234,14 +315,101 @@ it('refuses to strand a restricted matter without disclosing it, then revokes gr
     reason: 'Staff membership removed.',
   });
   expect(JSON.stringify(history)).not.toContain('Private personnel detail');
+  expect(
+    Object.fromEntries(
+      (
+        await sql`select user_id,deleted_at is null as active from matter_access where matter_id=${id}`
+      ).map((r) => [r.user_id, r.active]),
+    ),
+  ).toEqual({ [users[1]!]: true, [users[2]!]: false });
+  expect(
+    await count(
+      sql`select count(*)::int as n from audit_logs where record_id=${id} and action='matter.access.change.v1' and after->>'reason'='Staff membership removed.'`,
+    ),
+  ).toBe(1);
+});
+
+it('counts only an available, active owner/admin/attorney co-manager as a handoff', async () => {
+  const id = await createMatter('Ineligible co-manager');
+  expect((await grant(id, users[1]!, 'manager', 1)).status).toBe(200);
+  const cases = [
+    sql`update auth.users set banned_until=now()+interval '1 hour' where id=${users[1]!}`,
+    sql`update auth.users set deleted_at=now() where id=${users[1]!}`,
+    sql`update auth.users set email_confirmed_at=null where id=${users[1]!}`,
+    sql`update firm_members set deleted_at=now() where firm_id=${firm} and user_id=${users[1]!}`,
+    sql`update firm_members set role='paralegal' where firm_id=${firm} and user_id=${users[1]!}`,
+  ];
+  for (const ineligible of cases) {
+    await ineligible;
+    expect(await code(await remove(2))).toBe('MATTER_HANDOFF_REQUIRED');
+    expect(await membership(2)).toEqual({ role: 'attorney', revision: 1, removed: false });
+    expect(
+      await count(
+        sql`select count(*)::int as n from matter_access where firm_id=${firm} and deleted_at is null`,
+      ),
+    ).toBe(2);
+    await sql`update auth.users set banned_until=null,deleted_at=null,email_confirmed_at=now() where id=${users[1]!}`;
+    await sql`update firm_members set role='admin',deleted_at=null where firm_id=${firm} and user_id=${users[1]!}`;
+  }
+});
+
+it('revokes every grant of the member across matters and leaves other firms untouched', async () => {
+  const managed = await createMatter('Managed matter');
+  expect((await grant(managed, users[1]!, 'manager', 1)).status).toBe(200);
+  const read = await createMatter('Read matter', 1);
+  expect((await grant(read, users[2]!, 'reader', 1, 1)).status).toBe(200);
+  const dual = randomUUID(),
+    foreignMatter = randomUUID();
+  extraUsers.push(dual);
+  await sql`insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values (${dual},${`${dual}@membership.test`},now(),'{}'::jsonb)`;
+  await sql`insert into firm_members(firm_id,user_id,role) values (${firm},${dual},'paralegal'),(${foreign},${dual},'paralegal')`;
+  try {
+    await sql`insert into matters(id,firm_id,title,created_by) values (${foreignMatter},${foreign},'Foreign matter',${users[4]!})`;
+    await sql`insert into matter_access(firm_id,matter_id,user_id,role,created_by) values (${foreign},${foreignMatter},${dual},'reader',${users[4]!})`;
+    expect((await grant(managed, dual, 'reader', 2, 2)).status).toBe(200);
+    expect((await remove(2)).status).toBe(200);
+    expect(
+      await sql`select m.id,m.access_revision as revision,a.deleted_at is null as active from matters m
+        join matter_access a on a.matter_id=m.id and a.user_id=${users[2]!} where m.id in ${sql([managed, read])} order by m.id`,
+    ).toEqual(
+      [
+        { id: managed, revision: 4, active: false },
+        { id: read, revision: 3, active: false },
+      ].sort((a, b) => a.id.localeCompare(b.id)),
+    );
+    expect(
+      await count(
+        sql`select count(*)::int as n from audit_logs where firm_id=${firm} and action='matter.access.change.v1' and after->>'userId'=${users[2]!} and after->'role'='null'::jsonb`,
+      ),
+    ).toBe(2);
+    expect(
+      (
+        await call('/firms/current/staff/removals', 0, {
+          userId: dual,
+          expectedRevision: 1,
+          reason: 'Left',
+        })
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await sql`select fm.deleted_at is null as active,a.deleted_at is null as granted,a.revision,m.access_revision
+        from firm_members fm join matter_access a on a.firm_id=fm.firm_id and a.user_id=fm.user_id
+        join matters m on m.id=a.matter_id where fm.firm_id=${foreign} and fm.user_id=${dual}`
+      )[0],
+    ).toEqual({ active: true, granted: true, revision: 1, access_revision: 1 });
+  } finally {
+    await sql.begin(async (tx) => {
+      await tx`set local session_replication_role=replica`;
+      await tx`delete from matter_access where firm_id=${foreign}`;
+      await tx`delete from matters where firm_id=${foreign}`;
+    });
+  }
 });
 
 it('ends a removed member’s API and database access and keeps grants revoked after restoration', async () => {
   const id = await createMatter('Walled litigation');
   expect((await grant(id, users[1]!, 'manager', 1)).status).toBe(200);
-  expect((await remove(2)).status).toBe(200);
-  expect((await call(`/matters/${id}`, 2)).status).toBe(403);
-  expect((await call('/matters', 2)).status).toBe(403);
   const rls = async () =>
     sql.begin(async (tx) => {
       await tx`set local role authenticated`;
@@ -251,27 +419,27 @@ it('ends a removed member’s API and database access and keeps grants revoked a
         grants: await count(tx`select count(*)::int as n from matter_access where matter_id=${id}`),
       };
     });
+  expect(await rls()).toEqual({ matters: 1, grants: 1 });
+  // Membership alone gates access, even while a grant is still active.
+  await sql`update firm_members set deleted_at=now() where firm_id=${firm} and user_id=${users[2]!}`;
+  expect(await rls()).toEqual({ matters: 0, grants: 0 });
+  expect((await call(`/matters/${id}`, 2)).status).toBe(403);
+  await sql`update firm_members set deleted_at=null where firm_id=${firm} and user_id=${users[2]!}`;
+  expect((await remove(2)).status).toBe(200);
+  expect((await call(`/matters/${id}`, 2)).status).toBe(403);
+  expect((await call('/matters', 2)).status).toBe(403);
   expect(await rls()).toEqual({ matters: 0, grants: 0 });
   expect((await restore(2, 'attorney', 2)).status).toBe(200);
   expect((await call(`/matters/${id}`, 2)).status).toBe(404);
+  const list = await call('/matters', 2);
+  expect(list.status).toBe(200);
+  expect(JSON.stringify(await list.json())).not.toContain(id);
   expect(await rls()).toEqual({ matters: 0, grants: 0 });
   expect(
     await count(
       sql`select count(*)::int as n from matter_access where firm_id=${firm} and user_id=${users[2]!} and deleted_at is null`,
     ),
   ).toBe(0);
-});
-
-it('revokes grants left active by a membership removed outside the command when restoring it', async () => {
-  const id = await createMatter('Legacy removal');
-  expect((await grant(id, users[1]!, 'manager', 1)).status).toBe(200);
-  await sql`update firm_members set deleted_at=now() where firm_id=${firm} and user_id=${users[2]!}`;
-  expect((await restore(2, 'attorney', 1)).status).toBe(200);
-  expect((await call(`/matters/${id}`, 2)).status).toBe(404);
-  const history = matterAccessHistorySchema.parse(
-    await (await call(`/matters/${id}/access-history`, 1)).json(),
-  );
-  expect(history.items[0]).toMatchObject({ userId: users[2], role: null });
 });
 
 it('removes an unavailable sole manager, whose grant could otherwise return if the ban lifts', async () => {
@@ -299,7 +467,7 @@ it('lists a removed account whose Auth email is missing', async () => {
   }
 });
 
-it('distinguishes a restoration that revokes leftover grants in matter history', async () => {
+it('revokes grants left active by an out-of-band removal when restoring, with distinct history', async () => {
   const id = await createMatter('Leftover grant');
   expect((await grant(id, users[1]!, 'manager', 1)).status).toBe(200);
   await sql`update firm_members set deleted_at=now() where firm_id=${firm} and user_id=${users[2]!}`;
@@ -307,7 +475,37 @@ it('distinguishes a restoration that revokes leftover grants in matter history',
   const history = matterAccessHistorySchema.parse(
     await (await call(`/matters/${id}/access-history`, 1)).json(),
   );
-  expect(history.items[0]?.reason).toBe('Staff membership restored without matter access.');
+  expect(history.items[0]).toMatchObject({
+    userId: users[2],
+    role: null,
+    reason: 'Staff membership restored without matter access.',
+  });
+  expect((await call(`/matters/${id}`, 2)).status).toBe(404);
+  expect((await sql`select access_revision from matters where id=${id}`)[0]?.access_revision).toBe(
+    3,
+  );
+});
+
+it('revokes the removed member’s pending invitations so restoration cannot revive them', async () => {
+  const prepared = await call('/firms/current/staff-invitations', 1, {
+    email: `invitee-${randomUUID()}@membership.test`,
+    role: 'paralegal',
+  });
+  expect(prepared.status).toBe(200);
+  const { invitationId } = (await prepared.json()) as { invitationId: string };
+  expect((await remove(1)).status).toBe(200);
+  const invitation = async () =>
+    (
+      await sql`select status,revision,revoked_by from staff_invitations where id=${invitationId}`
+    )[0];
+  expect(await invitation()).toEqual({ status: 'revoked', revision: 2, revoked_by: users[0] });
+  expect(
+    await count(
+      sql`select count(*)::int as n from audit_logs where record_id=${invitationId} and action='staff.invitation.revoke.v1'`,
+    ),
+  ).toBe(1);
+  expect((await restore(1, 'admin', 2)).status).toBe(200);
+  expect(await invitation()).toEqual({ status: 'revoked', revision: 2, revoked_by: users[0] });
 });
 
 it('keeps a removed member out through invitations, which require a membership review', async () => {
@@ -317,6 +515,15 @@ it('keeps a removed member out through invitations, which require a membership r
     role: 'attorney',
   });
   expect(invited.status).toBe(409);
+  expect(JSON.stringify(await invited.json())).toContain('requires a membership review');
+  const [pending] =
+    await sql`insert into staff_invitations(firm_id,email,role,created_by,expires_at)
+    values (${firm},${`${users[2]}@membership.test`},'attorney',${users[0]!},now()+interval '1 day') returning id`;
+  const accepted = await call(`/staff-invitations/${pending!.id}/acceptance`, 2, {
+    expectedRevision: 1,
+  });
+  expect(accepted.status).toBe(409);
+  expect(await membership(2)).toEqual({ role: 'attorney', revision: 2, removed: true });
 });
 
 it('commits self-removal once without authorizing replay or further administration', async () => {
@@ -334,9 +541,15 @@ it('revalidates actor session and recipient state before receipt replay', async 
   expect((await remove(2, 1, 0, key)).status).toBe(403);
   await sql`update auth.sessions set not_after=null where id=${sessions[0]!}`;
   await sql`update firm_members set deleted_at=null where firm_id=${firm} and user_id=${users[2]!}`;
-  expect((await remove(2, 1, 0, key)).status).toBe(409);
+  expect(await code(await remove(2, 1, 0, key))).toBe('STAFF_MEMBERSHIP_CHANGED');
   await sql`update firm_members set deleted_at=now() where firm_id=${firm} and user_id=${users[2]!}`;
-  expect((await remove(2, 1, 0, key)).status).toBe(200);
+  const replayed = await remove(2, 1, 0, key);
+  expect(replayed.status).toBe(200);
+  expect(((await replayed.json()) as { commandId: string }).commandId).toBe(
+    (
+      await sql`select command_id from audit_logs where firm_id=${firm} and action='staff.membership.remove.v1'`
+    )[0]?.command_id,
+  );
   await sql`update auth.users set banned_until=now()+interval '1 hour' where id=${users[2]!}`;
   const unavailable = await restore(2, 'attorney', 2);
   expect(unavailable.status).toBe(404);
@@ -396,6 +609,11 @@ it('rolls back membership, grants and receipt when audit insertion fails, then r
         sql`select count(*)::int as n from command_receipts where firm_id=${firm} and idempotency_key=${key}`,
       ),
     ).toBe(0);
+    expect(
+      await count(
+        sql`select count(*)::int as n from audit_logs where record_id=${id} and after->>'userId'=${users[2]!}`,
+      ),
+    ).toBe(0);
   } finally {
     await sql
       .unsafe(
@@ -413,6 +631,19 @@ it('rolls back membership, grants and receipt when audit insertion fails, then r
 });
 
 it('paginates removed staff and membership history without foreign records, omissions or duplicates', async () => {
+  const outsider = randomUUID();
+  extraUsers.push(outsider);
+  await sql`insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values (${outsider},${`${outsider}@membership.test`},now(),'{}'::jsonb)`;
+  await sql`insert into firm_members(firm_id,user_id,role) values (${foreign},${outsider},'paralegal')`;
+  expect(
+    (
+      await call('/firms/current/staff/removals', 4, {
+        userId: outsider,
+        expectedRevision: 1,
+        reason: 'Foreign departure',
+      })
+    ).status,
+  ).toBe(200);
   for (let i = 0; i < 21; i++) {
     const user = randomUUID();
     extraUsers.push(user);
@@ -435,7 +666,15 @@ it('paginates removed staff and membership history without foreign records, omis
   );
   expect(second.items).toHaveLength(1);
   expect(second.nextCursor).toBeNull();
-  expect(new Set([...first.items, ...second.items].map((x) => x.userId)).size).toBe(21);
+  const removedIds = [...first.items, ...second.items].map((x) => x.userId);
+  expect(new Set(removedIds).size).toBe(21);
+  expect(removedIds).not.toContain(outsider);
+  await sql`update auth.users set banned_until=now()+interval '1 hour' where id=${removedIds[0]!}`;
+  expect(
+    removedStaffListSchema
+      .parse(await (await call('/firms/current/staff/removed')).json())
+      .items.find((x) => x.userId === removedIds[0])?.isAvailable,
+  ).toBe(false);
   const h1 = staffMembershipHistorySchema.parse(
     await (await call('/firms/current/staff/membership-history')).json(),
   );
@@ -449,6 +688,7 @@ it('paginates removed staff and membership history without foreign records, omis
   expect(h2.items).toHaveLength(1);
   expect(h2.nextCursor).toBeNull();
   expect(new Set([...h1.items, ...h2.items].map((x) => x.id)).size).toBe(21);
+  expect([...h1.items, ...h2.items].map((x) => x.userId)).not.toContain(outsider);
   expect(
     (await call(`/firms/current/staff/membership-history?beforeId=${h1.nextCursor!.beforeId}`))
       .status,
@@ -466,8 +706,18 @@ it('publishes distinct removal and restoration contracts for generated consumers
   const removal = ref('/firms/current/staff/removals'),
     restoration = ref('/firms/current/staff/restorations');
   expect(new Set([removal, restoration, ref('/firms/current/staff/role-changes')]).size).toBe(3);
-  const schema = doc.components!.schemas![restoration.split('/').at(-1)!] as {
-    properties: Record<string, { enum?: string[] }>;
-  };
-  expect(schema.properties.role!.enum).toContain('owner');
+  const schema = (ref: string) =>
+    doc.components!.schemas![ref.split('/').at(-1)!] as {
+      properties: Record<string, { enum?: string[] }>;
+      required: string[];
+    };
+  expect(schema(restoration).properties.role!.enum).toContain('owner');
+  expect(schema(restoration).required).toContain('role');
+  expect(schema(removal).properties.role).toBeUndefined();
+  for (const path of ['/firms/current/staff/removals', '/firms/current/staff/restorations'])
+    expect(
+      (doc.paths[path]!.post!.parameters as { name: string; required?: boolean }[]).find(
+        (p) => p.name === 'Idempotency-Key',
+      )?.required,
+    ).toBe(true);
 });

@@ -8,6 +8,7 @@ import {
   type FirmRole,
   type RemoveStaffMembership,
   type RestoreStaffMembership,
+  type StaffMembershipResult,
   type StaffMembershipHistoryCursor,
 } from '@lawfirm/core';
 import type postgres from 'postgres';
@@ -36,7 +37,7 @@ const changed = () =>
     'Staff access changed after this request. Refresh and review the history.',
   );
 type Target = { id: string; role: FirmRole; revision: number; removed: boolean };
-type Outcome = { value: ReturnType<typeof staffMembershipResultSchema.parse>; replayed: boolean };
+type Outcome = { value: StaffMembershipResult; replayed: boolean };
 
 @Injectable()
 export class StaffMembershipService {
@@ -152,6 +153,15 @@ export class StaffMembershipService {
         requestId,
         removeCommand,
       );
+      // Pending invitations rest on the issuer's membership; a later restoration must
+      // not revive invitations nobody reviewed after the removal.
+      await tx`with i as (update staff_invitations set status='revoked',revision=revision+1,revoked_by=${actor.sub},revoked_at=clock_timestamp()
+          where firm_id=${firm.id} and created_by=${input.userId} and status='pending' and deleted_at is null returning id,role,revision)
+        insert into audit_logs(firm_id,created_by,command_id,request_id,action,record_type,record_id,before,after,created_at)
+        select ${firm.id},${actor.sub},${commandId},${requestId},'staff.invitation.revoke.v1','staff_invitation',i.id,
+          jsonb_build_object('status','pending','revision',i.revision-1),
+          jsonb_build_object('role',i.role,'status','revoked','revision',i.revision,'acceptedBy',null),clock_timestamp()
+        from i`;
       await tx`update firm_members set deleted_at=clock_timestamp(),revision=${revision} where id=${target.id}`;
       const value = staffMembershipResultSchema.parse({
         firmId: firm.id,
@@ -199,7 +209,8 @@ export class StaffMembershipService {
         return { value: replay, replayed: true };
       }
       if (!target) throw unavailable();
-      if (firm.role !== 'owner' && input.role === 'owner')
+      // As with removal and role changes, an owner membership stays an owner decision.
+      if (firm.role !== 'owner' && (target.role === 'owner' || input.role === 'owner'))
         throw new ForbiddenException({
           code: 'OWNER_REQUIRED',
           message: 'A current firm owner must review owner memberships.',

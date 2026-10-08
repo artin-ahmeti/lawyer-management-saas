@@ -18,7 +18,9 @@ it('adds the membership history index without touching memberships, and reverses
     sql.unsafe(await readFile(new URL(file, root), 'utf8')).simple();
   const indexed = async () =>
     (
-      await sql`select count(*)::int as n from pg_indexes where indexname='audit_logs_staff_membership_history_idx'`
+      await sql`select count(*)::int as n from pg_indexes where indexname='audit_logs_staff_membership_history_idx'
+        and indexdef like '%staff.membership.remove.v1%' and indexdef like '%staff.membership.restore.v1%'
+        and indexdef like '%firm_member%'`
     )[0]?.n;
   try {
     await sql
