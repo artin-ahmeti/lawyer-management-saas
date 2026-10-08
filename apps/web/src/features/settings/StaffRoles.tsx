@@ -53,7 +53,8 @@ export function StaffRoles({
   const changed = () => {
     setCursor(null);
     refresh();
-    void cache.invalidateQueries({ queryKey: ['server-firm', context, 'staff-access'] });
+    for (const key of ['staff-access', 'staff-lifecycle-current'])
+      void cache.invalidateQueries({ queryKey: ['server-firm', context, key] });
     onAccessChanged();
   };
   const label = (id: string) => {

@@ -22,6 +22,7 @@ import { StaffInvitations } from './StaffInvitations';
 import { InitialFirmSetup } from './InitialFirmSetup';
 import { WorkspaceMemberships } from './WorkspaceMemberships';
 import { StaffSessionActions } from './StaffSessionActions';
+import { StaffLifecycle } from './StaffLifecycle';
 import { StaffRoles } from './StaffRoles';
 
 const queryNamespace = ['server-firm'] as const;
@@ -130,7 +131,12 @@ function AuthorizedFirmSettings({ context, userId }: { context: string; userId: 
     void cache.invalidateQueries({ queryKey: [...queryNamespace, context], exact: true });
   }, [cache, context]);
   const denyAccess = useCallback(() => {
-    void cache.cancelQueries({ queryKey: [...queryNamespace, context] });
+    // Cancelling the session's firm reads also cancels the account's own workspace
+    // reads, which share the prefix; losing a firm changes those, so refetch them.
+    void cache.cancelQueries({ queryKey: [...queryNamespace, context] }).then(() => {
+      for (const key of ['memberships', 'active-selection'])
+        void cache.invalidateQueries({ queryKey: [...queryNamespace, context, key] });
+    });
     cache.setQueryData([...queryNamespace, context], {
       kind: 'denied',
       message: 'Your current firm membership could not be confirmed.',
@@ -237,6 +243,13 @@ function AuthorizedFirmSettings({ context, userId }: { context: string; userId: 
             client={client}
             context={context}
             firmId={firm.id}
+            onAccessChanged={recheckAccess}
+          />
+          <StaffLifecycle
+            client={client}
+            context={context}
+            firmId={firm.id}
+            userId={userId}
             onAccessChanged={recheckAccess}
           />
           <StaffInvitations client={client} context={context} userId={userId} firmId={firm.id} />

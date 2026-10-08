@@ -38,6 +38,7 @@ const selectionOnly = process.env.RUN_SELECTION_ONLY === '1';
 const matterOnly = process.env.RUN_MATTER_ONLY === '1';
 const matterAccessOnly = process.env.RUN_MATTER_ACCESS_ONLY === '1';
 const staffRolesOnly = process.env.RUN_STAFF_ROLES_ONLY === '1';
+const staffLifecycleOnly = process.env.RUN_STAFF_LIFECYCLE_ONLY === '1';
 const ownedUsers = [];
 let user;
 let socket;
@@ -324,7 +325,36 @@ try {
   assert(heldRead);
   await send('Fetch.continueRequest', { requestId: heldRead });
   await send('Fetch.disable');
-  if (staffRolesOnly) {
+  if (staffLifecycleOnly) {
+    await waitFor(valueIs('Browser firm LLP'), 'authenticated firm read');
+    await waitFor(
+      hasText('No removals or restorations recorded yet.'),
+      'membership controls ready',
+    );
+    const { verifyStaffLifecycle } = await import('./staff-lifecycle.browser.mjs');
+    await verifyStaffLifecycle({
+      sql,
+      firm,
+      user,
+      ownedUsers,
+      send,
+      evaluate,
+      waitFor,
+      button,
+      type,
+      hasText,
+      screenshot,
+      listeners,
+    });
+    assert.deepEqual(
+      errors,
+      [],
+      'No unexpected runtime exceptions during staff membership changes',
+    );
+    console.log(
+      'PASS: audited staff removal/restoration, handoff refusal without disclosure, response-loss recovery, revoked grants, stale review, self-removal, responsive and keyboard states.',
+    );
+  } else if (staffRolesOnly) {
     await waitFor(valueIs('Browser firm LLP'), 'authenticated firm read');
     await waitFor(hasText('No role changes recorded yet.'), 'role controls ready');
     const { verifyStaffRoles } = await import('./staff-roles.browser.mjs');
@@ -1110,7 +1140,7 @@ try {
     ),
   ]);
   for (const ownedFirm of ownedFirms) {
-    if (matterAccessOnly || staffRolesOnly) {
+    if (matterAccessOnly || staffRolesOnly || staffLifecycleOnly) {
       await sql.begin(async (tx) => {
         await tx`set local session_replication_role=replica`;
         await tx`delete from audit_logs where firm_id=${ownedFirm}`;

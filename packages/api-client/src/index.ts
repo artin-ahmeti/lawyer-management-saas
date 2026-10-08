@@ -10,6 +10,18 @@ export type ChangeStaffRole = NonNullable<
 >['content']['application/json'];
 export type ChangeStaffRoleResult =
   paths['/firms/current/staff/role-changes']['post']['responses'][200]['content']['application/json'];
+export type RemovedStaffList =
+  paths['/firms/current/staff/removed']['get']['responses'][200]['content']['application/json'];
+export type StaffMembershipHistory =
+  paths['/firms/current/staff/membership-history']['get']['responses'][200]['content']['application/json'];
+export type RemoveStaffMembership = NonNullable<
+  paths['/firms/current/staff/removals']['post']['requestBody']
+>['content']['application/json'];
+export type RestoreStaffMembership = NonNullable<
+  paths['/firms/current/staff/restorations']['post']['requestBody']
+>['content']['application/json'];
+export type StaffMembershipResult =
+  paths['/firms/current/staff/removals']['post']['responses'][200]['content']['application/json'];
 
 export type MatterAccessList =
   paths['/matters/{matterId}/access']['get']['responses'][200]['content']['application/json'];
@@ -154,6 +166,38 @@ export function createApiClient(options: ClientOptions) {
       }),
     changeStaffRole: (input: ChangeStaffRole, action: Action) =>
       request<ChangeStaffRoleResult>('/firms/current/staff/role-changes', {
+        method: 'POST',
+        signal: action.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': action.idempotencyKey,
+          'X-Request-Id': action.requestId,
+        },
+        body: JSON.stringify(input),
+      }),
+    removedStaff: (signal?: AbortSignal, afterId?: string) =>
+      request<RemovedStaffList>(
+        `/firms/current/staff/removed${afterId ? `?${new URLSearchParams({ afterId })}` : ''}`,
+        { signal },
+      ),
+    staffMembershipHistory: (signal?: AbortSignal, cursor: InvitationCursor = null) =>
+      request<StaffMembershipHistory>(
+        `/firms/current/staff/membership-history${invitationPage(cursor)}`,
+        { signal },
+      ),
+    removeStaffMembership: (input: RemoveStaffMembership, action: Action) =>
+      request<StaffMembershipResult>('/firms/current/staff/removals', {
+        method: 'POST',
+        signal: action.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': action.idempotencyKey,
+          'X-Request-Id': action.requestId,
+        },
+        body: JSON.stringify(input),
+      }),
+    restoreStaffMembership: (input: RestoreStaffMembership, action: Action) =>
+      request<StaffMembershipResult>('/firms/current/staff/restorations', {
         method: 'POST',
         signal: action.signal,
         headers: {

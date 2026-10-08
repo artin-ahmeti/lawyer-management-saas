@@ -29,7 +29,7 @@ Planned slice tasks:
        firm → membership → matter → grant locks, atomic membership/grant/matter-
        revision/receipt/audit effects, and removed-staff reads. Verify clean/upgrade/
        down/reapply and tenant isolation.
-3. [ ] Connect Settings remove/restore with reason, removed-staff list, history and
+3. [x] Connect Settings remove/restore with reason, removed-staff list, history and
        same-intent recovery; browser-verify loading, errors, denial, self-removal,
        keyboard and responsive states with evidence.
 4. [ ] Run the CI baseline and integration suites, run code-reviewer/security-auditor/

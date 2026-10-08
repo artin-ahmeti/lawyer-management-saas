@@ -238,6 +238,70 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/firms/current/staff/removed': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['StaffMembershipController_removed'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/firms/current/staff/membership-history': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['StaffMembershipController_history'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/firms/current/staff/removals': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['StaffMembershipController_remove'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/firms/current/staff/restorations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['StaffMembershipController_restore'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/firms/current/staff-invitations': {
     parameters: {
       query?: never;
@@ -464,6 +528,7 @@ export interface components {
         | 'firm.processing.request'
         | 'firm.staff.invitations.manage'
         | 'firm.staff.roles.manage'
+        | 'firm.staff.memberships.manage'
       )[];
     };
     ApiErrorDto: {
@@ -695,6 +760,82 @@ export interface components {
       revision: number;
       /** Format: uuid */
       commandId: string;
+    };
+    RemovedStaffListDto_Output: {
+      /** Format: uuid */
+      firmId: string;
+      assignableRoles: ('owner' | 'admin' | 'attorney' | 'paralegal' | 'billing' | 'readonly')[];
+      items: {
+        /** Format: uuid */
+        userId: string;
+        name: string | null;
+        email: string | null;
+        /** @enum {string} */
+        role: 'owner' | 'admin' | 'attorney' | 'paralegal' | 'billing' | 'readonly';
+        revision: number;
+        isAvailable: boolean;
+        /** Format: date-time */
+        removedAt: string;
+      }[];
+      /** Format: uuid */
+      nextCursor: string | null;
+    };
+    StaffMembershipHistoryDto_Output: {
+      /** Format: uuid */
+      firmId: string;
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        commandId: string;
+        /** Format: uuid */
+        actorId: string;
+        /** Format: uuid */
+        userId: string;
+        /** @enum {string} */
+        change: 'removed' | 'restored';
+        /** @enum {string} */
+        previousRole: 'owner' | 'admin' | 'attorney' | 'paralegal' | 'billing' | 'readonly';
+        /** @enum {string} */
+        role: 'owner' | 'admin' | 'attorney' | 'paralegal' | 'billing' | 'readonly';
+        revision: number;
+        reason: string;
+        /** Format: date-time */
+        createdAt: string;
+      }[];
+      nextCursor: {
+        /** Format: uuid */
+        beforeId: string;
+        /** Format: date-time */
+        beforeCreatedAt: string;
+      } | null;
+    };
+    StaffRemovalDto: {
+      /** Format: uuid */
+      userId: string;
+      expectedRevision: number;
+      reason: string;
+    };
+    StaffMembershipResultDto_Output: {
+      /** Format: uuid */
+      firmId: string;
+      /** Format: uuid */
+      userId: string;
+      /** @enum {string} */
+      role: 'owner' | 'admin' | 'attorney' | 'paralegal' | 'billing' | 'readonly';
+      revision: number;
+      /** @enum {string} */
+      status: 'removed' | 'active';
+      /** Format: uuid */
+      commandId: string;
+    };
+    StaffRestorationDto: {
+      /** Format: uuid */
+      userId: string;
+      expectedRevision: number;
+      reason: string;
+      /** @enum {string} */
+      role: 'owner' | 'admin' | 'attorney' | 'paralegal' | 'billing' | 'readonly';
     };
     StaffInvitationListDto_Output: {
       /** Format: uuid */
@@ -1624,6 +1765,245 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['StaffRoleResultDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  StaffMembershipController_removed: {
+    parameters: {
+      query?: {
+        afterId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RemovedStaffListDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  StaffMembershipController_history: {
+    parameters: {
+      query?: {
+        beforeId?: string;
+        beforeCreatedAt?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StaffMembershipHistoryDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  StaffMembershipController_remove: {
+    parameters: {
+      query?: never;
+      header: {
+        'X-Request-Id'?: string;
+        'Idempotency-Key': string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StaffRemovalDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StaffMembershipResultDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  StaffMembershipController_restore: {
+    parameters: {
+      query?: never;
+      header: {
+        'X-Request-Id'?: string;
+        'Idempotency-Key': string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StaffRestorationDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StaffMembershipResultDto_Output'];
         };
       };
       401: {
