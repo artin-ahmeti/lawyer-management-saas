@@ -350,11 +350,10 @@ it('keeps ended links readable as history for granted staff and removes everythi
 });
 
 it('replays a party ending only while the matter grant is current', async () => {
-  const parties = await parse(
-    matterPartyListSchema,
-    await api('GET', `/matters/${matterB}/parties`),
-  );
-  const target = parties.items.find((p) => p.contactId === beta)!;
+  // Matter B holds more than one page of parties after the paging case; look the link up directly.
+  const [target] = await sql<{ id: string }[]>`select id from matter_parties
+    where matter_id=${matterB} and contact_id=${beta} and deleted_at is null`;
+  if (!target) throw new Error('Beta must be a current party to matter B');
   const key = randomUUID();
   const first = await parse(
     matterPartyResultSchema,
