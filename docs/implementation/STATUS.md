@@ -1,43 +1,48 @@
 # Clepso implementation status
 
-Latest locally complete slice (October 8, 2026): **M01-S06b audited membership
-removal and restoration** ([record](slices/m01-s06b.md), D020).
-Prerequisites: M00 receipt/audit foundation, M01 live account/session/firm context
-(D016), S05b explicit matter grants (D018) and S06a role changes with firm-first
-policy locks (D019). PDF p12/p26/p39/p40.
-Outcome: current owners/admins remove a staff member or restore a removed one with
-a reason, reviewed membership revision, durable history and same-intent recovery.
-Removal ends the member's API and RLS access at once and, in the same transaction,
-revokes their matter grants and pending invitations; restoration needs an available
-account and an explicitly chosen role and returns no grants. Owner memberships stay
-an owner decision; the last available owner and the last eligible manager of any
-matter stay protected without disclosing restricted matters. Exceptional recovery
-is excluded. M01/M15 remain partial; first-five completion is 0/5.
+Current slice (planned October 8, 2026, awaiting approval): **M02-S02 universal
+contacts and matter-party links**. Latest locally complete slice: M01-S06b audited
+membership removal and restoration ([record](slices/m01-s06b.md), D020). M01-S06c
+exceptional recovery stays parked until the user records a recovery policy.
+Prerequisites: M00 receipt/audit foundation, M01 live firm/session context (D016),
+durable matters with explicit grants (D017/D018) and firm-first policy locks
+(D019/D020). PDF p13 (M02), p26 (M15), pp34–36 (practice/jurisdiction coverage).
+Outcome: live staff create and edit people and organizations in a firm contact
+directory, find them by bounded name search, and link one contact to several
+matters or several contacts to one matter with a party role (client, adverse party
+or other with a label). This meets the p13 scenario "one client in several matters
+and several clients in one matter" on durable records. Proposed boundary (D021,
+needs approval): directory entries are firm-visible to live staff, as later conflict
+search requires; matter-party links, and which matters a contact belongs to, follow
+matter grants, so a contact never reveals a walled matter, its title or a count.
+Contact create/edit: owner/admin/attorney/paralegal; billing/readonly read only.
+Linking needs a matter manager grant. Aliases, related entities, relationship
+status, representatives, configurable roles/profiles/fields, jurisdictions and
+conflict checking stay with later M02/M07/M18 slices. M02/M15 remain partial;
+first-five completion is 0/5.
 
-Verified slice tasks:
+Planned slice tasks:
 
-1. [x] Establish failing API/RLS outcome tests: remove/restore by current owner/admin,
-       owner-only owner targets, cross-firm/unknown/already-removed targets, replay
-       and concurrent review, last-owner and last-manager refusal without disclosure,
-       a removed member's live session losing API/RLS/matter reads, grants staying
-       revoked after restoration, and invitation acceptance still refusing.
-2. [x] Add reversible membership-removal provenance/history migration; strict shared
-       contracts and a keyed `firms/current/staff` membership-change command with
-       firm → membership → matter → grant locks, atomic membership/grant/matter-
-       revision/receipt/audit effects, and removed-staff reads. Verify clean/upgrade/
-       down/reapply and tenant isolation.
-3. [x] Connect Settings remove/restore with reason, removed-staff list, history and
-       same-intent recovery; browser-verify loading, errors, denial, self-removal,
-       keyboard and responsive states with evidence.
-4. [x] Run the CI baseline and integration suites, run code-reviewer/security-auditor/
-       test-engineer, record evidence, D020 and tracker, and name the next slice.
-
-The slice passes local functional checks. The dependency audit remains a release
-blocker. Next dependency-ready slice: **M01-S06c exceptional recovery** once the
-user records a policy for an unavailable last owner/manager and external Auth bans
-(a product decision; no owner bypass exists today). Without that decision, continue
-with **M02 universal contacts and matter-party links**, then configurable profiles.
-M22 stays deferred.
+1. [ ] Establish failing API/RLS outcome tests: create/edit person and organization
+       contacts by allowed roles and refusal for billing/readonly and other firms;
+       reviewed-revision edits, replay and concurrent review; bounded name search;
+       link/unlink party roles needing a manager grant; one contact in two matters
+       and two clients in one matter; an ungranted reader seeing neither the link,
+       the matter nor its count from contact reads; removed members losing access.
+2. [ ] Add reversible `contacts`/`matter_parties` migration (same-firm composite
+       keys, forced RLS, select-only client role, immutable provenance, link
+       history through soft end); strict shared contracts; keyed contact create
+       and edit, keyset contact list with name search, contact detail, and
+       matter party add/end/list with firm → matter → grant → contact locks and
+       atomic receipt/audit; regenerate the API client. Verify clean/upgrade/down/
+       reapply and tenant isolation.
+3. [ ] Replace the live Contacts preview with the durable directory (list, search,
+       create/edit with same-intent recovery, detail with authorized matters) and add
+       a Parties panel to live matter detail (add existing or new contact, role,
+       end link). Explicit preview keeps fixtures. Browser-verify loading, empty,
+       error, denial, keyboard and responsive states with evidence.
+4. [ ] Run the CI baseline and integration suites, run code-reviewer/security-auditor/
+       test-engineer, record evidence, D021 and tracker, and name the next slice.
 
 Product authority: `docs/product/clepso-implementation-blueprint.pdf`, v1.1,
 October 1, 2026. All 44 pages were read from that file for this audit on
