@@ -6,7 +6,12 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { SignJWT } from 'jose';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest';
-import { createMatterResultSchema } from '@lawfirm/core';
+import {
+  createMatterResultSchema,
+  matterAccessHistorySchema,
+  removedStaffListSchema,
+  staffMembershipHistorySchema,
+} from '@lawfirm/core';
 import { AppModule } from '../src/app.module';
 import { configureHttp } from '../src/common/http';
 
@@ -218,7 +223,9 @@ it('refuses to strand a restricted matter without disclosing it, then revokes gr
   expect((await sql`select access_revision from matters where id=${id}`)[0]?.access_revision).toBe(
     3,
   );
-  const history = await (await call(`/matters/${id}/access-history`, 1)).json();
+  const history = matterAccessHistorySchema.parse(
+    await (await call(`/matters/${id}/access-history`, 1)).json(),
+  );
   expect(history.items[0]).toMatchObject({
     userId: users[2],
     previousRole: 'manager',
@@ -261,8 +268,46 @@ it('revokes grants left active by a membership removed outside the command when 
   await sql`update firm_members set deleted_at=now() where firm_id=${firm} and user_id=${users[2]!}`;
   expect((await restore(2, 'attorney', 1)).status).toBe(200);
   expect((await call(`/matters/${id}`, 2)).status).toBe(404);
-  const history = await (await call(`/matters/${id}/access-history`, 1)).json();
+  const history = matterAccessHistorySchema.parse(
+    await (await call(`/matters/${id}/access-history`, 1)).json(),
+  );
   expect(history.items[0]).toMatchObject({ userId: users[2], role: null });
+});
+
+it('removes an unavailable sole manager, whose grant could otherwise return if the ban lifts', async () => {
+  const id = await createMatter('Unreachable manager');
+  await sql`update auth.users set banned_until=now()+interval '1 hour' where id=${users[2]!}`;
+  expect((await remove(2)).status).toBe(200);
+  expect(
+    await count(
+      sql`select count(*)::int as n from matter_access where matter_id=${id} and deleted_at is null`,
+    ),
+  ).toBe(0);
+});
+
+it('lists a removed account whose Auth email is missing', async () => {
+  expect((await remove(2)).status).toBe(200);
+  await sql`update auth.users set email=null where id=${users[2]!}`;
+  try {
+    const response = await call('/firms/current/staff/removed');
+    expect(response.status).toBe(200);
+    expect(removedStaffListSchema.parse(await response.json()).items).toEqual([
+      expect.objectContaining({ userId: users[2], email: null }),
+    ]);
+  } finally {
+    await sql`update auth.users set email=${`${users[2]}@membership.test`} where id=${users[2]!}`;
+  }
+});
+
+it('distinguishes a restoration that revokes leftover grants in matter history', async () => {
+  const id = await createMatter('Leftover grant');
+  expect((await grant(id, users[1]!, 'manager', 1)).status).toBe(200);
+  await sql`update firm_members set deleted_at=now() where firm_id=${firm} and user_id=${users[2]!}`;
+  expect((await restore(2, 'attorney', 1)).status).toBe(200);
+  const history = matterAccessHistorySchema.parse(
+    await (await call(`/matters/${id}/access-history`, 1)).json(),
+  );
+  expect(history.items[0]?.reason).toBe('Staff membership restored without matter access.');
 });
 
 it('keeps a removed member out through invitations, which require a membership review', async () => {
@@ -380,26 +425,32 @@ it('paginates removed staff and membership history without foreign records, omis
     });
     expect(response.status).toBe(200);
   }
-  const first = await (await call('/firms/current/staff/removed')).json();
+  const first = removedStaffListSchema.parse(
+    await (await call('/firms/current/staff/removed')).json(),
+  );
   expect(first.items).toHaveLength(20);
   expect(first.items[0]).toMatchObject({ role: 'paralegal', revision: 2, isAvailable: true });
-  const second = await (
-    await call(`/firms/current/staff/removed?afterId=${first.nextCursor}`)
-  ).json();
+  const second = removedStaffListSchema.parse(
+    await (await call(`/firms/current/staff/removed?afterId=${first.nextCursor}`)).json(),
+  );
   expect(second.items).toHaveLength(1);
   expect(second.nextCursor).toBeNull();
   expect(new Set([...first.items, ...second.items].map((x) => x.userId)).size).toBe(21);
-  const h1 = await (await call('/firms/current/staff/membership-history')).json();
+  const h1 = staffMembershipHistorySchema.parse(
+    await (await call('/firms/current/staff/membership-history')).json(),
+  );
   expect(h1.items).toHaveLength(20);
   expect(h1.items[0]).toMatchObject({ change: 'removed', role: 'paralegal', revision: 2 });
-  const h2 = await (
-    await call(`/firms/current/staff/membership-history?${new URLSearchParams(h1.nextCursor)}`)
-  ).json();
+  const h2 = staffMembershipHistorySchema.parse(
+    await (
+      await call(`/firms/current/staff/membership-history?${new URLSearchParams(h1.nextCursor!)}`)
+    ).json(),
+  );
   expect(h2.items).toHaveLength(1);
   expect(h2.nextCursor).toBeNull();
   expect(new Set([...h1.items, ...h2.items].map((x) => x.id)).size).toBe(21);
   expect(
-    (await call(`/firms/current/staff/membership-history?beforeId=${h1.nextCursor.beforeId}`))
+    (await call(`/firms/current/staff/membership-history?beforeId=${h1.nextCursor!.beforeId}`))
       .status,
   ).toBe(422);
 });

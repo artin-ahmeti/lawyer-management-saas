@@ -24,7 +24,7 @@ Planned slice tasks:
        and concurrent review, last-owner and last-manager refusal without disclosure,
        a removed member's live session losing API/RLS/matter reads, grants staying
        revoked after restoration, and invitation acceptance still refusing.
-2. [ ] Add reversible membership-removal provenance/history migration; strict shared
+2. [x] Add reversible membership-removal provenance/history migration; strict shared
        contracts and a keyed `firms/current/staff` membership-change command with
        firm → membership → matter → grant locks, atomic membership/grant/matter-
        revision/receipt/audit effects, and removed-staff reads. Verify clean/upgrade/

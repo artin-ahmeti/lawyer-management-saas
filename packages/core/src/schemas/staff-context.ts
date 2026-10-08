@@ -9,6 +9,7 @@ export const firmCapabilitySchema = z.enum([
   'firm.processing.request',
   'firm.staff.invitations.manage',
   'firm.staff.roles.manage',
+  'firm.staff.memberships.manage',
 ]);
 export const staffContextSchema = z
   .strictObject({

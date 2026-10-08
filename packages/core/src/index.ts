@@ -9,6 +9,7 @@ export * from './schemas/staff-firm-selection.js';
 export * from './schemas/matter.js';
 export * from './schemas/matter-access.js';
 export * from './schemas/staff-role.js';
+export * from './schemas/staff-lifecycle.js';
 export * from './schemas/firm-provision.js';
 export * from './schemas/staff-invitation.js';
 export * from './schemas/readiness.js';

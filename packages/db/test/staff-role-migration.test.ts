@@ -26,7 +26,7 @@ it('preserves existing memberships and reverses only unused role revisions', asy
       )
       .simple();
     const files = (await readdir(new URL('migrations/', root)))
-        .filter((f) => f.endsWith('.sql'))
+        .filter((f) => f.endsWith('.sql') && f <= '20261008004318_familiar_fat_cobra.sql')
         .sort(),
       cutoff = '20261008004318';
     for (const file of files.filter((f) => f < cutoff)) await apply(`migrations/${file}`);

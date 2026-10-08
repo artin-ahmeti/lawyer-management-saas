@@ -75,6 +75,7 @@ it('returns supported firm capabilities from the current database role instead o
               'firm.processing.request',
               'firm.staff.invitations.manage',
               'firm.staff.roles.manage',
+              'firm.staff.memberships.manage',
             ]
           : []),
       ],

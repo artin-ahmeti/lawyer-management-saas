@@ -79,6 +79,11 @@ export const auditLogs = pgTable(
     index('audit_logs_staff_role_history_idx')
       .on(t.firmId, t.createdAt, t.id)
       .where(sql`${t.action} = 'staff.role.change.v1' and ${t.recordType} = 'firm_member'`),
+    index('audit_logs_staff_membership_history_idx')
+      .on(t.firmId, t.createdAt, t.id)
+      .where(
+        sql`${t.action} in ('staff.membership.remove.v1', 'staff.membership.restore.v1') and ${t.recordType} = 'firm_member'`,
+      ),
   ],
 );
 

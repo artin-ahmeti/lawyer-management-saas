@@ -20,6 +20,7 @@ export function capabilitiesForRole(role: FirmRole): FirmCapability[] {
           'firm.processing.request',
           'firm.staff.invitations.manage',
           'firm.staff.roles.manage',
+          'firm.staff.memberships.manage',
         ] as const)
       : []),
   ];

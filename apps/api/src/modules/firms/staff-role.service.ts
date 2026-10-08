@@ -1,11 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import {
-  ConflictException,
-  ForbiddenException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
   changeStaffRoleResultSchema,
   firmRoleSchema,
@@ -21,10 +15,9 @@ import { confirmedAccount } from '../../common/auth/confirmed-account';
 import { hasFirmCapability, StaffAccessService } from '../../common/auth/staff-access.service';
 import { DatabaseService } from '../../common/database/database.module';
 import { log } from '../../common/http';
+import { canManageMatter, conflict, requireMatterHandoff, requireOtherOwner } from './staff-policy';
 
 const command = 'staff.role.change.v1';
-const canManageMatter = (role: FirmRole) => ['owner', 'admin', 'attorney'].includes(role);
-const conflict = (code: string, message: string) => new ConflictException({ code, message });
 
 @Injectable()
 export class StaffRoleService {
@@ -128,33 +121,20 @@ export class StaffRoleService {
         );
       if (target.role === input.role)
         throw conflict('STAFF_ROLE_UNCHANGED', 'This membership already has the requested role.');
-      if (target.role === 'owner' && input.role !== 'owner') {
-        const [other] =
-          await tx`select fm.id from firm_members fm join auth.users u on u.id=fm.user_id
-          where fm.firm_id=${firm.id} and fm.user_id<>${input.userId} and fm.role='owner' and fm.deleted_at is null
-          and u.deleted_at is null and u.email_confirmed_at is not null and (u.banned_until is null or u.banned_until <= clock_timestamp())
-          order by fm.user_id limit 1 for share of fm,u`;
-        if (!other)
-          throw conflict(
-            'LAST_FIRM_OWNER',
-            'Assign another available firm owner before changing this owner role.',
-          );
-      }
-      if (canManageMatter(target.role as FirmRole) && !canManageMatter(input.role)) {
-        const [stranded] =
-          await tx`select 1 from matter_access a join matters m on m.firm_id=a.firm_id and m.id=a.matter_id
-          where a.firm_id=${firm.id} and a.user_id=${input.userId} and a.role='manager' and a.deleted_at is null and m.deleted_at is null
-          and not exists(select 1 from matter_access b join firm_members fm on fm.firm_id=b.firm_id and fm.user_id=b.user_id
-            join auth.users u on u.id=b.user_id where b.firm_id=a.firm_id and b.matter_id=a.matter_id and b.user_id<>a.user_id
-            and b.role='manager' and b.deleted_at is null and fm.deleted_at is null and fm.role in ('owner','admin','attorney')
-            and u.deleted_at is null and u.email_confirmed_at is not null and (u.banned_until is null or u.banned_until <= clock_timestamp()) limit 1 for share of fm,u) limit 1`;
-        // Firm administration confers no right to names, IDs or counts of restricted matters.
-        if (stranded)
-          throw conflict(
-            'MATTER_HANDOFF_REQUIRED',
-            'An authorized matter manager must complete a handoff before this role change.',
-          );
-      }
+      if (target.role === 'owner' && input.role !== 'owner')
+        await requireOtherOwner(
+          tx,
+          firm.id,
+          input.userId,
+          'Assign another available firm owner before changing this owner role.',
+        );
+      if (canManageMatter(target.role as FirmRole) && !canManageMatter(input.role))
+        await requireMatterHandoff(
+          tx,
+          firm.id,
+          input.userId,
+          'An authorized matter manager must complete a handoff before this role change.',
+        );
       const commandId = randomUUID(),
         revision = Number(target.revision) + 1;
       const value = changeStaffRoleResultSchema.parse({

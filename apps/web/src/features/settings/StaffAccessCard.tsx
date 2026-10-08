@@ -22,6 +22,7 @@ const permissions: Record<FirmCapability, string> = {
   'firm.processing.request': 'Request reviewed profile checks',
   'firm.staff.invitations.manage': 'Prepare and revoke staff invitations',
   'firm.staff.roles.manage': 'Review staff and change eligible roles',
+  'firm.staff.memberships.manage': 'Remove and restore staff memberships',
 };
 export function StaffAccessCard({
   client,
