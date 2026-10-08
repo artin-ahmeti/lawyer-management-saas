@@ -36,6 +36,7 @@ const invitationOnly = process.env.RUN_INVITATION_ONLY === '1';
 const sessionOnly = process.env.RUN_SESSION_ONLY === '1';
 const selectionOnly = process.env.RUN_SELECTION_ONLY === '1';
 const matterOnly = process.env.RUN_MATTER_ONLY === '1';
+const contactOnly = process.env.RUN_CONTACT_ONLY === '1';
 const matterAccessOnly = process.env.RUN_MATTER_ACCESS_ONLY === '1';
 const staffRolesOnly = process.env.RUN_STAFF_ROLES_ONLY === '1';
 const staffLifecycleOnly = process.env.RUN_STAFF_LIFECYCLE_ONLY === '1';
@@ -397,6 +398,27 @@ try {
     assert.deepEqual(errors, [], 'No unexpected runtime exceptions during access management');
     console.log(
       'PASS: audited staff grants/revocation, lost-response recovery, last manager, live roles, protected reads, responsive and keyboard/accessibility states.',
+    );
+  } else if (contactOnly) {
+    await waitFor(valueIs('Browser firm LLP'), 'authenticated firm read');
+    const { verifyContacts } = await import('./contact.browser.mjs');
+    await verifyContacts({
+      sql,
+      firm,
+      user,
+      send,
+      evaluate,
+      waitFor,
+      button,
+      type,
+      hasText,
+      screenshot,
+      listeners,
+      clickExpression,
+    });
+    assert.deepEqual(errors, [], 'No unexpected runtime exceptions during contact flow');
+    console.log(
+      'PASS: firm directory, response-loss replay, stale edit refusal, literal search, two clients on one matter, walled contact matters, link ending, live role/membership, responsive and keyboard/accessibility states.',
     );
   } else if (matterOnly) {
     await waitFor(valueIs('Browser firm LLP'), 'authenticated firm read');
@@ -1140,13 +1162,15 @@ try {
     ),
   ]);
   for (const ownedFirm of ownedFirms) {
-    if (matterAccessOnly || staffRolesOnly || staffLifecycleOnly) {
+    if (matterAccessOnly || staffRolesOnly || staffLifecycleOnly || contactOnly) {
       await sql.begin(async (tx) => {
         await tx`set local session_replication_role=replica`;
         await tx`delete from audit_logs where firm_id=${ownedFirm}`;
       });
     }
     for (const table of [
+      'matter_parties',
+      'contacts',
       'matter_access',
       'matters',
       'staff_session_contexts',

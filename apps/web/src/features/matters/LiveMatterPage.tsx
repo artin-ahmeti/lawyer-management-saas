@@ -9,6 +9,7 @@ import { loadMatter } from './live-matters';
 import { useLiveMatterClient } from './use-live-matter-client';
 import styles from './LiveMatters.module.css';
 import { MatterStaffAccess } from './MatterStaffAccess';
+import { MatterParties } from '@/features/contacts/MatterParties';
 
 export function LiveMatterPage({ id }: { id: string }) {
   const { client, context, firmId } = useLiveMatterClient(),
@@ -89,8 +90,9 @@ export function LiveMatterPage({ id }: { id: string }) {
             <Card
               className={styles.card}
               title={<h2 className="cl-t-title-2">Matter workspace</h2>}
-              subtitle="People, practice profiles, documents, tasks and billing will become available as those services are connected."
+              subtitle="Practice profiles, documents, tasks and billing will become available as those services are connected."
             />
+            <MatterParties key={id} id={id} />
           </>
         )
       )}

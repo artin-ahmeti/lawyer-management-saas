@@ -36,7 +36,7 @@ Planned slice tasks:
        matter party add/end/list with firm → matter → grant → contact locks and
        atomic receipt/audit; regenerate the API client. Verify clean/upgrade/down/
        reapply and tenant isolation.
-3. [ ] Replace the live Contacts preview with the durable directory (list, search,
+3. [x] Replace the live Contacts preview with the durable directory (list, search,
        create/edit with same-intent recovery, detail with authorized matters) and add
        a Parties panel to live matter detail (add existing or new contact, role,
        end link). Explicit preview keeps fixtures. Browser-verify loading, empty,
