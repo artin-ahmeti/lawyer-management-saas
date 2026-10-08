@@ -1,7 +1,7 @@
 # Clepso implementation status
 
-Current slice (planned October 8, 2026, awaiting approval): **M01-S06b audited
-membership removal and restoration**. Latest locally complete slice: M01-S06a
+Current slice (approved October 8, 2026): **M01-S06b audited membership
+removal and restoration**. Latest locally complete slice: M01-S06a
 audited staff role changes ([record](slices/m01-s06a.md)).
 Prerequisites: M00 receipt/audit foundation, M01 live account/session/firm context
 (D016), S05b explicit matter grants (D018) and S06a role changes with firm-first
@@ -19,7 +19,7 @@ product decision as M01-S06c. M01/M15 remain partial; first-five completion is 0
 
 Planned slice tasks:
 
-1. [ ] Establish failing API/RLS outcome tests: remove/restore by current owner/admin,
+1. [x] Establish failing API/RLS outcome tests: remove/restore by current owner/admin,
        owner-only owner targets, cross-firm/unknown/already-removed targets, replay
        and concurrent review, last-owner and last-manager refusal without disclosure,
        a removed member's live session losing API/RLS/matter reads, grants staying
