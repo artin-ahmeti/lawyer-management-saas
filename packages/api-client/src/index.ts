@@ -42,6 +42,31 @@ export type CreateMatter = NonNullable<
 >['content']['application/json'];
 export type CreateMatterResult =
   paths['/matters']['post']['responses'][201]['content']['application/json'];
+export type ContactList =
+  paths['/contacts']['get']['responses'][200]['content']['application/json'];
+export type ContactListQuery = { q?: string; afterName?: string; afterId?: string };
+export type ContactDetail =
+  paths['/contacts/{contactId}']['get']['responses'][200]['content']['application/json'];
+export type ContactMatterList =
+  paths['/contacts/{contactId}/matters']['get']['responses'][200]['content']['application/json'];
+export type CreateContact = NonNullable<
+  paths['/contacts']['post']['requestBody']
+>['content']['application/json'];
+export type UpdateContact = NonNullable<
+  paths['/contacts/{contactId}']['patch']['requestBody']
+>['content']['application/json'];
+export type ContactResult =
+  paths['/contacts']['post']['responses'][201]['content']['application/json'];
+export type MatterPartyList =
+  paths['/matters/{matterId}/parties']['get']['responses'][200]['content']['application/json'];
+export type AddMatterParty = NonNullable<
+  paths['/matters/{matterId}/parties']['post']['requestBody']
+>['content']['application/json'];
+export type EndMatterParty = NonNullable<
+  paths['/matters/{matterId}/party-endings']['post']['requestBody']
+>['content']['application/json'];
+export type MatterPartyResult =
+  paths['/matters/{matterId}/parties']['post']['responses'][201]['content']['application/json'];
 export type StaffInvitationList =
   paths['/firms/current/staff-invitations']['get']['responses'][200]['content']['application/json'];
 export type ReceivedInvitationList =
@@ -154,6 +179,17 @@ export function createApiClient(options: ClientOptions) {
       },
       body: JSON.stringify(input),
     });
+  const keyed = <T>(path: string, method: 'POST' | 'PATCH', input: unknown, action: Action) =>
+    request<T>(path, {
+      method,
+      signal: action.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': action.idempotencyKey,
+        'X-Request-Id': action.requestId,
+      },
+      body: JSON.stringify(input),
+    });
   return {
     firmStaff: (signal?: AbortSignal, afterId?: string) =>
       request<FirmStaffList>(
@@ -250,6 +286,37 @@ export function createApiClient(options: ClientOptions) {
         },
         body: JSON.stringify(input),
       }),
+    contacts: (query: ContactListQuery = {}, signal?: AbortSignal) => {
+      const params = new URLSearchParams(
+        Object.entries(query).filter((entry): entry is [string, string] => Boolean(entry[1])),
+      );
+      return request<ContactList>(`/contacts${params.size ? `?${params}` : ''}`, { signal });
+    },
+    contact: (id: string, signal?: AbortSignal) =>
+      request<ContactDetail>(`/contacts/${encodeURIComponent(id)}`, { signal }),
+    contactMatters: (id: string, signal?: AbortSignal, afterId?: string) =>
+      request<ContactMatterList>(
+        `/contacts/${encodeURIComponent(id)}/matters${afterId ? `?${new URLSearchParams({ afterId })}` : ''}`,
+        { signal },
+      ),
+    createContact: (input: CreateContact, action: Action) =>
+      keyed<ContactResult>('/contacts', 'POST', input, action),
+    updateContact: (id: string, input: UpdateContact, action: Action) =>
+      keyed<ContactResult>(`/contacts/${encodeURIComponent(id)}`, 'PATCH', input, action),
+    matterParties: (id: string, signal?: AbortSignal, afterId?: string) =>
+      request<MatterPartyList>(
+        `/matters/${encodeURIComponent(id)}/parties${afterId ? `?${new URLSearchParams({ afterId })}` : ''}`,
+        { signal },
+      ),
+    addMatterParty: (id: string, input: AddMatterParty, action: Action) =>
+      keyed<MatterPartyResult>(`/matters/${encodeURIComponent(id)}/parties`, 'POST', input, action),
+    endMatterParty: (id: string, input: EndMatterParty, action: Action) =>
+      keyed<MatterPartyResult>(
+        `/matters/${encodeURIComponent(id)}/party-endings`,
+        'POST',
+        input,
+        action,
+      ),
     activeFirmSelection: (signal?: AbortSignal) =>
       request<ActiveFirmSelection>('/auth/active-firm', { signal }),
     selectStaffFirm: (input: SelectStaffFirm, action: Action) =>

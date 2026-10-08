@@ -462,6 +462,86 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/contacts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ContactController_list'];
+    put?: never;
+    post: operations['ContactController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/contacts/{contactId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ContactController_read'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['ContactController_update'];
+    trace?: never;
+  };
+  '/contacts/{contactId}/matters': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ContactController_matters'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/matters/{matterId}/parties': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['MatterPartyController_list'];
+    put?: never;
+    post: operations['MatterPartyController_add'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/matters/{matterId}/party-endings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['MatterPartyController_end'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1058,6 +1138,165 @@ export interface components {
       revision: number;
       /** Format: uuid */
       commandId: string;
+    };
+    ContactListDto_Output: {
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        firmId: string;
+        /** @enum {string} */
+        kind: 'person' | 'organization';
+        displayName: string;
+        email: string | null;
+        phone: string | null;
+        revision: number;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+      }[];
+      nextCursor: {
+        afterName: string;
+        /** Format: uuid */
+        afterId: string;
+      } | null;
+      canEdit: boolean;
+    };
+    ContactDetailDto_Output: {
+      contact: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        firmId: string;
+        /** @enum {string} */
+        kind: 'person' | 'organization';
+        displayName: string;
+        email: string | null;
+        phone: string | null;
+        revision: number;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+      };
+      canEdit: boolean;
+    };
+    ContactMatterListDto_Output: {
+      /** Format: uuid */
+      contactId: string;
+      items: {
+        /** Format: uuid */
+        partyId: string;
+        /** Format: uuid */
+        matterId: string;
+        title: string;
+        reference: string | null;
+        /** @enum {string} */
+        role: 'client' | 'adverse_party' | 'other';
+        label: string | null;
+      }[];
+      /** Format: uuid */
+      nextCursor: string | null;
+    };
+    CreateContactDto: {
+      /** @enum {string} */
+      kind: 'person' | 'organization';
+      displayName: string;
+      email?: string;
+      phone?: string;
+    };
+    ContactResultDto_Output: {
+      contact: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        firmId: string;
+        /** @enum {string} */
+        kind: 'person' | 'organization';
+        displayName: string;
+        email: string | null;
+        phone: string | null;
+        revision: number;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        updatedAt: string;
+      };
+      /** Format: uuid */
+      commandId: string;
+    };
+    UpdateContactDto: {
+      expectedRevision: number;
+      displayName?: string;
+      email?: string | null;
+      phone?: string | null;
+    };
+    MatterPartyListDto_Output: {
+      /** Format: uuid */
+      matterId: string;
+      items: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        firmId: string;
+        /** Format: uuid */
+        matterId: string;
+        /** Format: uuid */
+        contactId: string;
+        contact: {
+          /** @enum {string} */
+          kind: 'person' | 'organization';
+          displayName: string;
+        };
+        /** @enum {string} */
+        role: 'client' | 'adverse_party' | 'other';
+        label: string | null;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        endedAt: string | null;
+      }[];
+      /** Format: uuid */
+      nextCursor: string | null;
+      canManage: boolean;
+    };
+    AddMatterPartyDto: {
+      /** Format: uuid */
+      contactId: string;
+      /** @enum {string} */
+      role: 'client' | 'adverse_party' | 'other';
+      label?: string;
+    };
+    MatterPartyResultDto_Output: {
+      party: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        firmId: string;
+        /** Format: uuid */
+        matterId: string;
+        /** Format: uuid */
+        contactId: string;
+        contact: {
+          /** @enum {string} */
+          kind: 'person' | 'organization';
+          displayName: string;
+        };
+        /** @enum {string} */
+        role: 'client' | 'adverse_party' | 'other';
+        label: string | null;
+        /** Format: date-time */
+        createdAt: string;
+        /** Format: date-time */
+        endedAt: string | null;
+      };
+      /** Format: uuid */
+      commandId: string;
+    };
+    EndMatterPartyDto: {
+      /** Format: uuid */
+      partyId: string;
     };
   };
   responses: never;
@@ -2679,6 +2918,474 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ResultDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  ContactController_list: {
+    parameters: {
+      query?: {
+        q?: string;
+        afterName?: string;
+        afterId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ContactListDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  ContactController_create: {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateContactDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ContactResultDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  ContactController_read: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        contactId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ContactDetailDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  ContactController_update: {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+      };
+      path: {
+        contactId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateContactDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ContactResultDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  ContactController_matters: {
+    parameters: {
+      query?: {
+        afterId?: string;
+      };
+      header?: never;
+      path: {
+        contactId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ContactMatterListDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  MatterPartyController_list: {
+    parameters: {
+      query?: {
+        afterId?: string;
+      };
+      header?: never;
+      path: {
+        matterId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MatterPartyListDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  MatterPartyController_add: {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+      };
+      path: {
+        matterId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AddMatterPartyDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MatterPartyResultDto_Output'];
+        };
+      };
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorDto'];
+        };
+      };
+    };
+  };
+  MatterPartyController_end: {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+      };
+      path: {
+        matterId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EndMatterPartyDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MatterPartyResultDto_Output'];
         };
       };
       401: {

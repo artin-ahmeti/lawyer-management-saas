@@ -26,6 +26,8 @@ const USER_B = '00000000-0000-4000-b000-00000000000b';
 const MATTER_A = randomUUID(),
   MATTER_RESTRICTED = randomUUID(),
   MATTER_B = randomUUID();
+const CONTACT_A = randomUUID(),
+  CONTACT_B = randomUUID();
 
 async function signToken(claims: Record<string, unknown>): Promise<string> {
   return new SignJWT({ aud: 'authenticated', iss: `${SUPABASE_URL}/auth/v1`, ...claims })
@@ -78,6 +80,13 @@ beforeAll(async () => {
   await sql`insert into public.matter_access(firm_id,matter_id,user_id,role,created_by) values
     (${FIRM_A},${MATTER_A},${USER_A},'manager',${USER_A}),
     (${FIRM_B},${MATTER_B},${USER_B},'manager',${USER_B})`;
+  await sql`insert into public.contacts(id,firm_id,kind,display_name,created_by) values
+    (${CONTACT_A},${FIRM_A},'person','Firm A client',${USER_A}),
+    (${CONTACT_B},${FIRM_B},'organization','Firm B client',${USER_B})`;
+  await sql`insert into public.matter_parties(firm_id,matter_id,contact_id,role,created_by) values
+    (${FIRM_A},${MATTER_A},${CONTACT_A},'client',${USER_A}),
+    (${FIRM_A},${MATTER_RESTRICTED},${CONTACT_A},'client',${USER_A}),
+    (${FIRM_B},${MATTER_B},${CONTACT_B},'client',${USER_B})`;
 }, 30_000);
 
 afterAll(async () => {
@@ -86,6 +95,8 @@ afterAll(async () => {
 });
 
 async function cleanup(): Promise<void> {
+  await sql`delete from public.matter_parties where firm_id in (${FIRM_A}, ${FIRM_B})`;
+  await sql`delete from public.contacts where firm_id in (${FIRM_A}, ${FIRM_B})`;
   await sql`delete from public.matter_access where firm_id in (${FIRM_A}, ${FIRM_B})`;
   await sql`delete from public.matters where firm_id in (${FIRM_A}, ${FIRM_B})`;
   await sql`delete from public.practice_areas where firm_id in (${FIRM_A}, ${FIRM_B})`;
@@ -151,6 +162,50 @@ describe('cross-firm read isolation', () => {
       auth: { persistSession: false },
     });
     expect((await anon.from('matters').select('id')).error?.code).toBe('42501');
+  });
+  it('scopes the contact directory to the firm and party links to granted matters', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'owner');
+    const directory = await a.from('contacts').select('id', { count: 'exact' });
+    expect(directory.error).toBeNull();
+    expect(directory.data).toEqual([{ id: CONTACT_A }]);
+    expect(directory.count).toBe(1);
+    const parties = await a.from('matter_parties').select('matter_id', { count: 'exact' });
+    expect(parties.error).toBeNull();
+    expect(parties.data).toEqual([{ matter_id: MATTER_A }]);
+    expect(parties.count).toBe(1);
+    const forged = await clientFor(USER_A, FIRM_B, 'owner');
+    for (const table of ['contacts', 'matter_parties']) {
+      const foreign = await forged.from(table).select('id', { count: 'exact' });
+      expect(foreign.error).toBeNull();
+      expect(foreign.count).toBe(0);
+    }
+  });
+  it('rejects direct contact/party writes and anonymous reads', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'owner');
+    const create = await a
+      .from('contacts')
+      .insert({ firm_id: FIRM_A, kind: 'person', display_name: 'Forbidden', created_by: USER_A });
+    expect(create.error?.code).toBe('42501');
+    const rename = await a.from('contacts').update({ display_name: 'X' }).eq('id', CONTACT_A);
+    expect(rename.error?.code).toBe('42501');
+    const link = await a.from('matter_parties').insert({
+      firm_id: FIRM_A,
+      matter_id: MATTER_A,
+      contact_id: CONTACT_A,
+      role: 'adverse_party',
+      created_by: USER_A,
+    });
+    expect(link.error?.code).toBe('42501');
+    const end = await a
+      .from('matter_parties')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('matter_id', MATTER_A);
+    expect(end.error?.code).toBe('42501');
+    const anon = createClient(SUPABASE_URL, await signToken({ role: 'anon' }), {
+      auth: { persistSession: false },
+    });
+    for (const table of ['contacts', 'matter_parties'])
+      expect((await anon.from(table).select('id')).error?.code).toBe('42501');
   });
   it('keeps invitation identities and membership writes behind the API for members and anonymous clients', async () => {
     const clients = [

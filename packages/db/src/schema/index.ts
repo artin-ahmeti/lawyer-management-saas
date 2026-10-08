@@ -9,3 +9,4 @@ export * from './execution.js';
 export * from './staff-invitations.js';
 export * from './staff-session-contexts.js';
 export * from './matters.js';
+export * from './contacts.js';

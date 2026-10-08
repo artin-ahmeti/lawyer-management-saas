@@ -29,7 +29,7 @@ Planned slice tasks:
        link/unlink party roles needing a manager grant; one contact in two matters
        and two clients in one matter; an ungranted reader seeing neither the link,
        the matter nor its count from contact reads; removed members losing access.
-2. [ ] Add reversible `contacts`/`matter_parties` migration (same-firm composite
+2. [x] Add reversible `contacts`/`matter_parties` migration (same-firm composite
        keys, forced RLS, select-only client role, immutable provenance, link
        history through soft end); strict shared contracts; keyed contact create
        and edit, keyset contact list with name search, contact detail, and

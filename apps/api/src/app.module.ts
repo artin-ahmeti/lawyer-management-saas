@@ -8,6 +8,7 @@ import { DatabaseModule } from './common/database/database.module';
 import { FirmModule } from './modules/firms/firm.module';
 import { StaffInvitationModule } from './modules/staff-invitations/staff-invitation.module';
 import { MatterModule } from './modules/matters/matter.module';
+import { ContactModule } from './modules/contacts/contact.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { MatterModule } from './modules/matters/matter.module';
     FirmModule,
     StaffInvitationModule,
     MatterModule,
+    ContactModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
