@@ -23,7 +23,7 @@ first-five completion is 0/5.
 
 Planned slice tasks:
 
-1. [ ] Establish failing API/RLS outcome tests: create/edit person and organization
+1. [x] Establish failing API/RLS outcome tests: create/edit person and organization
        contacts by allowed roles and refusal for billing/readonly and other firms;
        reviewed-revision edits, replay and concurrent review; bounded name search;
        link/unlink party roles needing a manager grant; one contact in two matters

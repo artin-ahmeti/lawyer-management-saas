@@ -8,6 +8,7 @@ export * from './schemas/staff-membership.js';
 export * from './schemas/staff-firm-selection.js';
 export * from './schemas/matter.js';
 export * from './schemas/matter-access.js';
+export * from './schemas/contact.js';
 export * from './schemas/staff-role.js';
 export * from './schemas/staff-lifecycle.js';
 export * from './schemas/firm-provision.js';
