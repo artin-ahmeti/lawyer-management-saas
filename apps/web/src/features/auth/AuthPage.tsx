@@ -659,6 +659,14 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
           </div>
         ) : null}
         {error ? <Banner tone="danger" title={error} role="alert" /> : null}
+        {params.get('notice') === 'sign-out-unconfirmed' && !previewMode ? (
+          <Banner
+            tone="warning"
+            role="alert"
+            title="Signed out of this browser"
+            text="Session revocation could not be confirmed. Previously issued access may remain valid until it expires."
+          />
+        ) : null}
         <button
           type="button"
           className="cl-btn cl-btn--outline cl-btn--lg cl-btn--block"

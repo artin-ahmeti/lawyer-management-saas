@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": false,
+    "types": [],
+    "incremental": false
+  },
+  "include": ["src/lib/firm-api.type-test.ts"]
+}

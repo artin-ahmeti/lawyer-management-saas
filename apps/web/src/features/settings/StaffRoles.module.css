@@ -1,0 +1,70 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  color: var(--ink);
+  font: inherit;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item {
+  min-width: 0;
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.card :global(.cl-card__head) {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.card :global(.cl-btn) {
+  min-height: 44px;
+  max-width: 100%;
+  height: auto;
+  white-space: normal;
+}
+
+.card :global(.cl-card__head) > :global(.cl-inline) {
+  flex: 1 1 14rem;
+}
+
+.card :global(.cl-card__title) {
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+
+.card :global(.cl-card__title) h2 {
+  font: inherit;
+  letter-spacing: inherit;
+}

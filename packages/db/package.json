@@ -2,7 +2,7 @@
   "name": "@lawfirm/db",
   "version": "0.0.1",
   "private": true,
-  "description": "Drizzle schema — drizzle-kit generate emits plain SQL into supabase/migrations (one migration history, Plan §2)",
+  "description": "Drizzle schema \u2014 drizzle-kit generate emits plain SQL into supabase/migrations (one migration history, Plan \u00a72)",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -29,6 +29,7 @@
     "typescript": "~6.0.3",
     "@supabase/supabase-js": "^2.112.3",
     "jose": "^6.0.0",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "@types/node": "^26.2.0"
   }
 }

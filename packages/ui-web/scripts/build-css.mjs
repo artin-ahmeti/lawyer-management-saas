@@ -18,4 +18,7 @@ writeFileSync(resolve(here, '../dist/clepso.css'), fonts + banner + tokens + '\n
 // Same stylesheet without the Google Fonts @import, for apps that self-host Geist
 // (apps/web loads it through next/font and points --font-sans at it).
 writeFileSync(resolve(here, '../dist/clepso.base.css'), banner + tokens + '\n' + bundle);
-console.log('dist/clepso.css + dist/clepso.base.css written');
+// Tokens only (custom properties, light + dark), for surfaces that bring their own
+// component layer, such as the marketing site in apps/landing.
+writeFileSync(resolve(here, '../dist/clepso.tokens.css'), banner + tokens);
+console.log('dist/clepso.css + dist/clepso.base.css + dist/clepso.tokens.css written');

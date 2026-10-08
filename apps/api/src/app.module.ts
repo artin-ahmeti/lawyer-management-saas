@@ -4,6 +4,10 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
+import { DatabaseModule } from './common/database/database.module';
+import { FirmModule } from './modules/firms/firm.module';
+import { StaffInvitationModule } from './modules/staff-invitations/staff-invitation.module';
+import { MatterModule } from './modules/matters/matter.module';
 
 @Module({
   imports: [
@@ -11,6 +15,10 @@ import { HealthModule } from './modules/health/health.module';
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     HealthModule,
     AuthModule,
+    DatabaseModule,
+    FirmModule,
+    StaffInvitationModule,
+    MatterModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

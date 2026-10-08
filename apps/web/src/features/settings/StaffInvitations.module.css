@@ -1,0 +1,45 @@
+.panel :global(.cl-card__head),
+.controls {
+  flex-wrap: wrap;
+}
+.panel h2,
+.details p,
+.note {
+  margin: 0;
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--hairline);
+}
+.details {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.details p,
+.note {
+  color: var(--ink-2);
+}
+.controls {
+  display: flex;
+  gap: var(--space-3);
+}
+.control {
+  min-height: 44px;
+  max-width: 100%;
+  white-space: normal;
+  height: auto;
+}
+@media (max-width: 480px) {
+  .row {
+    flex-direction: column;
+  }
+}

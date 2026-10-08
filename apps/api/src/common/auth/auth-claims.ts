@@ -7,4 +7,6 @@ export interface AuthClaims {
   role: 'authenticated';
   firm_id?: string;
   user_role?: FirmRole;
+  session_id?: string;
+  staff_context_revision?: number;
 }

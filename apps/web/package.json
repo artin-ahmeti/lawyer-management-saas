@@ -7,10 +7,11 @@
     "dev": "next dev --port 3100",
     "build": "next build",
     "start": "next start --port 3100",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit && tsc --noEmit -p tsconfig.contracts.json",
     "test": "vitest run"
   },
   "dependencies": {
+    "@lawfirm/api-client": "workspace:*",
     "@lawfirm/core": "workspace:*",
     "@lawfirm/ui-web": "workspace:*",
     "@supabase/ssr": "^0.12.7",

@@ -2,13 +2,14 @@
   "name": "@lawfirm/api",
   "version": "0.0.1",
   "private": true,
-  "description": "NestJS API — the only write path to Postgres (Plan §3)",
+  "description": "NestJS API \u2014 the only write path to Postgres (Plan \u00a73)",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "dev": "nest start --watch",
     "start": "node dist/main.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@lawfirm/core": "workspace:*",
@@ -31,7 +32,8 @@
     "rxjs": "^7.8.2",
     "stripe": "^22.5.0",
     "zod": "^4.4.3",
-    "jose": "^6.2.9"
+    "jose": "^6.2.9",
+    "ioredis": "6.0.0"
   },
   "devDependencies": {
     "@lawfirm/config": "workspace:*",

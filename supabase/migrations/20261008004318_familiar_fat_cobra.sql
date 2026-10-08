@@ -1,0 +1,3 @@
+ALTER TABLE "firm_members" ADD COLUMN "revision" integer DEFAULT 1 NOT NULL;--> statement-breakpoint
+CREATE INDEX "audit_logs_staff_role_history_idx" ON "audit_logs" USING btree ("firm_id","created_at","id") WHERE "audit_logs"."action" = 'staff.role.change.v1' and "audit_logs"."record_type" = 'firm_member';--> statement-breakpoint
+ALTER TABLE "firm_members" ADD CONSTRAINT "firm_members_revision" CHECK ("firm_members"."revision" >= 1);

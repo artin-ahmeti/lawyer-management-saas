@@ -29,8 +29,14 @@ import { useMatters, useContacts, useTasks, useTimekeepers } from '@/lib/data';
 import { CURRENT_USER } from '@/lib/data/fixtures';
 import { moneyOrDash, fmtDate } from '@/lib/format';
 import { useOverlays } from '@/stores/ui';
+import { previewMode } from '@/lib/env';
+import { LiveMattersPage } from './LiveMattersPage';
 
 export function MattersPage() {
+  return previewMode ? <PreviewMattersPage /> : <LiveMattersPage />;
+}
+
+function PreviewMattersPage() {
   const matters = useMatters();
   const contacts = useContacts();
   const tasks = useTasks();

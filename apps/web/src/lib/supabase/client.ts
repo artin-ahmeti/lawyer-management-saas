@@ -1,9 +1,10 @@
 'use client';
 
 import { createBrowserClient } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { hasSupabase, supabaseAnonKey, supabaseUrl } from '@/lib/env';
 
-let client: ReturnType<typeof createBrowserClient> | null = null;
+let client: SupabaseClient | null = null;
 
 /**
  * Browser Supabase client — READ path only (RLS-scoped selects, auth).

@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { dataMode } from '@/lib/env';
-import { useOverlays, useUiPrefs } from '@/stores/ui';
+import { useSidebar } from '@/lib/sidebar';
+import { useOverlays } from '@/stores/ui';
 import { useTimerHydrated, useTimerStore } from '@/stores/timer';
 import { AppSidebar } from './AppSidebar';
 import { AppTopBar } from './AppTopBar';
@@ -16,18 +17,28 @@ const SEEDED_KEY = 'clepso.timer.seeded';
 
 /** The signed-in frame: sidebar, top bar, page, and the overlays every page can summon. */
 export function AppFrame({ children }: { children: ReactNode }) {
-  const collapsed = useUiPrefs((s) => s.sidebarCollapsed);
-  const setCollapsed = useUiPrefs((s) => s.setSidebarCollapsed);
+  const { mode } = useSidebar();
+  const shellRef = useRef<HTMLDivElement>(null);
   const openPalette = useOverlays((s) => s.openPalette);
   const openCapture = useOverlays((s) => s.openCapture);
   const closeAll = useOverlays((s) => s.closeAll);
   const hydrated = useTimerHydrated();
   const startTimer = useTimerStore((s) => s.start);
 
+  // Sidebar transitions switch on only after the first painted frame, so the
+  // initial width (from the cookie or the viewport default) never animates in.
   useEffect(() => {
-    void useUiPrefs.persist.rehydrate();
-    if (window.innerWidth <= 1100) setCollapsed(true);
-  }, [setCollapsed]);
+    let second = 0;
+    const first = requestAnimationFrame(() => {
+      second = requestAnimationFrame(() => {
+        if (shellRef.current) shellRef.current.dataset.motion = 'on';
+      });
+    });
+    return () => {
+      cancelAnimationFrame(first);
+      cancelAnimationFrame(second);
+    };
+  }, []);
 
   // The fixtures open with a timer already running; seed it once per browser.
   useEffect(() => {
@@ -65,10 +76,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
   }, [openPalette, openCapture, closeAll]);
 
   return (
-    <div
-      className={['cl-shell', 'app-shell', collapsed && 'is-collapsed'].filter(Boolean).join(' ')}
-      style={{ ['--size-sidebar' as string]: collapsed ? '68px' : '256px', minHeight: '100vh' }}
-    >
+    <div ref={shellRef} className={`cl-shell app-shell is-${mode}`}>
       <a href="#main-content" className="app-skip-link">
         Skip to content
       </a>
