@@ -11,6 +11,7 @@ import styles from './LiveMatters.module.css';
 import { MatterStaffAccess } from './MatterStaffAccess';
 import { MatterParties } from '@/features/contacts/MatterParties';
 import { MatterFields } from '@/features/practice-profiles/MatterFields';
+import { MatterJurisdictions } from '@/features/jurisdictions/MatterJurisdictions';
 
 export function LiveMatterPage({ id }: { id: string }) {
   const { client, context, firmId } = useLiveMatterClient(),
@@ -112,6 +113,9 @@ export function LiveMatterPage({ id }: { id: string }) {
           </div>
           <div hidden={!matter}>
             <MatterParties key={id} id={id} />
+          </div>
+          <div hidden={!matter}>
+            <MatterJurisdictions key={`${id}:jurisdictions`} id={id} />
           </div>
         </>
       )}

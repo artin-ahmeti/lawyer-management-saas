@@ -38,6 +38,7 @@ const selectionOnly = process.env.RUN_SELECTION_ONLY === '1';
 const matterOnly = process.env.RUN_MATTER_ONLY === '1';
 const contactOnly = process.env.RUN_CONTACT_ONLY === '1';
 const profileOnly = process.env.RUN_PROFILE_ONLY === '1';
+const jurisdictionOnly = process.env.RUN_JURISDICTION_ONLY === '1';
 const matterAccessOnly = process.env.RUN_MATTER_ACCESS_ONLY === '1';
 const staffRolesOnly = process.env.RUN_STAFF_ROLES_ONLY === '1';
 const staffLifecycleOnly = process.env.RUN_STAFF_LIFECYCLE_ONLY === '1';
@@ -422,6 +423,27 @@ try {
     assert.deepEqual(errors, [], 'No unexpected runtime exceptions during profile flow');
     console.log(
       'PASS: starter profile with response-loss replay, typed matter fields with required values, pinned version after revision, stale edit refusal, archive, assignment, responsive, named controls and live role/membership.',
+    );
+  } else if (jurisdictionOnly) {
+    await waitFor(valueIs('Browser firm LLP'), 'authenticated firm read');
+    const { verifyJurisdictions } = await import('./matter-jurisdiction.browser.mjs');
+    await verifyJurisdictions({
+      sql,
+      firm,
+      user,
+      send,
+      evaluate,
+      waitFor,
+      button,
+      type,
+      hasText,
+      screenshot,
+      listeners,
+      clickExpression,
+    });
+    assert.deepEqual(errors, [], 'No unexpected runtime exceptions during jurisdiction flow');
+    console.log(
+      'PASS: forums with name clash and archive, matter jurisdictions with loading/error/empty states, governing law without a court, response-loss replay, two venues in different jurisdictions, inline forum, duplicate refusal, ending, responsive, named controls and live role/membership.',
     );
   } else if (contactOnly) {
     await waitFor(valueIs('Browser firm LLP'), 'authenticated firm read');
@@ -1186,12 +1208,25 @@ try {
     ),
   ]);
   for (const ownedFirm of ownedFirms) {
-    if (matterAccessOnly || staffRolesOnly || staffLifecycleOnly || contactOnly || profileOnly) {
+    if (
+      matterAccessOnly ||
+      staffRolesOnly ||
+      staffLifecycleOnly ||
+      contactOnly ||
+      profileOnly ||
+      jurisdictionOnly
+    ) {
       await sql.begin(async (tx) => {
         await tx`set local session_replication_role=replica`;
         await tx`delete from audit_logs where firm_id=${ownedFirm}`;
       });
     }
+    // Jurisdiction history refuses deletion; remove test-owned rows with triggers suspended.
+    await sql.begin(async (tx) => {
+      await tx`set local session_replication_role=replica`;
+      await tx`delete from matter_jurisdictions where firm_id=${ownedFirm}`;
+      await tx`delete from forums where firm_id=${ownedFirm}`;
+    });
     for (const table of [
       'matter_parties',
       'contacts',

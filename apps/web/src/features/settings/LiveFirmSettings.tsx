@@ -25,6 +25,7 @@ import { StaffSessionActions } from './StaffSessionActions';
 import { StaffLifecycle } from './StaffLifecycle';
 import { StaffRoles } from './StaffRoles';
 import { PracticeProfiles } from '@/features/practice-profiles/PracticeProfiles';
+import { Forums } from '@/features/jurisdictions/Forums';
 
 const queryNamespace = ['server-firm'] as const;
 
@@ -239,6 +240,7 @@ function AuthorizedFirmSettings({ context, userId }: { context: string; userId: 
         onAccessDenied={denyAccess}
       />
       <PracticeProfiles client={client} context={context} firmId={firm.id} />
+      <Forums client={client} context={context} firmId={firm.id} />
       {firm.canRename && (
         <>
           <StaffRoles

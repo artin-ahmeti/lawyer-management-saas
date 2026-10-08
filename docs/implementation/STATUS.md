@@ -50,7 +50,7 @@ repeated endings instead, like parties; see the slice record):
        add/end/list with firm → matter → grant → forum locks and atomic
        receipt/audit; regenerate the API client. Verify clean/upgrade/down/reapply
        and tenant isolation.
-3. [ ] Add live Settings forums (list, add, rename, archive) and a Jurisdictions
+3. [x] Add live Settings forums (list, add, rename, archive) and a Jurisdictions
        panel on live matter detail (add with purpose, catalog jurisdiction, optional
        forum or new forum, optional docket; end; the "no jurisdiction-specific
        automation" notice), with same-intent recovery. Explicit preview keeps
