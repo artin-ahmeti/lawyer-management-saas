@@ -40,3 +40,8 @@ minimumReleaseAgeExclude:
   - expo-document-picker@57.0.3
   - expo-router@57.0.24
   - expo-updates@57.0.24
+overrides:
+  # GHSA-jqcg-44mw-7w3h; remove after Express's resolved dependency remains patched without this pin.
+  proxy-addr: 2.0.8
+  # GHSA-pqg4-j6r4-53mv; reviewed patch, retain until the native tooling graph resolves it without this pin.
+  shell-quote: 1.11.0

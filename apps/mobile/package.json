@@ -10,6 +10,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit",
+    "test": "node --test test/dependency-security.test.mjs",
     "prebuild": "expo prebuild"
   },
   "dependencies": {

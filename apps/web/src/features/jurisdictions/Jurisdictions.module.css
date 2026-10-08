@@ -1,0 +1,83 @@
+.card :global(.cl-card__head) {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.card :global(.cl-card__head) > :global(.cl-inline) {
+  flex: 1 1 14rem;
+}
+
+.card :global(.cl-card__title) {
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+
+.card :global(.cl-card__title) h2 {
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item {
+  min-width: 0;
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.select {
+  width: 100%;
+  min-width: 0;
+  color: var(--ink);
+  font: inherit;
+}
+
+/* Two columns from tablet width; one column on phones. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.subform {
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+}
+
+.subform legend {
+  padding-inline: var(--space-1);
+}

@@ -11,8 +11,13 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./icons": {
+      "types": "./dist/icons.d.ts",
+      "default": "./dist/icons.js"
+    },
     "./clepso.css": "./dist/clepso.css",
-    "./clepso.base.css": "./dist/clepso.base.css"
+    "./clepso.base.css": "./dist/clepso.base.css",
+    "./clepso.tokens.css": "./dist/clepso.tokens.css"
   },
   "files": [
     "dist"

@@ -1,5 +1,15 @@
 import { sql } from 'drizzle-orm';
-import { jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  check,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 /**
  * Phase 1 — tenancy core. Conventions per CLAUDE.md §Schema:
@@ -22,6 +32,8 @@ export const firms = pgTable('firms', {
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   name: text('name').notNull(),
+  // Non-negative CHECK is maintained with the execution security companion migration.
+  revision: integer('revision').notNull().default(0),
   subdomain: text('subdomain').unique(),
   plan: text('plan').notNull().default('trial'),
   stripeCustomerId: text('stripe_customer_id'),
@@ -56,12 +68,16 @@ export const firmMembers = pgTable(
       .notNull()
       .references(() => profiles.id),
     role: firmRole('role').notNull().default('attorney'),
+    revision: integer('revision').notNull().default(1),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     createdBy: uuid('created_by'),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
-  (t) => [uniqueIndex('firm_members_firm_user_uq').on(t.firmId, t.userId)],
+  (t) => [
+    uniqueIndex('firm_members_firm_user_uq').on(t.firmId, t.userId),
+    check('firm_members_revision', sql`${t.revision} >= 1`),
+  ],
 );
 
 export const practiceAreas = pgTable(

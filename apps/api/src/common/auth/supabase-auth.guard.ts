@@ -1,5 +1,6 @@
 import type { CanActivate, ExecutionContext } from '@nestjs/common';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { staffClaimsSchema } from '@lawfirm/core';
 import { ConfigService } from '@nestjs/config';
 import type { Request } from 'express';
 import type { JWTPayload } from 'jose';
@@ -18,7 +19,7 @@ export class SupabaseAuthGuard implements CanActivate {
   private readonly hsSecret?: Uint8Array;
   private readonly issuer: string;
 
-  constructor(config: ConfigService) {
+  constructor(@Inject(ConfigService) config: ConfigService) {
     const supabaseUrl = config.get<string>('SUPABASE_URL');
     if (!supabaseUrl) {
       throw new Error('SUPABASE_URL is not set');
@@ -41,23 +42,34 @@ export class SupabaseAuthGuard implements CanActivate {
     let payload: JWTPayload;
     try {
       const { alg } = decodeProtectedHeader(token);
-      const options = { audience: 'authenticated', issuer: this.issuer };
-      if (alg?.startsWith('HS')) {
+      const options = {
+        audience: 'authenticated',
+        issuer: this.issuer,
+        requiredClaims: ['sub', 'exp'],
+      };
+      if (alg === 'HS256') {
         if (!this.hsSecret) {
           throw new Error('HS256 token but SUPABASE_JWT_SECRET not configured');
         }
-        ({ payload } = await jwtVerify(token, this.hsSecret, options));
+        ({ payload } = await jwtVerify(token, this.hsSecret, {
+          ...options,
+          algorithms: ['HS256'],
+        }));
       } else {
-        ({ payload } = await jwtVerify(token, this.jwks, options));
+        ({ payload } = await jwtVerify(token, this.jwks, {
+          ...options,
+          algorithms: ['ES256', 'RS256'],
+        }));
       }
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    if (payload.role !== 'authenticated' || typeof payload.sub !== 'string') {
+    const claims = staffClaimsSchema.safeParse(payload);
+    if (!claims.success) {
       throw new UnauthorizedException('Not an authenticated user token');
     }
-    request.user = payload as unknown as AuthClaims;
+    request.user = claims.data;
     return true;
   }
 }

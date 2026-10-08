@@ -33,15 +33,15 @@ export default tseslint.config(
     },
   },
   {
-    // Next.js app: React hooks rules + Next's core-web-vitals checks.
-    files: ['apps/web/**/*.{ts,tsx}'],
+    // Next.js apps: React hooks rules + Next's core-web-vitals checks.
+    files: ['apps/web/**/*.{ts,tsx}', 'apps/landing/**/*.{ts,tsx}'],
     plugins: { '@next/next': nextPlugin, 'react-hooks': reactHooks },
     rules: {
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs['core-web-vitals'].rules,
       ...reactHooks.configs.recommended.rules,
     },
-    settings: { next: { rootDir: 'apps/web' } },
+    settings: { next: { rootDir: ['apps/web', 'apps/landing'] } },
   },
   {
     // NestJS DI: classes referenced in constructor params must stay VALUE

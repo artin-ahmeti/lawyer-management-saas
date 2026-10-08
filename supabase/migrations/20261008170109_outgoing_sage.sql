@@ -1,0 +1,1 @@
+CREATE INDEX "audit_logs_staff_membership_history_idx" ON "audit_logs" USING btree ("firm_id","created_at","id") WHERE "audit_logs"."action" in ('staff.membership.remove.v1', 'staff.membership.restore.v1') and "audit_logs"."record_type" = 'firm_member';

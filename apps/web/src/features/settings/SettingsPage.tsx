@@ -37,6 +37,8 @@ import { money } from '@/lib/format';
 import { useOverlays } from '@/stores/ui';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { FirmProfileForm } from './FirmProfileForm';
+import { LiveFirmSettings } from './LiveFirmSettings';
+import { previewMode } from '@/lib/env';
 
 const SECTIONS = ['Firm', 'Plan', 'Users', 'Playbooks', 'Billing', 'Integrations', 'Security'];
 const SECTION_META: Record<string, { label: string; icon: IconName }> = {
@@ -52,6 +54,10 @@ const CARD = 'Visa ····4410';
 const dollars = (cents: number) => money(cents).replace('.00', '');
 
 export function SettingsPage() {
+  return previewMode ? <PreviewSettingsPage /> : <LiveFirmSettings />;
+}
+
+function PreviewSettingsPage() {
   const params = useSearchParams();
   const router = useRouter();
   const section =

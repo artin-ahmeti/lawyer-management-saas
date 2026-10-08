@@ -2,23 +2,29 @@
   "name": "@lawfirm/worker",
   "version": "0.0.1",
   "private": true,
-  "description": "BullMQ processors — invoice runs, reminders, OCR/AV scans, webhooks. Own container, own scaling.",
+  "description": "Durable outbox dispatch and bounded job execution; domain processors land with their modules.",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
     "dev": "tsx watch src/main.ts",
-    "start": "node dist/main.js"
+    "start": "node dist/main.js",
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@lawfirm/core": "workspace:*",
     "@lawfirm/db": "workspace:*",
     "bullmq": "^6.1.2",
-    "pino": "^10.3.1"
+    "ioredis": "^6.0.0",
+    "pino": "^10.3.1",
+    "postgres": "^3.4.9"
   },
   "devDependencies": {
     "@lawfirm/config": "workspace:*",
     "@types/node": "^26.2.0",
     "tsx": "^4.23.12",
-    "typescript": "~6.0.3"
-  }
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.11"
+  },
+  "type": "module"
 }

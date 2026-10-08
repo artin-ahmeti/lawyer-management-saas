@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "command_receipts_provision_intent_uq" ON "command_receipts" USING btree ("created_by","idempotency_key") WHERE "command_receipts"."command" = 'firm.provision.v1';

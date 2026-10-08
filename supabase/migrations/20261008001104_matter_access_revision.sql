@@ -1,0 +1,3 @@
+ALTER TABLE "matters" ADD COLUMN "access_revision" integer DEFAULT 1 NOT NULL;--> statement-breakpoint
+CREATE INDEX "audit_logs_matter_access_history_idx" ON "audit_logs" USING btree ("firm_id","record_id","created_at","id") WHERE "audit_logs"."action" = 'matter.access.change.v1' and "audit_logs"."record_type" = 'matter';--> statement-breakpoint
+ALTER TABLE "matters" ADD CONSTRAINT "matters_access_revision" CHECK ("matters"."access_revision" >= 1);

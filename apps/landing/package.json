@@ -1,0 +1,32 @@
+{
+  "name": "@lawfirm/landing",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Clepso marketing site: Next.js + Tailwind CSS over the Clepso design tokens. Sample data only; no writes to Supabase.",
+  "scripts": {
+    "dev": "next dev --port 3200",
+    "build": "next build",
+    "start": "next start --port 3200",
+    "typecheck": "next typegen && tsc --noEmit",
+    "render:vessel": "node scripts/render-vessel.mjs"
+  },
+  "dependencies": {
+    "@lawfirm/ui-web": "workspace:*",
+    "motion": "^13.4.6",
+    "next": "^16.3.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "three": "^0.186.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@lawfirm/config": "workspace:*",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.186.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.3"
+  }
+}

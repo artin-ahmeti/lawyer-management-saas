@@ -5,6 +5,7 @@
  * JWTs. Blocking in CI.
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { randomUUID } from 'node:crypto';
 import { SignJWT } from 'jose';
 import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -22,6 +23,18 @@ const FIRM_A = '00000000-0000-4000-a000-00000000000a';
 const FIRM_B = '00000000-0000-4000-a000-00000000000b';
 const USER_A = '00000000-0000-4000-b000-00000000000a';
 const USER_B = '00000000-0000-4000-b000-00000000000b';
+const MATTER_A = randomUUID(),
+  MATTER_RESTRICTED = randomUUID(),
+  MATTER_B = randomUUID();
+const CONTACT_A = randomUUID(),
+  CONTACT_B = randomUUID();
+const PROFILE_A = randomUUID(),
+  PROFILE_B = randomUUID(),
+  VERSION_A = randomUUID(),
+  VERSION_B = randomUUID();
+const FORUM_A = randomUUID(),
+  FORUM_ARCHIVED = randomUUID(),
+  FORUM_B = randomUUID();
 
 async function signToken(claims: Record<string, unknown>): Promise<string> {
   return new SignJWT({ aud: 'authenticated', iss: `${SUPABASE_URL}/auth/v1`, ...claims })
@@ -67,6 +80,39 @@ beforeAll(async () => {
     (${FIRM_A}, ${USER_A}, 'owner'), (${FIRM_B}, ${USER_B}, 'owner')`;
   await sql`insert into public.practice_areas (firm_id, name) values
     (${FIRM_A}, 'Personal Injury'), (${FIRM_B}, 'Immigration')`;
+  // A profile and its current version are written together (deferred key).
+  await sql.begin(async (tx) => {
+    await tx`insert into public.practice_profiles(id,firm_id,name,created_by) values
+      (${PROFILE_A},${FIRM_A},'Deals',${USER_A}),(${PROFILE_B},${FIRM_B},'Deals',${USER_B})`;
+    await tx`insert into public.practice_profile_versions(id,firm_id,profile_id,version,fields,created_by) values
+      (${VERSION_A},${FIRM_A},${PROFILE_A},1,'[{"key":"entity_name","label":"Entity","type":"text","required":false}]'::jsonb,${USER_A}),
+      (${VERSION_B},${FIRM_B},${PROFILE_B},1,'[]'::jsonb,${USER_B})`;
+  });
+  await sql`insert into public.matters(id,firm_id,title,created_by) values
+    (${MATTER_A},${FIRM_A},'Granted engagement',${USER_A}),
+    (${MATTER_RESTRICTED},${FIRM_A},'Restricted engagement',${USER_A}),
+    (${MATTER_B},${FIRM_B},'Other firm engagement',${USER_B})`;
+  await sql`insert into public.matter_access(firm_id,matter_id,user_id,role,created_by) values
+    (${FIRM_A},${MATTER_A},${USER_A},'manager',${USER_A}),
+    (${FIRM_B},${MATTER_B},${USER_B},'manager',${USER_B})`;
+  await sql`update public.matters set profile_version_id=${VERSION_A},
+    field_values=jsonb_build_object('entity_name',title) where id in (${MATTER_A},${MATTER_RESTRICTED})`;
+  await sql`insert into public.contacts(id,firm_id,kind,display_name,created_by) values
+    (${CONTACT_A},${FIRM_A},'person','Firm A client',${USER_A}),
+    (${CONTACT_B},${FIRM_B},'organization','Firm B client',${USER_B})`;
+  await sql`insert into public.matter_parties(firm_id,matter_id,contact_id,role,created_by) values
+    (${FIRM_A},${MATTER_A},${CONTACT_A},'client',${USER_A}),
+    (${FIRM_A},${MATTER_RESTRICTED},${CONTACT_A},'client',${USER_A}),
+    (${FIRM_B},${MATTER_B},${CONTACT_B},'client',${USER_B})`;
+  await sql`insert into public.forums(id,firm_id,name,kind,jurisdiction,created_by) values
+    (${FORUM_A},${FIRM_A},'Superior Court','court','CA',${USER_A}),
+    (${FORUM_ARCHIVED},${FIRM_A},'Labor Board','agency','CA',${USER_A}),
+    (${FORUM_B},${FIRM_B},'Superior Court','court','CA',${USER_B})`;
+  await sql`update public.forums set archived_at=now(),revision=2 where id=${FORUM_ARCHIVED}`;
+  await sql`insert into public.matter_jurisdictions(firm_id,matter_id,purpose,jurisdiction,forum_id,docket_number,created_by) values
+    (${FIRM_A},${MATTER_A},'venue','CA',${FORUM_A},'GRANTED-1',${USER_A}),
+    (${FIRM_A},${MATTER_RESTRICTED},'venue','CA',${FORUM_A},'RESTRICTED-1',${USER_A}),
+    (${FIRM_B},${MATTER_B},'venue','CA',${FORUM_B},'OTHER-1',${USER_B})`;
 }, 30_000);
 
 afterAll(async () => {
@@ -75,6 +121,23 @@ afterAll(async () => {
 });
 
 async function cleanup(): Promise<void> {
+  // Forums and references are history that refuses deletion; remove fixtures without triggers.
+  if ((await sql`select to_regclass('public.forums') is not null as present`)[0]?.present)
+    await sql.begin(async (tx) => {
+      await tx`set local session_replication_role=replica`;
+      await tx`delete from public.matter_jurisdictions where firm_id in (${FIRM_A}, ${FIRM_B})`;
+      await tx`delete from public.forums where firm_id in (${FIRM_A}, ${FIRM_B})`;
+    });
+  await sql`delete from public.matter_parties where firm_id in (${FIRM_A}, ${FIRM_B})`;
+  await sql`delete from public.contacts where firm_id in (${FIRM_A}, ${FIRM_B})`;
+  await sql`delete from public.matter_access where firm_id in (${FIRM_A}, ${FIRM_B})`;
+  await sql`delete from public.matters where firm_id in (${FIRM_A}, ${FIRM_B})`;
+  // Profile history refuses deletion; fixtures are removed with triggers suspended.
+  await sql.begin(async (tx) => {
+    await tx`set local session_replication_role=replica`;
+    await tx`delete from public.practice_profile_versions where firm_id in (${FIRM_A}, ${FIRM_B})`;
+    await tx`delete from public.practice_profiles where firm_id in (${FIRM_A}, ${FIRM_B})`;
+  });
   await sql`delete from public.practice_areas where firm_id in (${FIRM_A}, ${FIRM_B})`;
   await sql`delete from public.firm_members where firm_id in (${FIRM_A}, ${FIRM_B})`;
   await sql`delete from public.firms where id in (${FIRM_A}, ${FIRM_B})`;
@@ -82,6 +145,320 @@ async function cleanup(): Promise<void> {
 }
 
 describe('cross-firm read isolation', () => {
+  it('filters matter records, grants and exact counts by explicit access even for owners', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'owner');
+    const read = await a.from('matters').select('id', { count: 'exact' });
+    expect(read.error).toBeNull();
+    expect(read.data).toEqual([{ id: MATTER_A }]);
+    expect(read.count).toBe(1);
+    const grants = await a.from('matter_access').select('matter_id');
+    expect(grants.error).toBeNull();
+    expect(grants.data).toEqual([{ matter_id: MATTER_A }]);
+    const forged = await clientFor(USER_A, FIRM_B, 'owner');
+    const foreign = await forged.from('matters').select('id', { count: 'exact' });
+    expect(foreign.error).toBeNull();
+    expect(foreign.data).toEqual([]);
+    expect(foreign.count).toBe(0);
+    const restricted = await a.from('matters').select('id').eq('id', MATTER_RESTRICTED);
+    expect(restricted.error).toBeNull();
+    expect(restricted.data).toEqual([]);
+  });
+  it('removes matter records and counts when a grant is revoked despite a still-valid token', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'owner');
+    await sql`update matter_access set deleted_at=now() where matter_id=${MATTER_A} and user_id=${USER_A}`;
+    try {
+      const read = await a.from('matters').select('id', { count: 'exact' });
+      expect(read.error).toBeNull();
+      expect(read.data).toEqual([]);
+      expect(read.count).toBe(0);
+      const grants = await a.from('matter_access').select('id');
+      expect(grants.error).toBeNull();
+      expect(grants.data).toEqual([]);
+    } finally {
+      await sql`update matter_access set deleted_at=null where matter_id=${MATTER_A} and user_id=${USER_A}`;
+    }
+  });
+  it('rejects direct matter/grant writes and anonymous reads', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'owner');
+    const create = await a
+      .from('matters')
+      .insert({ firm_id: FIRM_A, title: 'Forbidden', created_by: USER_A });
+    expect(create.error?.code).toBe('42501');
+    const grant = await a.from('matter_access').insert({
+      firm_id: FIRM_A,
+      matter_id: MATTER_RESTRICTED,
+      user_id: USER_A,
+      role: 'manager',
+      created_by: USER_A,
+    });
+    expect(grant.error?.code).toBe('42501');
+    const update = await a
+      .from('matter_access')
+      .update({ role: 'manager' })
+      .eq('matter_id', MATTER_A);
+    expect(update.error?.code).toBe('42501');
+    const anon = createClient(SUPABASE_URL, await signToken({ role: 'anon' }), {
+      auth: { persistSession: false },
+    });
+    expect((await anon.from('matters').select('id')).error?.code).toBe('42501');
+  });
+  it('scopes the contact directory to the firm and party links to granted matters', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'owner');
+    const directory = await a.from('contacts').select('id', { count: 'exact' });
+    expect(directory.error).toBeNull();
+    expect(directory.data).toEqual([{ id: CONTACT_A }]);
+    expect(directory.count).toBe(1);
+    const parties = await a.from('matter_parties').select('matter_id', { count: 'exact' });
+    expect(parties.error).toBeNull();
+    expect(parties.data).toEqual([{ matter_id: MATTER_A }]);
+    expect(parties.count).toBe(1);
+    const forged = await clientFor(USER_A, FIRM_B, 'owner');
+    for (const table of ['contacts', 'matter_parties']) {
+      const foreign = await forged.from(table).select('id', { count: 'exact' });
+      expect(foreign.error).toBeNull();
+      expect(foreign.count).toBe(0);
+    }
+  });
+  it('keeps ended links as granted history and hides the directory from removed members', async () => {
+    await sql`update matter_parties set deleted_at=clock_timestamp() where matter_id=${MATTER_A} and contact_id=${CONTACT_A}`;
+    const a = await clientFor(USER_A, FIRM_A, 'owner');
+    const history = await a.from('matter_parties').select('matter_id,deleted_at');
+    expect(history.error).toBeNull();
+    expect(history.data).toEqual([{ matter_id: MATTER_A, deleted_at: expect.any(String) }]);
+    await sql`update firm_members set deleted_at=now() where firm_id=${FIRM_A} and user_id=${USER_A}`;
+    try {
+      for (const table of ['contacts', 'matter_parties']) {
+        const removed = await a.from(table).select('id', { count: 'exact' });
+        expect(removed.error).toBeNull();
+        expect(removed.count).toBe(0);
+      }
+    } finally {
+      await sql`update firm_members set deleted_at=null where firm_id=${FIRM_A} and user_id=${USER_A}`;
+    }
+  });
+  it('rejects direct contact/party writes and anonymous reads', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'owner');
+    const create = await a
+      .from('contacts')
+      .insert({ firm_id: FIRM_A, kind: 'person', display_name: 'Forbidden', created_by: USER_A });
+    expect(create.error?.code).toBe('42501');
+    const rename = await a.from('contacts').update({ display_name: 'X' }).eq('id', CONTACT_A);
+    expect(rename.error?.code).toBe('42501');
+    const link = await a.from('matter_parties').insert({
+      firm_id: FIRM_A,
+      matter_id: MATTER_A,
+      contact_id: CONTACT_A,
+      role: 'adverse_party',
+      created_by: USER_A,
+    });
+    expect(link.error?.code).toBe('42501');
+    const end = await a
+      .from('matter_parties')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('matter_id', MATTER_A);
+    expect(end.error?.code).toBe('42501');
+    const anon = createClient(SUPABASE_URL, await signToken({ role: 'anon' }), {
+      auth: { persistSession: false },
+    });
+    for (const table of ['contacts', 'matter_parties'])
+      expect((await anon.from(table).select('id')).error?.code).toBe('42501');
+  });
+  it('scopes practice profiles to the firm and matter field values to granted matters', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'readonly');
+    const profiles = await a.from('practice_profiles').select('id', { count: 'exact' });
+    expect(profiles.error).toBeNull();
+    expect(profiles.data).toEqual([{ id: PROFILE_A }]);
+    const versions = await a.from('practice_profile_versions').select('id', { count: 'exact' });
+    expect(versions.error).toBeNull();
+    expect(versions.data).toEqual([{ id: VERSION_A }]);
+    const values = await a.from('matters').select('id,field_values');
+    expect(values.error).toBeNull();
+    expect(values.data).toEqual([
+      { id: MATTER_A, field_values: { entity_name: 'Granted engagement' } },
+    ]);
+    const forged = await clientFor(USER_A, FIRM_B, 'owner');
+    for (const table of ['practice_profiles', 'practice_profile_versions']) {
+      const foreign = await forged.from(table).select('id', { count: 'exact' });
+      expect(foreign.error).toBeNull();
+      expect(foreign.count).toBe(0);
+    }
+    await sql`update firm_members set deleted_at=now() where firm_id=${FIRM_A} and user_id=${USER_A}`;
+    try {
+      for (const table of ['practice_profiles', 'practice_profile_versions']) {
+        const removed = await a.from(table).select('id', { count: 'exact' });
+        expect(removed.error).toBeNull();
+        expect(removed.count).toBe(0);
+      }
+    } finally {
+      await sql`update firm_members set deleted_at=null where firm_id=${FIRM_A} and user_id=${USER_A}`;
+    }
+  });
+  it('rejects direct profile, version and field-value writes and anonymous reads', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'owner');
+    const create = await a
+      .from('practice_profiles')
+      .insert({ firm_id: FIRM_A, name: 'Forbidden', created_by: USER_A });
+    expect(create.error?.code).toBe('42501');
+    const archive = await a
+      .from('practice_profiles')
+      .update({ archived_at: new Date().toISOString() })
+      .eq('id', PROFILE_A);
+    expect(archive.error?.code).toBe('42501');
+    const publish = await a.from('practice_profile_versions').insert({
+      firm_id: FIRM_A,
+      profile_id: PROFILE_A,
+      version: 2,
+      fields: [],
+      created_by: USER_A,
+    });
+    expect(publish.error?.code).toBe('42501');
+    const values = await a.from('matters').update({ field_values: {} }).eq('id', MATTER_A);
+    expect(values.error?.code).toBe('42501');
+    const anon = createClient(SUPABASE_URL, await signToken({ role: 'anon' }), {
+      auth: { persistSession: false },
+    });
+    for (const table of ['practice_profiles', 'practice_profile_versions'])
+      expect((await anon.from(table).select('id')).error?.code).toBe('42501');
+  });
+  it('scopes forums to the firm and jurisdiction references to granted matters', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'readonly');
+    const forums = await a.from('forums').select('id', { count: 'exact' }).order('name');
+    expect(forums.error).toBeNull();
+    expect(forums.data).toEqual([{ id: FORUM_ARCHIVED }, { id: FORUM_A }]);
+    // Row-lock system columns would reveal when a walled matter used a forum.
+    for (const table of ['forums', 'matter_jurisdictions'])
+      expect((await a.from(table).select('id,xmax')).error?.code).toBe('42501');
+    expect((await a.from('forums').select('*')).error).toBeNull();
+    const references = await a.from('matter_jurisdictions').select('matter_id,docket_number');
+    expect(references.error).toBeNull();
+    expect(references.data).toEqual([{ matter_id: MATTER_A, docket_number: 'GRANTED-1' }]);
+    const forged = await clientFor(USER_A, FIRM_B, 'owner');
+    for (const table of ['forums', 'matter_jurisdictions']) {
+      const foreign = await forged.from(table).select('id', { count: 'exact' });
+      expect(foreign.error).toBeNull();
+      expect(foreign.count).toBe(0);
+    }
+    await sql`update firm_members set deleted_at=now() where firm_id=${FIRM_A} and user_id=${USER_A}`;
+    try {
+      for (const table of ['forums', 'matter_jurisdictions']) {
+        const removed = await a.from(table).select('id', { count: 'exact' });
+        expect(removed.error).toBeNull();
+        expect(removed.count).toBe(0);
+      }
+    } finally {
+      await sql`update firm_members set deleted_at=null where firm_id=${FIRM_A} and user_id=${USER_A}`;
+    }
+  });
+  it('rejects direct forum/reference writes and anonymous reads', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'owner');
+    const create = await a.from('forums').insert({
+      firm_id: FIRM_A,
+      name: 'Forbidden',
+      kind: 'agency',
+      jurisdiction: 'NY',
+      created_by: USER_A,
+    });
+    expect(create.error?.code).toBe('42501');
+    const archive = await a
+      .from('forums')
+      .update({ archived_at: new Date().toISOString() })
+      .eq('id', FORUM_A);
+    expect(archive.error?.code).toBe('42501');
+    const add = await a.from('matter_jurisdictions').insert({
+      firm_id: FIRM_A,
+      matter_id: MATTER_A,
+      purpose: 'governing_law',
+      jurisdiction: 'NY',
+      created_by: USER_A,
+    });
+    expect(add.error?.code).toBe('42501');
+    const end = await a
+      .from('matter_jurisdictions')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('matter_id', MATTER_A);
+    expect(end.error?.code).toBe('42501');
+    const anon = createClient(SUPABASE_URL, await signToken({ role: 'anon' }), {
+      auth: { persistSession: false },
+    });
+    for (const table of ['forums', 'matter_jurisdictions'])
+      expect((await anon.from(table).select('id')).error?.code).toBe('42501');
+  });
+  it('keeps invitation identities and membership writes behind the API for members and anonymous clients', async () => {
+    const clients = [
+      await clientFor(USER_A, FIRM_A),
+      await clientFor(USER_A, FIRM_B),
+      createClient(SUPABASE_URL, await signToken({ role: 'anon' }), {
+        auth: { persistSession: false },
+      }),
+    ];
+    for (const client of clients) {
+      const read = await client.from('staff_invitations').select('*');
+      expect(read.error?.code).toBe('42501');
+      const preparation = await client.from('staff_invitations').insert({
+        firm_id: FIRM_A,
+        email: 'recipient@test.local',
+        role: 'owner',
+        created_by: USER_A,
+        expires_at: '2026-10-14T12:00:00Z',
+      });
+      expect(preparation.error?.code).toBe('42501');
+      const acceptance = await client
+        .from('staff_invitations')
+        .update({ status: 'accepted' })
+        .eq('firm_id', FIRM_A);
+      expect(acceptance.error?.code).toBe('42501');
+    }
+    const [permissions] =
+      await sql`select has_table_privilege('service_role','staff_invitations','DELETE') as can_delete`;
+    expect(permissions?.can_delete).toBe(false);
+  });
+  it('keeps recovery reasons and command provenance inaccessible to clients', async () => {
+    for (const client of [
+      await clientFor(USER_A, FIRM_A),
+      await clientFor(USER_A, FIRM_B),
+      createClient(SUPABASE_URL, await signToken({ role: 'anon' }), {
+        auth: { persistSession: false },
+      }),
+    ]) {
+      expect((await client.from('execution_recoveries').select('*')).error?.code).toBe('42501');
+      expect(
+        (await client.from('execution_recoveries').insert({ id: FIRM_A, firm_id: FIRM_A })).error
+          ?.code,
+      ).toBe('42501');
+    }
+    expect(
+      (
+        await sql`select has_table_privilege('service_role', 'execution_recoveries', 'UPDATE') or has_table_privilege('service_role', 'execution_recoveries', 'DELETE') as can_rewrite`
+      )[0]?.can_rewrite,
+    ).toBe(false);
+  });
+  it('keeps attempt history server-only for members, forged firm claims and anonymous clients', async () => {
+    for (const client of [
+      await clientFor(USER_A, FIRM_A),
+      await clientFor(USER_A, FIRM_B),
+      createClient(SUPABASE_URL, await signToken({ role: 'anon' }), {
+        auth: { persistSession: false },
+      }),
+    ]) {
+      const { data, error } = await client.from('job_execution_attempts').select('*');
+      expect(data).toBeNull();
+      expect(error?.code).toBe('42501');
+      const write = await client.from('job_execution_attempts').insert({
+        job_id: FIRM_A,
+        firm_id: FIRM_A,
+        created_by: USER_A,
+        attempt_number: 1,
+        lease_token: FIRM_A,
+        lease_until: '2026-10-06T10:30:00.000Z',
+      });
+      expect(write.error?.code).toBe('42501');
+    }
+    expect(
+      (
+        await sql`select has_table_privilege('service_role', 'public.job_execution_attempts', 'DELETE') as can_delete`
+      )[0]?.can_delete,
+    ).toBe(false);
+  });
   it('a member sees only their own firm', async () => {
     const a = await clientFor(USER_A, FIRM_A);
     const { data, error } = await a.from('firms').select('id, name');
@@ -160,5 +537,62 @@ describe('custom access token hook', () => {
       ) as event`;
     const claims = (row?.event as { claims: Record<string, string> }).claims;
     expect(claims.firm_id).toBeUndefined();
+  });
+});
+
+describe('current membership, even with an unexpired token', () => {
+  it('a deleted firm is neither readable nor stamped into a refreshed token', async () => {
+    const a = await clientFor(USER_A, FIRM_A);
+    await sql`update public.firms set deleted_at = now() where id = ${FIRM_A}`;
+    try {
+      const { data, error } = await a.from('practice_areas').select('id');
+      expect(error).toBeNull();
+      expect(data).toEqual([]);
+      const [row] = await sql`select public.custom_access_token_hook(
+        jsonb_build_object('user_id', ${USER_A}::text, 'claims', '{}'::jsonb)
+      ) as event`;
+      expect(row?.event.claims.firm_id).toBeUndefined();
+    } finally {
+      await sql`update public.firms set deleted_at = null where id = ${FIRM_A}`;
+    }
+  });
+
+  it('a token claiming another firm cannot read that firm without membership', async () => {
+    const a = await clientFor(USER_A, FIRM_B, 'owner');
+    const { data, error } = await a.from('firms').select('id');
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it('revocation immediately removes firm, colleague and practice-area reads', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'owner');
+    await sql`update public.firm_members set deleted_at = now()
+      where firm_id = ${FIRM_A} and user_id = ${USER_A}`;
+    try {
+      for (const table of ['firms', 'firm_members', 'practice_areas']) {
+        const { data, error } = await a.from(table).select('id');
+        expect(error).toBeNull();
+        expect(data, table).toEqual([]);
+      }
+    } finally {
+      await sql`update public.firm_members set deleted_at = null
+        where firm_id = ${FIRM_A} and user_id = ${USER_A}`;
+    }
+  });
+
+  it('token refresh removes stale firm claims after revocation', async () => {
+    await sql`update public.firm_members set deleted_at = now()
+      where firm_id = ${FIRM_A} and user_id = ${USER_A}`;
+    try {
+      const [row] = await sql`select public.custom_access_token_hook(
+        jsonb_build_object('user_id', ${USER_A}::text, 'claims',
+          jsonb_build_object('sub', ${USER_A}::text, 'firm_id', ${FIRM_A}::text,
+            'user_role', 'owner'))
+      ) as event`;
+      expect(row?.event.claims).toEqual({ sub: USER_A });
+    } finally {
+      await sql`update public.firm_members set deleted_at = null
+        where firm_id = ${FIRM_A} and user_id = ${USER_A}`;
+    }
   });
 });

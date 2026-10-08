@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "command_receipts_invitation_accept_intent_uq" ON "command_receipts" USING btree ("created_by","idempotency_key") WHERE "command_receipts"."command" = 'staff.invitation.accept.v1';

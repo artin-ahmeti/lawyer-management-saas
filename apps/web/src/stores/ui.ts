@@ -2,25 +2,6 @@
 
 import type { ReactNode } from 'react';
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
-
-/** Per-device layout preferences. */
-interface UiPrefs {
-  sidebarCollapsed: boolean;
-  toggleSidebar: () => void;
-  setSidebarCollapsed: (collapsed: boolean) => void;
-}
-
-export const useUiPrefs = create<UiPrefs>()(
-  persist(
-    (set) => ({
-      sidebarCollapsed: false,
-      toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
-      setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
-    }),
-    { name: 'clepso.ui', storage: createJSONStorage(() => localStorage), skipHydration: true },
-  ),
-);
 
 export type CaptureKind = 'Start timer' | 'Voice memo' | 'Log time' | 'Expense' | 'Task' | 'Note';
 

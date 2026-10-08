@@ -54,6 +54,8 @@ import {
 import { downloadFile, csv } from '@/lib/download';
 import { useOverlays } from '@/stores/ui';
 import { DocumentsPage } from '@/features/documents/DocumentsPage';
+import { previewMode } from '@/lib/env';
+import { LiveMatterPage } from './LiveMatterPage';
 
 const TABS = ['Overview', 'Activity', 'Tasks', 'Time', 'Documents', 'Billing', 'Trust', 'Contacts'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -141,6 +143,10 @@ const TIME_EMPTY: Record<string, string> = {
 };
 
 export function MatterPage({ id }: { id: string }) {
+  return previewMode ? <PreviewMatterPage id={id} /> : <LiveMatterPage id={id} />;
+}
+
+function PreviewMatterPage({ id }: { id: string }) {
   const matter = useMatter(id);
   const tasks = useTasks();
   const contacts = useContacts();

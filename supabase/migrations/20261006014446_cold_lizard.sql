@@ -1,0 +1,2 @@
+CREATE INDEX "outbox_events_firm_created_idx" ON "outbox_events" USING btree ("firm_id","created_at","id");--> statement-breakpoint
+CREATE INDEX "outbox_events_recovery_idx" ON "outbox_events" USING btree ("dispatched_at") WHERE "outbox_events"."dispatched_at" is not null and "outbox_events"."deleted_at" is null;

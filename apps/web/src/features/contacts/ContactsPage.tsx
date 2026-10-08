@@ -21,6 +21,8 @@ import { useOverlays } from '@/stores/ui';
 import { Modal } from '@/components/Modal';
 import { fmtDate, plural } from '@/lib/format';
 import { todayIso } from '@/lib/clock';
+import { previewMode } from '@/lib/env';
+import { LiveContactsPage } from './LiveContactsPage';
 
 type ChipKey = 'All' | 'Clients' | 'Opposing' | 'Experts';
 const CHIPS: { key: ChipKey; role: ContactRole | null }[] = [
@@ -49,8 +51,12 @@ function matterFor(contact: Contact, matters: Matter[]): Matter | undefined {
   );
 }
 
-/** Contacts: people and companies across matters, with a conflict pre-check on every card. */
 export function ContactsPage() {
+  return previewMode ? <PreviewContactsPage /> : <LiveContactsPage />;
+}
+
+/** Contacts: people and companies across matters, with a conflict pre-check on every card. */
+function PreviewContactsPage() {
   const contacts = useContacts();
   const matters = useMatters();
   const router = useRouter();

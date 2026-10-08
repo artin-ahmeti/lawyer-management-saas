@@ -5,3 +5,10 @@
  * supabase/migrations/. Money numeric(19,4); durations integer minutes.
  */
 export * from './tenancy.js';
+export * from './execution.js';
+export * from './staff-invitations.js';
+export * from './staff-session-contexts.js';
+export * from './practice-profiles.js';
+export * from './matters.js';
+export * from './contacts.js';
+export * from './jurisdictions.js';

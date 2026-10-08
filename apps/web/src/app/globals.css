@@ -148,31 +148,145 @@ a:hover {
   text-overflow: ellipsis;
 }
 
-/* Sidebar collapse: labels fade and collapse, the grid animates through --size-sidebar. */
+/* ── Sidebar ───────────────────────────────────────────────────────────────
+   One layout for both states, driven by a single variable: --rail is 0 when
+   expanded and 1 on the collapsed rail. Nothing re-anchors when it changes:
+   icon centre = sidebar padding 12 + item padding 10 + half the 18px icon = 31px,
+   so the 62px rail already centres every icon. Collapsing only narrows the
+   column; labels, counts and chevrons fade and are clipped by their row, no row
+   changes height, and the two 28px elements (firm mark, avatar) ease 5px onto
+   the icon axis. Because the state is one variable, the viewport default (rail
+   at ≤1100px when the user never chose) is plain CSS and correct on first paint. */
 .app-shell {
-  transition: grid-template-columns 200ms var(--ease-standard);
+  --rail: 0;
+  --size-sidebar: calc(256px - 194px * var(--rail));
+  --sidebar-ease: 220ms var(--ease-standard);
+  /* Expanded-only content leaves fast and returns once the column has opened;
+     rail-only content does the opposite. */
+  --rail-leave: calc(90ms + 70ms * (1 - var(--rail))) var(--ease-standard)
+    calc(70ms * (1 - var(--rail)));
+  --rail-enter: calc(90ms + 70ms * var(--rail)) var(--ease-standard) calc(70ms * var(--rail));
+  --rail-visibility: visible;
+  min-height: 100vh;
 }
+.app-shell.is-collapsed {
+  --rail: 1;
+  --rail-visibility: hidden;
+}
+@media (max-width: 1100px) {
+  .app-shell.is-auto {
+    --rail: 1;
+    --rail-visibility: hidden;
+  }
+}
+.app-shell[data-motion='on'] {
+  transition: grid-template-columns var(--sidebar-ease);
+}
+/* Until the first frame has painted, the initial state never animates in. */
+.app-shell:not([data-motion='on']) .app-sidebar,
+.app-shell:not([data-motion='on']) .app-sidebar *,
+.app-shell:not([data-motion='on']) .app-sidebar *::before,
+.app-shell:not([data-motion='on']) .app-sidebar *::after {
+  transition: none !important;
+}
+
 .app-sidebar {
   position: sticky;
   top: 0;
   height: 100vh;
+  padding: 12px;
+  gap: 2px;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: none;
   background: var(--surface-2);
 }
+.app-navitem {
+  position: relative;
+  isolation: isolate;
+  flex: none;
+  gap: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.app-navitem > .cl-ic {
+  flex: none;
+}
+/* The design-system hover is surface-2, the sidebar's own colour; use a half-strength active surface instead. */
+.app-sidebar .app-navitem:not(.is-active):hover {
+  background: color-mix(in oklab, var(--surface) 55%, transparent);
+  color: var(--ink);
+}
+.app-navitem:active {
+  transform: scale(0.985);
+}
+
+/* Expanded-only content fades; nothing changes size. */
 .app-sidebar__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.app-sidebar__stack {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  min-width: 0;
-  flex: 1;
-  overflow: hidden;
-  opacity: 1;
-  max-width: 200px;
+}
+.app-sidebar__trail {
+  flex: none;
+}
+.app-sidebar__label,
+.app-sidebar__trail,
+.app-sidebar__group-text,
+.app-sidebar__pace-body {
+  opacity: calc(1 - var(--rail));
+  transition: opacity var(--rail-leave);
+}
+.app-sidebar__collapse {
+  visibility: var(--rail-visibility);
   transition:
-    opacity 160ms var(--ease-standard),
-    max-width 200ms var(--ease-standard);
+    opacity var(--rail-leave),
+    visibility 0s linear calc(90ms * var(--rail));
+}
+
+/* Firm switcher: a card when expanded, just the mark on the rail. The card
+   chrome is a pseudo-element so it can fade without touching the row. */
+.app-sidebar__firm {
+  height: 48px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  color: var(--ink);
+}
+.app-sidebar__firm::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--surface);
+  box-shadow:
+    inset 0 0 0 1px var(--hairline),
+    var(--shadow-sm);
+  opacity: calc(1 - var(--rail));
+  transition:
+    opacity var(--sidebar-ease),
+    box-shadow 160ms var(--ease-standard);
+}
+.app-sidebar__firm:hover::before {
+  box-shadow:
+    inset 0 0 0 1px var(--border),
+    var(--shadow-sm);
+}
+.app-sidebar__firm-name,
+.app-sidebar__user-name {
+  max-width: 100%;
+  font-weight: 600;
+  color: var(--ink);
+}
+.app-sidebar__chevron {
+  display: inline-flex;
+  color: var(--ink-3);
 }
 .app-sidebar-mark {
   width: 28px;
@@ -184,6 +298,119 @@ a:hover {
   width: 18px;
   height: 18px;
 }
+.app-sidebar-mark,
+.app-sidebar__avatar {
+  transform: translateX(calc(-5px * var(--rail)));
+  transition: transform var(--sidebar-ease);
+}
+
+/* Group headers keep their height; on the rail the word becomes a short rule on the icon axis. */
+.app-sidebar__group {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.app-sidebar__group::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 22px;
+  width: 18px;
+  height: 1px;
+  background: var(--border);
+  opacity: var(--rail);
+  transition: opacity var(--rail-enter);
+}
+
+/* Unread badge: a pill with the count when expanded, a dot on the icon on the rail. */
+.app-navitem__dot {
+  position: absolute;
+  left: 23px;
+  top: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--surface-2);
+  pointer-events: none;
+  opacity: var(--rail);
+  transition: opacity var(--rail-enter);
+}
+.app-navitem.is-active .app-navitem__dot {
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.app-sidebar__spacer {
+  min-height: 12px;
+}
+
+/* Today's pace: a card when expanded, a vertical meter on the icon axis on the rail.
+   The body never wraps, so the card keeps its height in both states. */
+.app-sidebar__pace {
+  position: relative;
+  flex: none;
+  margin: 8px 0 6px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--accent-tint);
+  color: var(--accent-ink);
+  overflow: hidden;
+}
+.app-sidebar__pace-body {
+  white-space: nowrap;
+}
+.app-sidebar__pace-title {
+  font-weight: 600;
+}
+.app-sidebar__pace-bar {
+  background: color-mix(in oklab, var(--accent), transparent 80%);
+}
+.app-sidebar__pace-note {
+  margin-top: 8px;
+}
+.app-sidebar__pace-meter {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 16px;
+  width: 6px;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 3px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--accent), transparent 80%);
+  opacity: var(--rail);
+  transition: opacity var(--rail-enter);
+}
+.app-sidebar__pace-meter > span {
+  width: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+}
+
+/* Footer: avatar, name, and the collapse button (the top bar toggle expands it again). */
+.app-sidebar__footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 12px 10px 6px;
+  border-top: 1px solid var(--hairline);
+  overflow: hidden;
+}
+.app-sidebar__avatar {
+  display: inline-flex;
+  flex: none;
+}
+.app-sidebar__collapse {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+}
+
 .cl-navitem:hover,
 .cl-row:hover {
   text-decoration: none;
@@ -204,34 +431,6 @@ a:hover {
 }
 .app-time-table .cl-table__group .num {
   text-transform: none;
-}
-.app-sidebar__trail {
-  overflow: hidden;
-  max-width: 40px;
-  transition:
-    opacity 160ms,
-    max-width 200ms;
-}
-.app-shell.is-collapsed .app-sidebar__label,
-.app-shell.is-collapsed .app-sidebar__trail,
-.app-shell.is-collapsed .app-sidebar__group {
-  opacity: 0;
-  max-width: 0;
-}
-.app-shell.is-collapsed .app-sidebar__group {
-  height: 10px;
-  overflow: hidden;
-}
-.app-shell.is-collapsed .app-navitem {
-  justify-content: center;
-  padding: 0;
-}
-.app-navitem {
-  flex: none;
-  gap: 10px;
-}
-.app-navitem:active {
-  transform: scale(0.985);
 }
 
 .app-palette-item:hover,
@@ -764,6 +963,23 @@ body:has(dialog[open]) {
     min-width: 28px;
   }
 }
+/* Keep the timer and header actions usable alongside the rail on narrow screens. */
+@media (max-width: 400px) {
+  .cl-topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding-block: var(--space-2);
+    gap: var(--space-2);
+  }
+  .cl-topbar__search {
+    flex: 1 1 120px !important;
+  }
+  .cl-topbar__right {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

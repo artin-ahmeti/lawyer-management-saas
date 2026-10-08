@@ -15,10 +15,14 @@ import {
   useTimerSeconds,
   useTimerStore,
 } from '@/stores/timer';
-import { useOverlays, useUiPrefs } from '@/stores/ui';
+import { useSidebar } from '@/lib/sidebar';
+import { useOverlays } from '@/stores/ui';
+import { useStaffShell } from '@/lib/staff-shell';
+import { previewMode } from '@/lib/env';
 
 export function AppTopBar() {
-  const toggleSidebar = useUiPrefs((s) => s.toggleSidebar);
+  const staff = useStaffShell();
+  const { collapsed: sidebarCollapsed, toggle: toggleSidebar } = useSidebar();
   const openPalette = useOverlays((s) => s.openPalette);
   const openCapture = useOverlays((s) => s.openCapture);
   const { scheme, toggle: toggleTheme } = useTheme();
@@ -27,7 +31,10 @@ export function AppTopBar() {
       <button
         type="button"
         className="cl-btn cl-btn--ghost cl-btn--icon"
-        aria-label="Toggle sidebar"
+        aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-controls="app-sidebar"
+        aria-expanded={!sidebarCollapsed}
+        title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         onClick={toggleSidebar}
       >
         <Icon name="panel" />
@@ -67,7 +74,11 @@ export function AppTopBar() {
           <Icon name={scheme === 'dark' ? 'sun' : 'moon'} />
         </button>
         <Link href="/settings" aria-label="Your profile" style={{ display: 'inline-flex' }}>
-          <Avatar size="sm" tone="accent" initials={CURRENT_USER.initials} />
+          <Avatar
+            size="sm"
+            tone="accent"
+            initials={previewMode ? CURRENT_USER.initials : staff.initials}
+          />
         </Link>
       </div>
     </div>
