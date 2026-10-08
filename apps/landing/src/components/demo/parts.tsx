@@ -92,7 +92,7 @@ export function SourceChip({
       onClick={(e) => onOpen(id, e.currentTarget)}
       aria-pressed={active}
       className={cn(
-        'mx-0.5 inline-flex items-center gap-1 rounded-sm border px-1.5 py-px align-baseline text-caption transition-colors duration-150',
+        'source-chip mx-0.5 inline-flex min-h-11 items-center gap-1 rounded-sm border px-2 py-1 align-baseline text-caption transition-colors duration-150',
         active
           ? 'border-accent bg-accent-tint text-accent-ink'
           : 'border-line text-ink-2 hover:border-accent/60 hover:text-ink',
@@ -132,7 +132,7 @@ export function SourcePanel({ id, onClose }: { id: SourceId; onClose: () => void
         <button
           type="button"
           onClick={onClose}
-          className="-mr-2 -mt-2 grid size-10 shrink-0 place-items-center rounded-md text-ink-2 hover:bg-surface hover:text-ink"
+          className="-mr-2 -mt-2 grid size-11 shrink-0 place-items-center rounded-md text-ink-2 hover:bg-surface hover:text-ink"
           aria-label="Close source"
         >
           <Icon name="x" size={18} />

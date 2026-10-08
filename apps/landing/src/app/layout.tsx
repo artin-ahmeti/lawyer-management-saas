@@ -1,9 +1,15 @@
 import '@lawfirm/ui-web/clepso.tokens.css';
 import './globals.css';
+import './theme.css';
+import './redesign.css';
+import './hero.css';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { site } from '@/config/site';
+import { LANDING_THEME_COLOR } from '@/config/theme';
+import { ThemeProvider } from '@/components/site/ThemeProvider';
+import { getLandingTheme } from '@/lib/landing-theme';
 
 // The design system's families (Geist + Geist Mono, OFL), self-hosted by next/font.
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist', display: 'swap' });
@@ -29,18 +35,24 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title: site.title, description: site.description },
 };
 
-export const viewport: Viewport = {
-  themeColor: '#12151B', // dark --bg
-  colorScheme: 'dark',
-  width: 'device-width',
-  initialScale: 1,
-  viewportFit: 'cover',
-};
+export async function generateViewport(): Promise<Viewport> {
+  const theme = await getLandingTheme();
+  return {
+    themeColor: LANDING_THEME_COLOR[theme],
+    colorScheme: theme,
+    width: 'device-width',
+    initialScale: 1,
+    viewportFit: 'cover',
+  };
+}
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const theme = await getLandingTheme();
   return (
-    <html lang="en" data-theme="dark" className={`${geist.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+    <html lang="en" data-theme={theme} className={`${geist.variable} ${geistMono.variable}`}>
+      <body>
+        <ThemeProvider initialTheme={theme}>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

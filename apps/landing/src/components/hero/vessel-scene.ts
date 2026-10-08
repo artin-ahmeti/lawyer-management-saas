@@ -70,12 +70,14 @@ function lip(y: number, up: boolean): Vector2[] {
 }
 
 export interface VesselOptions {
+  theme?: 'dark' | 'light';
   /** Render one still frame without the flow (used for the static fallback). */
   still?: boolean;
   onFirstFrame?: () => void;
 }
 
 export interface VesselHandle {
+  setTheme(theme: 'dark' | 'light'): void;
   start(): void;
   stop(): void;
   setPaused(paused: boolean): void;
@@ -102,7 +104,10 @@ export function createVesselScene(
 
   const scene = new Scene();
   const pmrem = new PMREMGenerator(renderer);
-  const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  const room = new RoomEnvironment();
+  const environment = pmrem.fromScene(room, 0.04);
+  room.dispose();
+  const env = environment.texture;
   scene.environment = env;
 
   const camera = new PerspectiveCamera(26, 4 / 5, 0.1, 50);
@@ -123,23 +128,25 @@ export function createVesselScene(
   scene.add(vessel);
 
   const outerMat = new MeshPhysicalMaterial({
-    color: new Color(TOKENS.graphite),
-    roughness: 0.62,
-    metalness: 0.08,
-    clearcoat: 0.3,
-    clearcoatRoughness: 0.38,
-    envMapIntensity: 0.26,
+    color: new Color('#526ca5'),
+    roughness: 0.18,
+    metalness: 0.3,
+    transmission: 0.22,
+    thickness: 0.3,
+    clearcoat: 1,
+    clearcoatRoughness: 0.16,
+    envMapIntensity: 0.7,
     side: DoubleSide,
   });
   const innerMat = new MeshPhysicalMaterial({
     color: new Color(TOKENS.cobalt),
     vertexColors: true,
-    roughness: 0.6,
+    roughness: 0.26,
     metalness: 0.02,
     emissive: new Color(TOKENS.cobaltDeep),
-    emissiveIntensity: 0.12,
-    clearcoat: 0.15,
-    envMapIntensity: 0.22,
+    emissiveIntensity: 0.3,
+    clearcoat: 0.6,
+    envMapIntensity: 0.6,
     side: DoubleSide,
   });
   const lipMat = new MeshPhysicalMaterial({
@@ -151,16 +158,16 @@ export function createVesselScene(
     side: DoubleSide,
   });
 
-  const SEG = 160;
-  const outer = new Mesh(new LatheGeometry(profile(0, -HALF, HALF, 140), SEG), outerMat);
-  const innerGeo = new LatheGeometry(profile(WALL, HALF, -HALF, 140), SEG);
+  const SEG = 96;
+  const outer = new Mesh(new LatheGeometry(profile(0, -HALF, HALF, 96), SEG), outerMat);
+  const innerGeo = new LatheGeometry(profile(WALL, HALF, -HALF, 96), SEG);
   // Depth: the cobalt darkens toward the waist so the mouth reads as a well.
   const pos = innerGeo.getAttribute('position');
   const shade = new Float32Array(pos.count * 3);
   for (let i = 0; i < pos.count; i++) {
     const y = pos.getY(i);
-    const t = y > 0 ? Math.min(1, y / HALF) : 0;
-    const f = 0.08 + 0.62 * Math.pow(t, 1.6);
+    const t = Math.min(1, Math.abs(y) / HALF);
+    const f = 0.22 + 0.68 * Math.pow(t, 1.6);
     shade.set([f, f, f], i * 3);
   }
   innerGeo.setAttribute('color', new Float32BufferAttribute(shade, 3));
@@ -182,9 +189,9 @@ export function createVesselScene(
   dots.count = COUNT;
   vessel.add(dots);
   const seeds = Array.from({ length: COUNT }, (_, i) => ({
-    phase: i / COUNT + Math.random() * 0.02,
-    angle: Math.random() * Math.PI * 2,
-    spread: 0.35 + Math.random() * 0.5,
+    phase: i / COUNT,
+    angle: i * 2.399963,
+    spread: 0.35 + ((i * 17) % 29) / 58,
   }));
   const m = new Matrix4();
   const q = new Quaternion();
@@ -230,9 +237,12 @@ export function createVesselScene(
   function frame(now: number) {
     const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
     last = now;
-    if (!paused) elapsed += dt;
-    pointer.x += (pointer.tx - pointer.x) * 0.06;
-    pointer.y += (pointer.ty - pointer.y) * 0.06;
+    if (!paused) {
+      elapsed += dt;
+      const smoothing = 1 - Math.exp(-dt * 4);
+      pointer.x += (pointer.tx - pointer.x) * smoothing;
+      pointer.y += (pointer.ty - pointer.y) * smoothing;
+    }
     // At most ~3° of parallax.
     vessel.rotation.y = pointer.x * 0.05;
     vessel.rotation.x = 0.1 + pointer.y * 0.035;
@@ -243,12 +253,20 @@ export function createVesselScene(
       first = false;
       options.onFirstFrame?.();
     }
-    if (running) raf = requestAnimationFrame(frame);
+    if (running && !paused) raf = requestAnimationFrame(frame);
   }
 
+  function setTheme(theme: 'dark' | 'light') {
+    outerMat.color.set(theme === 'dark' ? '#526ca5' : '#b4c8f6');
+    lipMat.color.set(theme === 'dark' ? '#8eafff' : '#7797e4');
+    fill.intensity = theme === 'dark' ? 0.18 : 0.45;
+    renderer.render(scene, camera);
+  }
   resize();
+  setTheme(options.theme ?? 'dark');
 
   return {
+    setTheme,
     start() {
       if (running) return;
       running = true;
@@ -260,7 +278,13 @@ export function createVesselScene(
       cancelAnimationFrame(raf);
     },
     setPaused(next) {
+      if (paused === next) return;
       paused = next;
+      cancelAnimationFrame(raf);
+      if (running && !paused) {
+        last = 0;
+        raf = requestAnimationFrame(frame);
+      }
     },
     setPointer(x, y) {
       pointer.tx = x;
@@ -280,7 +304,7 @@ export function createVesselScene(
       dotGeo.dispose();
       dotMat.dispose();
       dots.dispose();
-      env.dispose();
+      environment.dispose();
       pmrem.dispose();
       renderer.dispose();
     },

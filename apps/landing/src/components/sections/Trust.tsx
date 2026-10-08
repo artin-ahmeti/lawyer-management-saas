@@ -42,13 +42,14 @@ const PRINCIPLES = [
 
 export function Trust() {
   return (
-    <section aria-labelledby="trust-title" className="section-y relative">
+    <section aria-labelledby="trust-title" className="section-y trust-section">
       <div className="container-mk">
         <div className="grid grid-cols-12 gap-x-6 gap-y-12">
           <div className="col-span-12 lg:col-span-5">
             <SectionLabel index="05">Control</SectionLabel>
             <h2 id="trust-title" className="text-h2 mt-6 text-ink">
-              Your judgment stays in charge.
+              Your practice.
+              <span className="heading-accent"> Your judgment.</span>
             </h2>
             <p className="text-lede mt-6 max-w-[34rem] text-ink-2">
               Clepso helps prepare the work. Decisions about clients, advice and what gets sent stay
@@ -56,7 +57,7 @@ export function Trust() {
             </p>
             <ul className="mt-10 grid gap-6">
               {PRINCIPLES.map((p) => (
-                <li key={p.title} className="border-l border-line pl-5">
+                <li key={p.title} className="border-l-2 border-accent/40 pl-5">
                   <p className="text-title-3 text-ink">{p.title}</p>
                   <p className="mt-1.5 text-body text-ink-2">{p.text}</p>
                 </li>
@@ -68,7 +69,7 @@ export function Trust() {
           </div>
 
           <div className="col-span-12 grid content-start gap-5 lg:col-span-6 lg:col-start-7">
-            <figure className="rounded-xl border border-hairline bg-surface shadow-lg">
+            <figure className="trust-panel rounded-xl border border-hairline">
               <figcaption className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-5 py-4">
                 <span className="flex items-center gap-2 text-label text-ink">
                   <Icon name="lock" size={16} className="text-ink-2" /> Who can see {MATTER.id}
@@ -104,7 +105,7 @@ export function Trust() {
               </ul>
             </figure>
 
-            <figure className="rounded-xl border border-hairline bg-surface shadow-lg lg:ml-12">
+            <figure className="trust-panel rounded-xl border border-hairline lg:ml-8">
               <figcaption className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-5 py-4">
                 <span className="flex items-center gap-2 text-label text-ink">
                   <Icon name="history" size={16} className="text-ink-2" /> Review record · client

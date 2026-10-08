@@ -10,7 +10,7 @@ export function Footer() {
   ].filter((l): l is { href: string; label: string } => l !== null);
 
   return (
-    <footer className="border-t border-hairline">
+    <footer className="site-footer border-t border-hairline">
       <div className="container-mk grid gap-10 py-12 md:grid-cols-[1fr_auto] md:items-start">
         <div>
           <Wordmark />
@@ -58,6 +58,19 @@ export function Footer() {
           </ul>
         </nav>
       </div>
+      <svg aria-hidden="true" focusable="false" className="footer-signature" viewBox="0 0 1000 240">
+        <text
+          x="500"
+          y="204"
+          textAnchor="middle"
+          fill="currentColor"
+          fontSize="240"
+          fontWeight="550"
+          letterSpacing="-16"
+        >
+          clepso.
+        </text>
+      </svg>
       <div className="container-mk flex flex-wrap items-center justify-between gap-3 border-t border-hairline py-6 text-caption text-ink-3">
         <p>© {new Date().getFullYear()} Clepso</p>
         {site.stage === 'preview' ? <p>Preview build · sample data · not indexed</p> : null}

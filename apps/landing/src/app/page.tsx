@@ -22,8 +22,8 @@ export default function Home() {
       <Header />
       <main id="main" tabIndex={-1} className="outline-none">
         <Hero />
-        <Recognition />
         <ProductReveal />
+        <Recognition />
         <AiWorkflows />
         <Capabilities />
         <Trust />

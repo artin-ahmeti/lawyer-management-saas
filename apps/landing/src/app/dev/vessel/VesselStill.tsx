@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createVesselScene } from '@/components/hero/vessel-scene';
+import { useLandingTheme } from '@/components/site/ThemeProvider';
 
 export function VesselStill() {
+  const { theme } = useLandingTheme();
   const ref = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
   useEffect(() => {
@@ -12,6 +14,7 @@ export function VesselStill() {
     document.body.style.background = 'transparent';
     const handle = createVesselScene(ref.current, {
       still: true,
+      theme,
       onFirstFrame: () => setReady(true),
     });
     handle.start();
@@ -20,7 +23,7 @@ export function VesselStill() {
       window.clearTimeout(t);
       handle.dispose();
     };
-  }, []);
+  }, [theme]);
   return (
     <canvas
       ref={ref}

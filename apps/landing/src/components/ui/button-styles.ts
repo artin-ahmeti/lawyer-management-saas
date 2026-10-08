@@ -10,7 +10,7 @@ export function buttonClass(
   extra?: string,
 ): string {
   return cn(
-    'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium tracking-[-0.005em]',
+    'mk-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium tracking-[-0.005em]',
     'transition-[background-color,border-color,color] duration-[180ms] ease-[var(--ease-standard)]',
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50',
     size === 'lg' ? 'h-12 px-5 text-[15px]' : 'h-11 px-4 text-[15px]',

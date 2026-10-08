@@ -1,0 +1,443 @@
+.hero-section {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  overflow: clip;
+}
+.hero-section::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 60% 38% at 50% 56%,
+    color-mix(in srgb, var(--mk-hero-glow) 10%, transparent),
+    transparent
+  );
+}
+.hero-copy {
+  padding-top: clamp(126px, 10vw, 144px);
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 12px;
+}
+.hero-eyebrow span {
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.hero-title {
+  font-size: clamp(46px, 6.4vw, 92px);
+  line-height: 1.02;
+  font-weight: 560;
+  letter-spacing: -0.055em;
+  margin-top: 25px;
+  text-wrap: balance;
+}
+.hero-title > span {
+  display: block;
+}
+.hero-title .heading-accent {
+  background: linear-gradient(110deg, var(--mk-heading-accent), var(--accent-ink));
+  background-clip: text;
+  color: transparent;
+}
+.hero-description {
+  max-width: 580px;
+  margin: 24px auto 0;
+  font-size: clamp(16px, 1.5vw, 18px);
+  line-height: 1.6;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+.hero-disclosure {
+  margin: 16px auto 0;
+  max-width: 540px;
+  color: var(--ink-3);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.clepsydra-stage {
+  width: 100%;
+  max-width: 1320px;
+  margin: 4px auto 0;
+  position: relative;
+  height: 650px;
+  container-type: inline-size;
+}
+.vessel-object {
+  position: absolute;
+  width: 400px;
+  height: 500px;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+.vessel-object img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.vessel-glow {
+  position: absolute;
+  inset: 16% -25% 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse,
+    color-mix(in srgb, var(--mk-hero-glow) 12%, transparent),
+    transparent 70%
+  );
+  z-index: -1;
+}
+.hero-canopy {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 315px;
+  color: var(--mk-canopy);
+  z-index: 0;
+  overflow: visible;
+}
+.hero-orbit {
+  position: absolute;
+  width: 710px;
+  height: 220px;
+  left: 50%;
+  top: 160px;
+  transform: translateX(-50%) rotate(-12deg);
+  border: 1px solid color-mix(in srgb, var(--accent) 9%, transparent);
+  border-radius: 50%;
+  z-index: 1;
+}
+.hero-artifact {
+  position: absolute;
+  z-index: 3;
+  width: 228px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 95%, transparent);
+  box-shadow: 0 12px 40px -12px #0003;
+  animation: artifact-arrive 700ms var(--ease-standard) var(--delay, 0s) both;
+}
+.hero-artifact-header {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  color: var(--ink-2);
+  font-size: 11px;
+}
+.hero-artifact-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--accent);
+  background: var(--accent-tint);
+}
+.hero-artifact p {
+  font-size: 12px;
+  color: var(--ink);
+  margin-top: 9px;
+}
+.hero-artifact small {
+  display: block;
+  font-size: 10px;
+  color: var(--ink-3);
+  margin-top: 3px;
+}
+.artifact-email {
+  left: 9%;
+  top: 66px;
+  transform: rotate(-5deg);
+  --delay: 0.3s;
+}
+.artifact-document {
+  right: 9%;
+  top: 90px;
+  transform: rotate(5deg);
+  --delay: 0.45s;
+}
+.artifact-date {
+  left: 14%;
+  top: 256px;
+  transform: rotate(-3deg);
+  --delay: 0.6s;
+}
+.artifact-time {
+  right: 11%;
+  top: 270px;
+  transform: rotate(3deg);
+  width: 175px;
+  --delay: 0.75s;
+}
+.hero-connection {
+  position: absolute;
+  z-index: 1;
+  top: 114px;
+  left: 24%;
+  right: 24%;
+  height: 140px;
+  pointer-events: none;
+  opacity: 0.35;
+}
+.hero-output {
+  position: absolute;
+  z-index: 4;
+  width: 340px;
+  left: 50%;
+  top: 335px;
+  transform: translateX(-50%);
+}
+.hero-output .seq-card {
+  animation-delay: 1.7s;
+}
+.hero-output figure {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: var(--mk-panel-shadow);
+  border-radius: 14px;
+}
+.hero-output figcaption {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+.hero-output figcaption > span:first-child {
+  display: grid;
+  gap: 2px;
+}
+.hero-output figcaption .ml-2 {
+  margin-left: 0;
+}
+.hero-output figcaption > span:last-child {
+  padding-top: 2px;
+}
+.hero-connection path {
+  animation: connection-flow 3.6s linear 0.4s both;
+}
+@keyframes connection-flow {
+  from {
+    stroke-dashoffset: 90;
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+.hero-output li {
+  padding-block: 8px;
+}
+.hero-output .seq-settle {
+  display: none;
+}
+.hero-output .seq-row {
+  animation-delay: 2s !important;
+}
+.motion-controls {
+  position: absolute;
+  z-index: 5;
+  bottom: 16px;
+  right: max(20px, 5%);
+  display: flex;
+  gap: 4px;
+}
+.motion-controls button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: var(--ink-2);
+  font-size: 11px;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  border: 1px solid var(--hairline);
+  cursor: pointer;
+}
+.motion-controls button:hover {
+  color: var(--ink);
+  background: var(--surface);
+}
+.clepsydra-stage.is-paused * {
+  animation-play-state: paused !important;
+}
+.clepsydra-stage.is-inactive * {
+  animation-play-state: paused !important;
+}
+@keyframes artifact-arrive {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+}
+@media (max-width: 1023px) {
+  .clepsydra-stage {
+    height: 650px;
+  }
+  .vessel-object {
+    width: 370px;
+    height: 462px;
+  }
+  .hero-artifact {
+    width: 190px;
+    padding: 12px;
+  }
+  .artifact-email {
+    left: 4%;
+    top: 70px;
+  }
+  .artifact-document {
+    right: 4%;
+    top: 100px;
+  }
+  .artifact-date {
+    left: 8%;
+    top: 245px;
+  }
+  .artifact-time {
+    right: 6%;
+    top: 265px;
+    width: 165px;
+  }
+  .hero-output {
+    top: 335px;
+  }
+  .hero-orbit {
+    width: 80%;
+  }
+  .hero-canopy {
+    height: 280px;
+  }
+}
+@media (max-width: 639px) {
+  .hero-copy {
+    padding-top: 116px;
+  }
+  .hero-title {
+    margin-top: 24px;
+    font-size: clamp(42px, 10vw, 62px);
+    letter-spacing: -0.05em;
+  }
+  .hero-description {
+    margin-top: 20px;
+    font-size: 16px;
+  }
+  .hero-actions {
+    gap: 10px;
+  }
+  .hero-actions .mk-button {
+    padding-inline: 16px;
+    font-size: 14px;
+  }
+  .hero-disclosure {
+    font-size: 10px;
+  }
+  .clepsydra-stage {
+    margin-top: 12px;
+    height: 630px;
+  }
+  .vessel-object {
+    width: 290px;
+    height: 362px;
+    top: 25px;
+  }
+  .hero-artifact {
+    width: 142px;
+    padding: 10px;
+    border-radius: 10px;
+  }
+  .hero-artifact p {
+    font-size: 10px;
+    margin-top: 5px;
+  }
+  .hero-artifact small {
+    display: none;
+  }
+  .hero-artifact-header {
+    font-size: 9px;
+    gap: 6px;
+  }
+  .hero-artifact-icon {
+    width: 22px;
+    height: 22px;
+  }
+  .artifact-email {
+    left: 3%;
+    top: 4px;
+  }
+  .artifact-document {
+    right: 3%;
+    top: 27px;
+  }
+  .artifact-date {
+    left: 3%;
+    top: 175px;
+    width: 128px;
+  }
+  .artifact-time {
+    right: 3%;
+    top: 195px;
+    width: 113px;
+  }
+  .hero-output {
+    top: 313px;
+    width: min(320px, 86%);
+  }
+  .hero-canopy {
+    height: 300px;
+    width: 150%;
+  }
+  .hero-orbit {
+    top: 136px;
+    height: 160px;
+    width: 94%;
+  }
+  .motion-controls {
+    bottom: 12px;
+    right: 50%;
+    transform: translateX(50%);
+  }
+  .hero-connection {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-controls {
+    display: none;
+  }
+  .hero-artifact {
+    animation: none;
+  }
+  .hero-connection path {
+    animation: none;
+  }
+}

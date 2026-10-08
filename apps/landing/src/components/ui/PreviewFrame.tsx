@@ -20,7 +20,7 @@ export function PreviewFrame({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-xl border border-hairline bg-surface shadow-lg',
+        'preview-frame overflow-hidden rounded-xl border border-hairline bg-surface shadow-lg',
         className,
       )}
     >

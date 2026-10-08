@@ -3,7 +3,7 @@
 /*
  * Clepso landing. Tokens come from @lawfirm/ui-web/clepso.tokens.css (generated
  * from design/src), imported in layout.tsx before this file, with the page
- * pinned to the dark set (<html data-theme="dark">). Tailwind's theme below only
+ * selecting the saved landing theme. Tailwind's theme below only
  * maps utilities onto those tokens; it defines no colours of its own.
  *
  * Name collisions resolve in the tokens' favour on purpose: Tailwind declares
@@ -71,7 +71,6 @@
   html {
     background: var(--bg);
     color: var(--ink);
-    color-scheme: dark;
     scroll-behavior: smooth;
     scroll-padding-top: 84px;
     -webkit-text-size-adjust: 100%;
@@ -199,44 +198,6 @@
    fail: every element's resting style is its final state; the keyframes only
    supply the start (fill-mode: both). Reduced motion shows the final state. */
 
-.hero-art {
-  container-type: inline-size;
-}
-
-.frag {
-  position: absolute;
-  left: 50%;
-  top: 20%;
-  translate: -50% -50%;
-  opacity: 0;
-  pointer-events: none;
-  animation: frag-flow 3.3s var(--ease-standard) var(--delay, 0s) both;
-}
-
-@keyframes frag-flow {
-  0% {
-    opacity: 0;
-    transform: translate(calc(var(--fx) + var(--dx, 0cqw)), calc(var(--fy) + var(--dy, -2cqw)))
-      rotate(var(--fr)) scale(0.96);
-  }
-  16% {
-    opacity: 1;
-    transform: translate(var(--fx), var(--fy)) rotate(var(--fr)) scale(1);
-  }
-  42% {
-    opacity: 1;
-    transform: translate(var(--fx), var(--fy)) rotate(var(--fr)) scale(1);
-  }
-  82% {
-    opacity: 0.85;
-    transform: translate(0, 1cqw) rotate(0deg) scale(0.34);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(0, 5cqw) rotate(0deg) scale(0.12);
-  }
-}
-
 .seq-card {
   animation: seq-card 0.6s var(--ease-standard) 2.45s both;
 }
@@ -260,30 +221,10 @@
   }
 }
 
-/* Headline: a short, legible line reveal; the text is real and always present. */
-.line-reveal > span {
-  display: block;
-  width: max-content;
-  max-width: 100%;
-  overflow: clip;
-  padding-bottom: 0.06em;
-  margin-bottom: -0.06em;
-}
-.line-reveal > span > span {
-  display: block;
-  animation: line-up 0.7s var(--ease-standard) var(--delay, 0s) both;
-}
-@keyframes line-up {
-  from {
-    transform: translateY(104%);
-  }
-}
-
 .fade-up {
   animation: seq-row 0.6s var(--ease-standard) var(--delay, 0.2s) both;
 }
 
-.is-paused .frag,
 .is-paused .seq-card,
 .is-paused .seq-row,
 .is-paused .seq-settle {
@@ -291,13 +232,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .frag {
-    display: none;
-  }
   .seq-card,
   .seq-row,
   .seq-settle,
-  .line-reveal > span > span,
   .fade-up {
     animation: none;
   }
@@ -350,8 +287,8 @@ summary::-webkit-details-marker {
 }
 @keyframes reveal-in {
   from {
-    transform: translateY(28px);
-    opacity: 0.55;
+    transform: translateY(18px);
+    opacity: 0.75;
   }
 }
 

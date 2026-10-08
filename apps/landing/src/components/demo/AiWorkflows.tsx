@@ -63,32 +63,29 @@ export function AiWorkflows() {
   const current = WORKFLOWS.find((w) => w.id === active)!;
 
   return (
-    <section id="ai" aria-labelledby="ai-title" className="section-y relative">
+    <section id="ai" aria-labelledby="ai-title" className="section-y ai-section">
       <div className="container-mk">
-        <div className="grid grid-cols-12 gap-x-6 gap-y-6">
-          <div className="col-span-12 lg:col-span-8">
-            <SectionLabel index="03">AI workflows</SectionLabel>
-            <h2 id="ai-title" className="text-h2 mt-6 text-ink">
-              <span className="block">From incoming work</span>
-              <span className="block text-ink-2">to a reviewed next step.</span>
-            </h2>
-          </div>
-          <div className="col-span-12 self-end lg:col-span-4">
-            <p className="text-lede text-ink-2">
-              Turn matter information into useful drafts, summaries and suggested actions. Review
-              the sources. Decide what happens next.
-            </p>
-          </div>
+        <div className="section-heading">
+          <SectionLabel index="03">Thoughtfully assisted. Always reviewed.</SectionLabel>
+          <h2 id="ai-title" className="text-h2 text-ink">
+            A head start on the work.
+            <br />
+            <span className="heading-accent">The final word is yours.</span>
+          </h2>
+          <p className="text-lede text-ink-2">
+            Turn incoming information into useful drafts, summaries and next steps. Follow the
+            sources. Decide what happens next.
+          </p>
         </div>
 
-        <p className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 text-body-sm text-ink-2">
+        <p className="mt-7 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-center text-caption text-ink-3">
           <StatusBadge status="preview" />
           These workflows are in preview. The demo runs on sample data; no AI service is called and
           nothing you type leaves this page.
         </p>
 
-        <div className="mt-10 grid grid-cols-12 gap-x-6 gap-y-6">
-          <div className="col-span-12 lg:col-span-4 lg:sticky lg:top-28 lg:self-start">
+        <div className="ai-layout">
+          <div className="min-w-0 lg:sticky lg:top-28">
             <Tabs
               items={WORKFLOWS.map((w) => ({
                 id: w.id,
@@ -113,20 +110,14 @@ export function AiWorkflows() {
               onSelect={select}
               label="AI workflows"
               idBase="ai"
-              className="no-scrollbar -mx-[var(--mk-gutter)] flex gap-2 overflow-x-auto px-[var(--mk-gutter)] lg:mx-0 lg:grid lg:gap-2 lg:overflow-visible lg:px-0"
-              tabClassName={(on) =>
-                cn(
-                  'block min-h-11 shrink-0 rounded-lg border px-3 py-2.5 transition-colors duration-200 lg:p-4',
-                  on
-                    ? 'border-accent/55 bg-surface'
-                    : 'border-hairline hover:border-line hover:bg-surface/60',
-                )
-              }
+              orientation="responsive"
+              className="workflow-tabs no-scrollbar"
+              tabClassName={() => 'workflow-tab'}
             />
             <p className="mt-4 text-body-sm text-ink-2 lg:hidden">{current.summary}</p>
           </div>
 
-          <div className="col-span-12 lg:col-span-8">
+          <div className="min-w-0">
             <PreviewFrame
               title={
                 <span>
@@ -144,7 +135,7 @@ export function AiWorkflows() {
                   key={w.id}
                   {...tabPanelProps('ai', w.id)}
                   hidden={w.id !== active}
-                  className="outline-none"
+                  className="workflow-panel focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
                 >
                   {w.id === 'email' ? (
                     <EmailWorkflow onComplete={(o) => complete('email', o)} />
