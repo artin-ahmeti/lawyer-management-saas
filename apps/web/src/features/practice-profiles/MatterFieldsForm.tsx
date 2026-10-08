@@ -1,6 +1,6 @@
 'use client';
 import { ApiError, type createApiClient } from '@lawfirm/api-client';
-import { applyFieldValues, type MatterFields, type PracticeProfileRecord } from '@lawfirm/core';
+import { applyFieldValues, type MatterFields } from '@lawfirm/core';
 import { Banner, Button } from '@lawfirm/ui-web';
 import { useEffect, useRef, useState } from 'react';
 import { FieldValueInputs } from './FieldValueInputs';
@@ -11,13 +11,14 @@ import {
   submitMatterFieldsCommand,
   type MatterFieldsCommand,
 } from './live-profiles';
-import { ProfilePicker } from './ProfilePicker';
+import { ProfilePicker, type PickedProfile } from './ProfilePicker';
 import styles from './PracticeProfiles.module.css';
 
 const messages: Record<string, string> = {
   MATTER_CHANGED: 'This matter changed after you opened it. Refresh to review the current values.',
   MATTER_FIELDS_UNCHANGED: 'These values are already saved.',
-  PROFILE_CHANGED: 'This practice profile changed. Choose it again to use its current fields.',
+  PROFILE_CHANGED:
+    'This practice profile changed. Close this form and choose it again to use its current fields.',
   PROFILE_ARCHIVED: 'This practice profile was archived. Choose an active profile.',
   PROFILE_PINNED: 'This matter already uses a practice profile. Refresh to review it.',
 };
@@ -30,7 +31,7 @@ export function MatterFieldsForm({
   client,
   context,
   firmId,
-  fields: loaded,
+  fields: opened,
   onSaved,
   onCancel,
 }: {
@@ -41,7 +42,10 @@ export function MatterFieldsForm({
   onSaved: (fields: MatterFields) => void;
   onCancel: () => void;
 }) {
-  const [picked, setPicked] = useState<PracticeProfileRecord>();
+  // The matter as opened: background reads never change the revision under review.
+  const [loaded] = useState(opened);
+  const [choice, setChoice] = useState<PickedProfile>({ state: 'none' });
+  const picked = choice.state === 'ready' ? choice.profile : undefined;
   const definitions = loaded.profile?.version.fields ?? picked?.currentVersion.fields ?? [];
   const [form, setForm] = useState(() => fieldForm(definitions, loaded.values));
   const [issues, setIssues] = useState<Record<string, string>>({});
@@ -64,7 +68,14 @@ export function MatterFieldsForm({
     if (running.current || terminal) return;
     let current = intent;
     if (!current) {
-      if (assigning && !picked) return setError('Choose a practice profile first.');
+      if (assigning && !picked)
+        return setError(
+          choice.state === 'loading'
+            ? 'Wait for the practice profile’s fields to load.'
+            : choice.state === 'failed'
+              ? 'The chosen practice profile could not be loaded. Retry it.'
+              : 'Choose a practice profile first.',
+        );
       const patch = fieldPatch(definitions, loaded.values, form);
       const checked = applyFieldValues(definitions, loaded.values, patch);
       if (!checked.ok) {
@@ -89,7 +100,7 @@ export function MatterFieldsForm({
       if (active.current) onSaved(result.fields);
     } catch (e) {
       if (!active.current) return;
-      const final = e instanceof ApiError && [401, 403, 404, 409, 422].includes(e.status);
+      const final = e instanceof ApiError && [401, 403, 404, 409, 413, 422].includes(e.status);
       setTerminal(final);
       setError(
         e instanceof ApiError && e.code === 'FIELD_VALUES_INVALID'
@@ -125,9 +136,12 @@ export function MatterFieldsForm({
           idPrefix="matter-assign"
           disabled={!!intent}
           onProfile={(next) => {
-            setPicked(next);
-            setForm(fieldForm(next?.currentVersion.fields ?? [], {}));
+            setChoice(next);
+            setForm(
+              fieldForm(next.state === 'ready' ? next.profile.currentVersion.fields : [], {}),
+            );
             setIssues({});
+            setError('');
           }}
         />
       )}
@@ -144,7 +158,7 @@ export function MatterFieldsForm({
       {error && <Banner role="alert" tone="warning" title={error} />}
       <div className={styles.actions}>
         {!terminal && (
-          <Button type="submit" variant="primary" disabled={busy}>
+          <Button type="submit" variant="primary" disabled={busy || choice.state === 'loading'}>
             {busy
               ? 'Saving fields…'
               : intent

@@ -120,7 +120,28 @@ export async function verifyPracticeProfiles({
     `[...document.querySelectorAll('#matter-create-profile option')].length > 1`,
     'profile options',
   );
+  // While the chosen profile's fields load, the matter cannot be created without them.
+  held = undefined;
+  listeners.set('Fetch.requestPaused', (e) => {
+    held = e.requestId;
+  });
+  await send('Fetch.enable', {
+    patterns: [{ urlPattern: `${api}/practice-profiles/${profile.id}`, requestStage: 'Request' }],
+  });
   await choose('#matter-create-profile', profile.id);
+  for (let i = 0; i < 100 && !held; i++) await new Promise((r) => setTimeout(r, 30));
+  assert(held, 'Profile detail request held');
+  assert.equal(
+    await evaluate(
+      `[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Create matter').disabled`,
+    ),
+    true,
+    'Create waits for the profile fields',
+  );
+  await waitFor(hasText('Loading profile fields'), 'profile fields loading');
+  await screenshot('06a-matter-profile-loading');
+  await send('Fetch.continueRequest', { requestId: held });
+  await send('Fetch.disable');
   await waitFor(`Boolean(document.querySelector('#matter-create-field-entity_name'))`, 'fields');
   await type('#matter-create-field-entity_name', 'Northwind Holdings');
   await button('Create matter');
@@ -162,8 +183,22 @@ export async function verifyPracticeProfiles({
   // Reviewed-revision edits: a save succeeds; a stale one is refused without overwriting.
   await button('Edit fields');
   await type('#matter-field-entity_name', 'Northwind Holdings LLC');
+  // Returning to the window refetches the matter; the open form and its input survive.
+  await evaluate(`window.dispatchEvent(new Event('visibilitychange')), true`);
+  await new Promise((r) => setTimeout(r, 800));
+  assert.equal(
+    await evaluate(`document.querySelector('#matter-field-entity_name')?.value`),
+    'Northwind Holdings LLC',
+    'Typed value survives a matter refetch',
+  );
   await button('Save fields');
+  await waitFor(hasText('Matter fields saved.'), 'saved banner');
   await waitFor(hasText('Northwind Holdings LLC'), 'saved values');
+  assert.equal(
+    await evaluate(`document.activeElement?.textContent.trim()`),
+    'Practice profile',
+    'Focus returns to the card heading',
+  );
   await button('Edit fields');
   await type('#matter-field-counterparty', 'Contoso Ltd');
   await sql`update matters set revision=revision+1 where id=${matter.id}`;

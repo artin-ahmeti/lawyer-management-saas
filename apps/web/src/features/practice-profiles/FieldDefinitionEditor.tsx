@@ -40,12 +40,19 @@ export function FieldDefinitionEditor({
             </Field>
             <Field
               label={<span id={`${id}-type-l`}>Type</span>}
-              help={d.published ? `Key ${d.key}` : undefined}
+              help={
+                d.typeLocked
+                  ? `Key ${d.key} · type fixed once published`
+                  : d.published
+                    ? `Key ${d.key}`
+                    : undefined
+              }
             >
               <select
                 aria-labelledby={`${id}-type-l`}
                 className={`cl-input ${styles.select}`}
                 value={d.type}
+                disabled={d.typeLocked}
                 onChange={(e) => update(i, { type: e.target.value as PracticeFieldType })}
               >
                 {fieldTypes.map((t) => (

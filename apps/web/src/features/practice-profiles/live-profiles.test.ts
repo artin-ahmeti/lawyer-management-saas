@@ -201,3 +201,58 @@ it('reads only own values, so a field keyed like an object member starts empty',
   expect(fieldPatch(inherited, {}, { constructor: 'Set' })).toEqual({ constructor: 'Set' });
   expect(fieldPatch(inherited, {}, { constructor: '' })).toEqual({});
 });
+
+it('treats equal numbers, yes/no answers and padded text as unchanged and clears only set values', () => {
+  const current = { entity_name: 'Northwind', share_count: 10, board_approved: false };
+  const form = fieldForm(fields, current);
+  expect(form.board_approved).toBe('no');
+  expect(
+    fieldPatch(fields, current, {
+      ...form,
+      entity_name: '  Northwind ',
+      share_count: '10.0',
+      board_approved: 'no',
+    }),
+  ).toEqual({});
+  expect(fieldPatch(fields, current, { ...form, board_approved: 'yes', target_close: '' })).toEqual(
+    { board_approved: true },
+  );
+  expect(fieldPatch(fields, current, { ...form, entity_name: '   ' })).toEqual({
+    entity_name: null,
+  });
+});
+
+it('ignores whitespace-only edits to profile details but counts a field reorder as a change', () => {
+  expect(
+    profileChanges(profile, { name: '  Deals  ', description: '   ', fields, archived: false }),
+  ).toBeNull();
+  const reordered = [...fields].reverse();
+  expect(
+    profileChanges(profile, { name: 'Deals', description: '', fields: reordered, archived: false }),
+  ).toEqual({ expectedRevision: 2, fields: reordered });
+  // A field set the shared rules refuse throws before any intent exists (the editor catches it).
+  const duplicate = [fields[0]!, fields[0]!];
+  expect(() =>
+    profileChanges(profile, { name: 'Deals', description: '', fields: duplicate, archived: false }),
+  ).toThrow();
+});
+
+it('builds a patch from an empty form when a field is keyed like an object member', () => {
+  const inherited: PracticeFieldDefinition[] = [
+    { key: 'constructor', label: 'Constructor', type: 'text', required: false },
+    { key: 'notes', label: 'Notes', type: 'long_text', required: false },
+  ];
+  expect(fieldPatch(inherited, {}, {})).toEqual({});
+  expect(fieldPatch(inherited, {}, { notes: 'Site survey' })).toEqual({ notes: 'Site survey' });
+});
+
+it('never gives a new field a key the current version already uses', () => {
+  const drafts = [
+    { ...draftFrom({ key: 'x', label: '', type: 'text', required: false }, false), label: 'Notes' },
+  ];
+  // "notes" was removed from the drafts but stays reserved by the current version.
+  expect(definitionsFrom(drafts, ['notes'])).toEqual([
+    { key: 'notes_2', label: 'Notes', type: 'text', required: false },
+  ]);
+  expect(draftFrom(fields[0]!, true, true).typeLocked).toBe(true);
+});

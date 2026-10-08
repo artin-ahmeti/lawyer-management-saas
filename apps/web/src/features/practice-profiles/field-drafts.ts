@@ -14,16 +14,23 @@ export type DraftField = {
   draftId: string;
   key: string;
   published: boolean;
+  /** Published fields keep their type; a different type needs a new field. */
+  typeLocked: boolean;
   label: string;
   type: PracticeFieldType;
   required: boolean;
   help: string;
   options: string;
 };
-export const draftFrom = (f: PracticeFieldDefinition, published: boolean): DraftField => ({
+export const draftFrom = (
+  f: PracticeFieldDefinition,
+  published: boolean,
+  typeLocked = false,
+): DraftField => ({
   draftId: crypto.randomUUID(),
   key: f.key,
   published,
+  typeLocked,
   label: f.label,
   type: f.type,
   required: f.required,
@@ -31,8 +38,11 @@ export const draftFrom = (f: PracticeFieldDefinition, published: boolean): Draft
   options: f.type === 'choice' ? f.options.join('\n') : '',
 });
 /** Field definitions as the shared contract expects; keys of new fields are made unique. */
-export function definitionsFrom(drafts: DraftField[]): PracticeFieldDefinition[] {
-  const used = new Set(drafts.filter((d) => d.published).map((d) => d.key));
+export function definitionsFrom(
+  drafts: DraftField[],
+  reserved: readonly string[] = [],
+): PracticeFieldDefinition[] {
+  const used = new Set([...reserved, ...drafts.filter((d) => d.published).map((d) => d.key)]);
   return drafts.map((d) => {
     let key = d.key;
     if (!d.published) {

@@ -3,12 +3,14 @@ import {
   applyFieldValues,
   createPracticeProfileSchema,
   practiceFieldListSchema,
+  practiceProfileListQuerySchema,
   practiceStarterKeySchema,
   revisePracticeProfileSchema,
   updateMatterFieldsSchema,
   type PracticeFieldDefinition,
 } from './practice-profile.js';
 import { practiceStarters } from './practice-profile-starters.js';
+import { createMatterSchema } from './matter.js';
 
 const fields: PracticeFieldDefinition[] = [
   { key: 'entity_name', label: 'Entity name', type: 'text', required: true },
@@ -89,6 +91,18 @@ describe('practice field definitions', () => {
       { name: 'Deals', fields: [{ ...text, type: 'choice', options: ['Yes\u0000'] }] },
     ])
       expect(createPracticeProfileSchema.safeParse(bad).success).toBe(false);
+  });
+
+  it('keeps a field set within one request body (90 KB of definitions)', () => {
+    const wide = Array.from({ length: 50 }, (_, i) => ({
+      key: `f${i}`,
+      label: `Field ${i}`,
+      type: 'choice',
+      required: false,
+      options: Array.from({ length: 50 }, (_, j) => `Option ${j} `.padEnd(80, 'x')),
+    }));
+    expect(practiceFieldListSchema.safeParse(wide).success).toBe(false);
+    expect(practiceFieldListSchema.safeParse(wide.slice(0, 10)).success).toBe(true);
   });
 
   it('accepts only primitive values keyed by field keys in a matter edit', () => {
@@ -196,13 +210,13 @@ describe('applyFieldValues', () => {
       type: 'long_text',
       required: false,
     }));
-    // 30 × 5000 three-byte characters passes each field's limit but not the total budget.
+    // 30 × 5000 three-byte characters passes each field's limit but not the 90 KB budget.
     const wide = Object.fromEntries(many.map((f) => [f.key, '漢'.repeat(5000)]));
     expect(applyFieldValues(many, {}, wide)).toEqual({
       ok: false,
       issues: [{ key: '*', message: 'These values are too long to save together.' }],
     });
-    const fits = Object.fromEntries(many.slice(0, 10).map((f) => [f.key, '漢'.repeat(5000)]));
+    const fits = Object.fromEntries(many.slice(0, 5).map((f) => [f.key, '漢'.repeat(5000)]));
     expect(applyFieldValues(many, {}, fits).ok).toBe(true);
   });
 
@@ -262,5 +276,116 @@ describe('operational starter catalog', () => {
     ] as const)
       for (const field of practiceStarters[key].fields)
         expect(`${field.key} ${field.label}`).not.toMatch(litigationOnly);
+  });
+});
+
+describe('field value boundaries', () => {
+  const base = { entity_name: 'A' };
+  const ok = (patch: Record<string, unknown>) => applyFieldValues(fields, base, patch as never).ok;
+
+  it('bounds text and long text by trimmed length', () => {
+    expect(ok({ entity_name: 'x'.repeat(500) })).toBe(true);
+    expect(ok({ entity_name: `  ${'x'.repeat(500)}  ` })).toBe(true);
+    expect(ok({ entity_name: 'x'.repeat(501) })).toBe(false);
+    expect(ok({ summary: 'x'.repeat(5000) })).toBe(true);
+    expect(ok({ summary: 'x'.repeat(5001) })).toBe(false);
+    // Whitespace-only text is not a value; clearing uses null.
+    expect(ok({ entity_name: '   ' })).toBe(false);
+  });
+
+  it('accepts numbers within ±1e12 inclusive, including zero and negatives', () => {
+    for (const n of [0, -0.5, -1e12, 1e12]) expect(ok({ deal_size: n })).toBe(true);
+    for (const n of [-1e12 - 1, 1e12 + 1]) expect(ok({ deal_size: n })).toBe(false);
+  });
+
+  it('accepts only real calendar dates in YYYY-MM-DD form', () => {
+    expect(ok({ target_close: '2024-02-29' })).toBe(true);
+    for (const d of ['2023-02-29', '2026-1-5', '2026-01-05T00:00:00Z', '05/01/2026', ''])
+      expect(ok({ target_close: d })).toBe(false);
+  });
+
+  it('matches choice options exactly, without case or whitespace folding', () => {
+    expect(ok({ structure: 'Asset purchase' })).toBe(true);
+    for (const v of ['asset purchase', ' Asset purchase', 'Asset purchase ', 'Asset'])
+      expect(ok({ structure: v })).toBe(false);
+  });
+
+  it('reports a trimmed repeat of the current text as no change', () => {
+    expect(applyFieldValues(fields, base, { entity_name: '  A ' })).toEqual({
+      ok: true,
+      values: base,
+      changed: [],
+    });
+  });
+
+  it('names a required field once when its supplied value is invalid', () => {
+    const result = applyFieldValues(fields, {}, { entity_name: 42 } as never);
+    expect(result).toEqual({
+      ok: false,
+      issues: [{ key: 'entity_name', message: 'Entity name needs 1–500 characters.' }],
+    });
+  });
+
+  it('refuses clearing a key that is not part of the profile', () => {
+    expect(applyFieldValues(fields, base, { court: null })).toEqual({
+      ok: false,
+      issues: [{ key: 'court', message: 'This field is not part of the matter profile.' }],
+    });
+  });
+
+  it('applies to an empty field set only an empty patch', () => {
+    expect(applyFieldValues([], {}, {})).toEqual({ ok: true, values: {}, changed: [] });
+    expect(applyFieldValues([], {}, { notes: 'x' }).ok).toBe(false);
+  });
+});
+
+describe('profile list query and revision intent', () => {
+  it('defaults to active profiles and needs both cursor parts', () => {
+    expect(practiceProfileListQuerySchema.parse({})).toEqual({ status: 'active' });
+    const afterId = '00000000-0000-4000-a000-000000000001';
+    expect(
+      practiceProfileListQuerySchema.parse({ status: 'archived', afterName: 'Deals', afterId }),
+    ).toEqual({ status: 'archived', afterName: 'Deals', afterId });
+    for (const bad of [
+      { afterName: 'Deals' },
+      { afterId },
+      { status: 'all' },
+      { afterName: '', afterId },
+      { afterName: 'x'.repeat(81), afterId },
+      { afterName: 'De\u0000als', afterId },
+      { afterName: 'Deals', afterId, firmId: afterId },
+    ])
+      expect(practiceProfileListQuerySchema.safeParse(bad).success).toBe(false);
+  });
+
+  it('refuses a null name, a zero revision and authority fields in a revision', () => {
+    for (const bad of [
+      { expectedRevision: 1, name: null },
+      { expectedRevision: 0, archived: true },
+      { expectedRevision: 1.5, archived: true },
+      { expectedRevision: 1, archived: true, firmId: '00000000-0000-4000-a000-000000000001' },
+      { expectedRevision: 1, basedOn: { key: 'family', version: 1 } },
+    ])
+      expect(revisePracticeProfileSchema.safeParse(bad).success).toBe(false);
+    expect(revisePracticeProfileSchema.safeParse({ expectedRevision: 1, fields: [] }).success).toBe(
+      true,
+    );
+  });
+
+  it('refuses matter field values without a profile and more than 50 values', () => {
+    expect(createMatterSchema.safeParse({ title: 'A', fieldValues: { a: 'x' } }).success).toBe(
+      false,
+    );
+    expect(
+      createMatterSchema.safeParse({
+        title: 'A',
+        profileVersionId: '00000000-0000-4000-a000-000000000001',
+        fieldValues: { a: 'x' },
+      }).success,
+    ).toBe(true);
+    const many = Object.fromEntries(Array.from({ length: 51 }, (_, i) => [`f${i}`, 'x']));
+    expect(updateMatterFieldsSchema.safeParse({ expectedRevision: 1, values: many }).success).toBe(
+      false,
+    );
   });
 });

@@ -3,7 +3,7 @@ import { ApiError, type createApiClient } from '@lawfirm/api-client';
 import { practiceStarters, type PracticeProfileSummary } from '@lawfirm/core';
 import { Banner, Button, Card, Pill, Skeleton } from '@lawfirm/ui-web';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { loadProfile, loadProfileList } from './live-profiles';
 import { ProfileEditor } from './ProfileEditor';
 import styles from './PracticeProfiles.module.css';
@@ -40,12 +40,20 @@ export function PracticeProfiles({
   const detail = useQuery({
     ...live,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     enabled: !!editing && editing !== 'new',
     queryKey: ['server-practice-profiles', context, 'edit', editing],
     queryFn: ({ signal }) => loadProfile(client, firmId, editing!, signal),
   });
   const data = !list.isFetching && !list.isError ? list.data : undefined;
   const denied = list.error instanceof ApiError && [401, 403].includes(list.error.status);
+  // Closing the editor returns focus to this card rather than dropping it on the page body.
+  const wasEditing = useRef(false);
+  useEffect(() => {
+    if (wasEditing.current && !editing)
+      document.getElementById('practice-profiles-heading')?.focus();
+    wasEditing.current = !!editing;
+  }, [editing]);
   const show = (next: 'active' | 'archived') => {
     setStatus(next);
     setCursor(undefined);
@@ -82,7 +90,11 @@ export function PracticeProfiles({
   return (
     <Card
       className={styles.card}
-      title={<h2 className="cl-t-title-2">Practice profiles</h2>}
+      title={
+        <h2 id="practice-profiles-heading" tabIndex={-1} className="cl-t-title-2">
+          Practice profiles
+        </h2>
+      }
       subtitle="Practice areas and their matter fields. Each change to fields publishes a new version; existing matters keep theirs."
       headerAction={
         list.data?.canManage && (

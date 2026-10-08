@@ -126,11 +126,11 @@ it('adds profiles, immutable versions and pinned matter values beside existing m
     await expect(
       sql`update matters set field_values=jsonb_build_object('notes',repeat('x',400001)) where id=${matter}`,
     ).rejects.toMatchObject({ code: '23514' });
-    // Values at the shared core budget (256000 UTF-8 bytes of JSON) always store.
+    // Values at the shared core budget (90000 UTF-8 bytes of JSON) always store.
     const atBudget = Object.fromEntries(
-      Array.from({ length: 17 }, (_, i) => [`notes_${i}`, '漢'.repeat(5000)]),
+      Array.from({ length: 5 }, (_, i) => [`notes_${i}`, '漢'.repeat(5000)]),
     );
-    expect(Buffer.byteLength(JSON.stringify(atBudget))).toBeLessThanOrEqual(256_000);
+    expect(Buffer.byteLength(JSON.stringify(atBudget))).toBeLessThanOrEqual(90_000);
     await sql`update matters set field_values=${sql.json(atBudget)} where id=${matter}`;
     await sql`update matters set title='Renamed advisory' where id=${matter}`;
     const [v2] = await version([], 2);

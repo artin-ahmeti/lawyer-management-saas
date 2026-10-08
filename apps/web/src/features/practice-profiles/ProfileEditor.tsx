@@ -31,7 +31,7 @@ const messages: Record<string, string> = {
 export function ProfileEditor({
   client,
   firmId,
-  profile,
+  profile: opened,
   onSaved,
   onCancel,
 }: {
@@ -41,12 +41,14 @@ export function ProfileEditor({
   onSaved: (profile: PracticeProfileRecord) => void;
   onCancel: () => void;
 }) {
+  // The record as opened: background reads never change the revision under review.
+  const [profile] = useState(opened);
   const [name, setName] = useState(profile?.name ?? ''),
     [description, setDescription] = useState(profile?.description ?? ''),
     [starter, setStarter] = useState<PracticeStarterKey | ''>(''),
     [archived, setArchived] = useState(profile?.archived ?? false),
     [drafts, setDrafts] = useState<DraftField[]>(
-      () => profile?.currentVersion.fields.map((f) => draftFrom(f, true)) ?? [],
+      () => profile?.currentVersion.fields.map((f) => draftFrom(f, true, true)) ?? [],
     );
   const [intent, setIntent] = useState<ProfileCommand>(),
     [busy, setBusy] = useState(false),
@@ -66,14 +68,18 @@ export function ProfileEditor({
   const chooseStarter = (key: PracticeStarterKey | '') => {
     setStarter(key);
     const chosen = key ? practiceStarters[key] : undefined;
-    setDrafts(chosen ? chosen.fields.map((f) => draftFrom(f, true)) : []);
+    setDrafts(chosen ? chosen.fields.map((f) => draftFrom(f, true, false)) : []);
     if (chosen) {
       setName(chosen.name);
       setDescription(chosen.description);
     }
   };
   const prepare = (): ProfileCommand | string => {
-    const fields = definitionsFrom(drafts);
+    // Keys of the current version stay reserved, so a removed field's key never changes type.
+    const fields = definitionsFrom(
+      drafts,
+      profile?.currentVersion.fields.map((f) => f.key),
+    );
     if (profile) {
       const changes = profileChanges(profile, { name, description, fields, archived });
       return changes
@@ -114,7 +120,14 @@ export function ProfileEditor({
       if (active.current) onSaved(result.profile);
     } catch (e) {
       if (!active.current) return;
-      const final = e instanceof ApiError && [401, 403, 404, 409, 422].includes(e.status);
+      // A taken name was refused before any change: keep the draft and let the name be edited.
+      if (e instanceof ApiError && e.code === 'PROFILE_NAME_TAKEN') {
+        setIntent(undefined);
+        setError(messages.PROFILE_NAME_TAKEN!);
+        document.getElementById('profile-name')?.focus();
+        return;
+      }
+      const final = e instanceof ApiError && [401, 403, 404, 409, 413, 422].includes(e.status);
       setTerminal(final);
       setError(
         e instanceof ApiError && messages[e.code]

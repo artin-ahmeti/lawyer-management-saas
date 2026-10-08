@@ -101,10 +101,19 @@ export function LiveMatterPage({ id }: { id: string }) {
               title={<h2 className="cl-t-title-2">Matter workspace</h2>}
               subtitle="Documents, tasks and billing will become available as those services are connected."
             />
-            <MatterFields key={`${id}:fields`} id={id} onChanged={refreshMatter} />
-            <MatterParties key={id} id={id} />
           </>
         )
+      )}
+      {/* Panels with forms stay mounted while the matter refetches, so typed input survives. */}
+      {query.data && !denied && (
+        <>
+          <div hidden={!matter}>
+            <MatterFields key={`${id}:fields`} id={id} onChanged={refreshMatter} />
+          </div>
+          <div hidden={!matter}>
+            <MatterParties key={id} id={id} />
+          </div>
+        </>
       )}
       {query.data?.accessRole === 'manager' && !denied && (
         <div hidden={!matter}>

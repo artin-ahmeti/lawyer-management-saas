@@ -14,6 +14,7 @@ const live = {
   gcTime: 0,
   networkMode: 'always' as const,
   refetchOnWindowFocus: false as const,
+  refetchOnReconnect: false as const,
 };
 /** Active profiles in name order; a firm's profile list is small, so pages are joined. */
 async function activeProfiles(
@@ -29,8 +30,13 @@ async function activeProfiles(
     cursor = list.nextCursor;
     if (!cursor) break;
   }
-  return items;
+  return { items, truncated: cursor !== null };
 }
+/** Until the chosen profile's fields load, a form must not submit as if none were chosen. */
+export type PickedProfile =
+  | { state: 'none' }
+  | { state: 'loading' | 'failed'; profile?: undefined }
+  | { state: 'ready'; profile: PracticeProfileRecord };
 
 /** Choose an active profile; the chosen profile's current version is loaded for its fields. */
 export function ProfilePicker({
@@ -46,7 +52,7 @@ export function ProfilePicker({
   firmId: string;
   idPrefix: string;
   disabled?: boolean;
-  onProfile: (profile: PracticeProfileRecord | undefined) => void;
+  onProfile: (picked: PickedProfile) => void;
 }) {
   const [profileId, setProfileId] = useState('');
   const list = useQuery({
@@ -61,12 +67,23 @@ export function ProfilePicker({
     queryFn: ({ signal }) => loadProfile(client, firmId, profileId, signal),
   });
   const chosen = profileId ? detail.data?.profile : undefined;
+  const pending = !profileId || chosen ? undefined : detail.isError ? 'failed' : 'loading';
   // Report only when the chosen profile changes, whatever callback identity the parent passes.
   const report = useRef(onProfile);
   useEffect(() => {
     report.current = onProfile;
   });
-  useEffect(() => report.current(chosen), [chosen]);
+  useEffect(
+    () =>
+      report.current(
+        chosen
+          ? { state: 'ready', profile: chosen }
+          : pending
+            ? { state: pending }
+            : { state: 'none' },
+      ),
+    [chosen, pending],
+  );
   const id = `${idPrefix}-profile`;
   return (
     <Field
@@ -80,9 +97,11 @@ export function ProfilePicker({
               ? 'This profile could not be loaded. Choose it again or refresh.'
               : profileId && detail.isFetching
                 ? 'Loading profile fields…'
-                : list.data && !list.data.length
+                : list.data && !list.data.items.length
                   ? 'No active profiles yet. Owners and admins add them in Settings.'
-                  : 'Adds the profile’s fields to this matter. Its current version stays with the matter.'}
+                  : list.data?.truncated
+                    ? 'Showing the first 200 active profiles in name order.'
+                    : 'Adds the profile’s fields to this matter. Its current version stays with the matter.'}
         </span>
       }
     >
@@ -97,7 +116,7 @@ export function ProfilePicker({
           onChange={(e) => setProfileId(e.target.value)}
         >
           <option value="">{list.isPending ? 'Loading profiles…' : 'No profile'}</option>
-          {(list.data ?? []).map((p) => (
+          {(list.data?.items ?? []).map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
             </option>

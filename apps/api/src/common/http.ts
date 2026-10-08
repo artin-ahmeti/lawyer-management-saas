@@ -27,12 +27,17 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const request = host.switchToHttp().getRequest<ApiRequest>();
     const response = host.switchToHttp().getResponse<Response>();
     const requestId = request.requestId ?? randomUUID();
+    // An oversized body is final: retrying the same request never helps (malformed JSON
+    // already arrives as a 400 HttpException).
+    const tooLarge = (error as { type?: unknown } | null)?.type === 'entity.too.large';
     const status =
       error instanceof ZodValidationException
         ? 422
         : error instanceof HttpException
           ? error.getStatus()
-          : 500;
+          : tooLarge
+            ? 413
+            : 500;
     const detail = error instanceof HttpException ? error.getResponse() : undefined;
     const payload =
       typeof detail === 'object' && detail !== null ? (detail as Record<string, unknown>) : {};
@@ -41,7 +46,9 @@ export class ApiExceptionFilter implements ExceptionFilter {
         ? payload.code
         : status === 422
           ? 'INVALID_REQUEST'
-          : `HTTP_${status}`;
+          : status === 413
+            ? 'PAYLOAD_TOO_LARGE'
+            : `HTTP_${status}`;
     const message =
       status >= 500
         ? 'The request could not be completed. Retry with the same action key.'

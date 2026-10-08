@@ -30,10 +30,12 @@ const utf8Length = (text: string) => {
   return bytes;
 };
 /**
- * UTF-8 bytes of one matter's serialized values. The database allows 400000 bytes of jsonb
- * text, which leaves room for its extra spacing, so a value set accepted here always stores.
+ * UTF-8 bytes of one matter's serialized values, and of one profile's field definitions.
+ * Each fits a single API request (100 KB body limit) with room for the rest of the body, and
+ * the database budgets (400000 bytes of values, 1000000 of definitions) always accept them.
  */
-export const MAX_FIELD_VALUES_BYTES = 256_000;
+export const MAX_FIELD_VALUES_BYTES = 90_000;
+export const MAX_FIELD_DEFINITIONS_BYTES = 90_000;
 const label = storableText(z.string().trim().min(1).max(80));
 const fieldBase = {
   key: practiceFieldKeySchema,
@@ -63,6 +65,9 @@ export const practiceFieldListSchema = z
   .max(MAX_PRACTICE_FIELDS)
   .refine((f) => new Set(f.map((d) => d.key)).size === f.length, {
     message: 'Field keys must be distinct.',
+  })
+  .refine((f) => utf8Length(JSON.stringify(f)) <= MAX_FIELD_DEFINITIONS_BYTES, {
+    message: 'These fields are too long to save together.',
   });
 
 /** Generic operational starters (pp34–35); not reviewed for any jurisdiction. */

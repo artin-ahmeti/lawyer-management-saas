@@ -25,8 +25,9 @@ export function FieldValueInputs({
     <div className={styles.inputs}>
       {fields.map((field) => {
         const id = `${idPrefix}-${field.key}`,
-          value = form[field.key] ?? '',
-          issue = issues[field.key];
+          // Own properties only: a field keyed like an object member still starts empty.
+          value = Object.hasOwn(form, field.key) ? (form[field.key] ?? '') : '',
+          issue = Object.hasOwn(issues, field.key) ? issues[field.key] : undefined;
         const set = (next: string) => onChange({ ...form, [field.key]: next });
         const common = {
           id,

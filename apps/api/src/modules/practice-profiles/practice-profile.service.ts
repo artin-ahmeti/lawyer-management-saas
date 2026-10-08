@@ -117,20 +117,27 @@ export class PracticeProfileService {
     profileId: string,
     lock: 'update' | 'none' = 'none',
   ) {
+    // Lock the profile alone first: a locked join re-checks only the locked row after a wait,
+    // so a joined version from before a concurrent revision would drop the row.
+    if (lock === 'update')
+      await tx`select id from practice_profiles where firm_id=${firmId} and id=${profileId} for update`;
     const [row] = await tx<ProfileRow[]>`select ${columns(tx)}
       from practice_profiles p join practice_profile_versions v
         on v.firm_id=p.firm_id and v.profile_id=p.id and v.version=p.current_version
-      where p.firm_id=${firmId} and p.id=${profileId} and p.deleted_at is null
-      ${lock === 'update' ? tx`for update of p` : tx``}`;
+      where p.firm_id=${firmId} and p.id=${profileId} and p.deleted_at is null`;
     if (!row) throw profileUnavailable();
     return row;
   }
   async list(actor: AuthClaims, query: PracticeProfileListQuery) {
     return this.database.sql.begin(async (tx) => {
       const firm = await this.scope(tx, actor);
+      // The list counts fields without reading each version's definitions.
       const rows = await tx<
-        (ProfileRow & { field_count: number })[]
-      >`select ${columns(tx)},jsonb_array_length(v.fields) as field_count
+        (Omit<ProfileRow, 'version_id' | 'fields' | 'version_created_at'> & {
+          field_count: number;
+        })[]
+      >`select p.id,p.firm_id,p.name,p.description,p.based_on_key,p.based_on_version,p.current_version,
+          p.revision,p.archived_at,p.created_at,p.updated_at,jsonb_array_length(v.fields) as field_count
         from practice_profiles p join practice_profile_versions v
           on v.firm_id=p.firm_id and v.profile_id=p.id and v.version=p.current_version
         where p.firm_id=${firm.id} and p.deleted_at is null
@@ -164,11 +171,6 @@ export class PracticeProfileService {
     const result = await this.database.sql
       .begin(async (tx) => {
         const firm = await this.scope(tx, actor, true);
-        if (input.basedOn && practiceStarters[input.basedOn.key].version !== input.basedOn.version)
-          throw new UnprocessableEntityException({
-            code: 'STARTER_UNAVAILABLE',
-            message: 'This starter profile version is unavailable.',
-          });
         const replay = await this.receipt(tx, firm.id, actor, commands.create, key, hash);
         if (replay)
           return {
@@ -178,6 +180,12 @@ export class PracticeProfileService {
             }),
             replayed: true,
           };
+        // Only new work checks the starter: a committed create still replays after a starter changes.
+        if (input.basedOn && practiceStarters[input.basedOn.key].version !== input.basedOn.version)
+          throw new UnprocessableEntityException({
+            code: 'STARTER_UNAVAILABLE',
+            message: 'This starter profile version is unavailable.',
+          });
         const id = randomUUID(),
           commandId = randomUUID();
         await tx`insert into practice_profiles(id,firm_id,name,description,based_on_key,based_on_version,created_by)

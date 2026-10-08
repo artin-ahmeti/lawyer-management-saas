@@ -638,6 +638,52 @@ it('refuses unstorable text before the database and replays a reordered retry', 
   expect(await retry.json()).toEqual(await first.json());
 });
 
+it('replays a committed create after its starter version changes', async () => {
+  const key = randomUUID();
+  const body = {
+    name: 'Family starter replay',
+    basedOn: { key: 'family', version: 1 },
+    fields: practiceStarters.family.fields,
+  };
+  const first = await parse(
+    practiceProfileResultSchema,
+    await api('POST', '/practice-profiles', 0, body, key),
+  );
+  const released = practiceStarters.family.version;
+  practiceStarters.family.version = released + 1;
+  try {
+    const replay = await api('POST', '/practice-profiles', 0, body, key);
+    expect(replay.status).toBe(201);
+    expect(practiceProfileResultSchema.parse(await replay.json())).toEqual(first);
+    // New work against the old starter version is refused.
+    const fresh = await api('POST', '/practice-profiles', 0, { ...body, name: 'Family again' });
+    expect(fresh.status).toBe(422);
+    expect(await code(fresh)).toBe('STARTER_UNAVAILABLE');
+  } finally {
+    practiceStarters.family.version = released;
+  }
+});
+
+it('refuses a body over the transport limit as final, not as a retryable failure', async () => {
+  const response = await api('POST', '/practice-profiles', 0, {
+    name: 'Oversized',
+    fields: [],
+    padding: 'x'.repeat(150_000),
+  });
+  expect(response.status).toBe(413);
+  expect(await code(response)).toBe('PAYLOAD_TOO_LARGE');
+  const malformed = await fetch(`${base}/practice-profiles`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${await token(0)}`,
+      'Content-Type': 'application/json',
+      'Idempotency-Key': randomUUID(),
+    },
+    body: '{"name":',
+  });
+  expect(malformed.status).toBe(400);
+});
+
 it('replays a matter creation recorded before practice profiles existed', async () => {
   const key = randomUUID();
   const created = await parse(

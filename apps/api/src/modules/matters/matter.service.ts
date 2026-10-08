@@ -38,20 +38,28 @@ type MatterRow = {
   revision: number;
   created_at: Date;
   role: 'reader' | 'manager';
-  profile_id: string | null;
-  profile_name: string | null;
-  profile_version: number | null;
+  profile_version_id: string | null;
 };
+type ProfileSummary = { version_id: string; id: string; name: string; version: number };
 /** Older receipts predate the profile summary; replays re-read the current matter anyway. */
 const receiptSchema = z.object({ matter: z.object({ id: uuidSchema }), commandId: uuidSchema });
 const columns = (tx: postgres.TransactionSql) =>
-  tx`m.id,m.firm_id,m.title,m.reference,m.revision,m.created_at,a.role,
-    p.id as profile_id,p.name as profile_name,v.version as profile_version`;
-/** The pinned profile summary; values are read through the matter fields endpoint. */
-const pinned = (tx: postgres.TransactionSql) =>
-  tx`left join practice_profile_versions v on v.firm_id=m.firm_id and v.id=m.profile_version_id
-    left join practice_profiles p on p.firm_id=v.firm_id and p.id=v.profile_id`;
-const view = (r: MatterRow) =>
+  tx`m.id,m.firm_id,m.title,m.reference,m.revision,m.created_at,a.role,m.profile_version_id`;
+/**
+ * Pinned profile summaries, read after the matter rows are locked. A joined read would let a
+ * concurrent first assignment serve the new revision with the profile missing.
+ */
+async function summaries(tx: postgres.TransactionSql, firmId: string, rows: MatterRow[]) {
+  const ids = [
+    ...new Set(rows.flatMap((r) => (r.profile_version_id ? [r.profile_version_id] : []))),
+  ];
+  if (!ids.length) return new Map<string, ProfileSummary>();
+  const found = await tx<ProfileSummary[]>`select v.id as version_id,p.id,p.name,v.version
+    from practice_profile_versions v join practice_profiles p on p.firm_id=v.firm_id and p.id=v.profile_id
+    where v.firm_id=${firmId} and v.id in ${tx(ids)}`;
+  return new Map(found.map((s) => [s.version_id, s]));
+}
+const view = (r: MatterRow, profiles: Map<string, ProfileSummary>) =>
   matterSchema.parse({
     id: r.id,
     firmId: r.firm_id,
@@ -60,10 +68,10 @@ const view = (r: MatterRow) =>
     revision: r.revision,
     createdAt: r.created_at.toISOString(),
     accessRole: r.role,
-    profile:
-      r.profile_id === null
-        ? null
-        : { id: r.profile_id, name: r.profile_name, version: r.profile_version },
+    profile: (() => {
+      const p = r.profile_version_id ? profiles.get(r.profile_version_id) : undefined;
+      return p ? { id: p.id, name: p.name, version: p.version } : null;
+    })(),
   });
 
 @Injectable()
@@ -79,7 +87,7 @@ export class MatterService {
     matterId: string,
   ) {
     const [row] = await tx<MatterRow[]>`select ${columns(tx)}
-      from matters m join matter_access a on a.firm_id=m.firm_id and a.matter_id=m.id ${pinned(tx)}
+      from matters m join matter_access a on a.firm_id=m.firm_id and a.matter_id=m.id
       where m.id=${matterId} and m.firm_id=${firmId} and m.deleted_at is null
         and a.user_id=${actor.sub} and a.deleted_at is null for share of m,a`;
     if (!row)
@@ -87,7 +95,7 @@ export class MatterService {
         code: 'MATTER_UNAVAILABLE',
         message: 'This matter is unavailable.',
       });
-    return view(row);
+    return view(row, await summaries(tx, firmId, [row]));
   }
   async read(actor: AuthClaims, matterId: string) {
     return this.database.sql.begin(async (tx) => {
@@ -105,10 +113,12 @@ export class MatterService {
       await confirmedAccount(tx, actor.sub, 'share');
       const firm = await this.access.current(tx, actor, 'share');
       const rows = await tx<MatterRow[]>`select ${columns(tx)}
-        from matters m join matter_access a on a.firm_id=m.firm_id and a.matter_id=m.id ${pinned(tx)}
+        from matters m join matter_access a on a.firm_id=m.firm_id and a.matter_id=m.id
         where m.firm_id=${firm.id} and m.deleted_at is null and a.user_id=${actor.sub} and a.deleted_at is null
         ${afterId ? tx`and m.id > ${afterId}::uuid` : tx``} order by m.id limit 21 for share of m,a`;
-      const items = rows.slice(0, 20).map(view);
+      const page = rows.slice(0, 20),
+        profiles = await summaries(tx, firm.id, page);
+      const items = page.map((r) => view(r, profiles));
       return {
         items,
         nextCursor: rows.length > 20 ? items.at(-1)!.id : null,

@@ -2,7 +2,7 @@
 import { ApiError } from '@lawfirm/api-client';
 import { Banner, Button, Card, Pill, Skeleton } from '@lawfirm/ui-web';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLiveMatterClient } from '@/features/matters/use-live-matter-client';
 import { displayValue } from './FieldValueInputs';
 import { loadMatterFields } from './live-profiles';
@@ -24,10 +24,18 @@ export function MatterFields({ id, onChanged }: { id: string; onChanged: () => v
     networkMode: 'always',
     // An open edit keeps the revision the user reviewed; reads refresh on focus otherwise.
     refetchOnWindowFocus: editing ? false : 'always',
+    refetchOnReconnect: !editing,
   });
   const data = !query.isFetching && !query.isError ? query.data : undefined;
   const denied = query.error instanceof ApiError && [401, 403, 404].includes(query.error.status);
   const profile = data?.profile;
+  // Closing the form returns focus to this card rather than dropping it on the page body.
+  const heading = useRef<HTMLHeadingElement>(null),
+    wasEditing = useRef(false);
+  useEffect(() => {
+    if (wasEditing.current && !editing) heading.current?.focus();
+    wasEditing.current = editing;
+  }, [editing]);
   const close = () => {
     setEditing(false);
     void query.refetch();
@@ -35,7 +43,11 @@ export function MatterFields({ id, onChanged }: { id: string; onChanged: () => v
   return (
     <Card
       className={styles.card}
-      title={<h2 className="cl-t-title-2">Practice profile</h2>}
+      title={
+        <h2 ref={heading} tabIndex={-1} className="cl-t-title-2">
+          Practice profile
+        </h2>
+      }
       subtitle={
         profile
           ? `${profile.name} · version ${profile.version.version}. New versions of the profile do not change this matter.`
@@ -56,10 +68,12 @@ export function MatterFields({ id, onChanged }: { id: string; onChanged: () => v
           firmId={firmId}
           fields={query.data}
           onCancel={close}
-          onSaved={() => {
+          onSaved={(saved) => {
+            const assigned = !query.data?.profile && saved.profile;
             setSaved(true);
             close();
-            onChanged();
+            // Only a first assignment changes the matter overview; value edits keep the page.
+            if (assigned) onChanged();
           }}
         />
       ) : query.isPending || query.isFetching ? (

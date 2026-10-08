@@ -80,7 +80,7 @@ export function fieldPatch(
 ): PracticeFieldPatch {
   const patch: PracticeFieldPatch = {};
   for (const field of fields) {
-    const raw = (form[field.key] ?? '').trim();
+    const raw = (Object.hasOwn(form, field.key) ? (form[field.key] ?? '') : '').trim();
     const had = Object.hasOwn(current, field.key);
     if (!raw) {
       if (had) patch[field.key] = null;
