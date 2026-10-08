@@ -16,8 +16,10 @@ import {
   type CreateContact,
   type FirmRole,
   type UpdateContact,
+  uuidSchema,
 } from '@lawfirm/core';
 import type postgres from 'postgres';
+import { z } from 'zod';
 import type { AuthClaims } from '../../common/auth/auth-claims';
 import { confirmedAccount } from '../../common/auth/confirmed-account';
 import { StaffAccessService } from '../../common/auth/staff-access.service';
@@ -53,6 +55,8 @@ const view = (r: ContactRow) =>
     createdAt: r.created_at.toISOString(),
     updatedAt: r.updated_at.toISOString(),
   });
+/** Receipts keep identifiers only: replays re-read the record, so details never persist here. */
+const receiptSchema = z.object({ contact: z.object({ id: uuidSchema }), commandId: uuidSchema });
 const unavailable = () =>
   new NotFoundException({ code: 'CONTACT_UNAVAILABLE', message: 'This contact is unavailable.' });
 const hashOf = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
@@ -82,11 +86,11 @@ export class ContactService {
     tx: postgres.TransactionSql,
     firmId: string,
     contactId: string,
-    lock: 'share' | 'update' = 'share',
+    lock: 'share' | 'update' | 'none' = 'share',
   ) {
     const [row] = await tx<ContactRow[]>`select ${columns(tx)} from contacts
       where firm_id=${firmId} and id=${contactId} and deleted_at is null
-      ${lock === 'update' ? tx`for update` : tx`for share`}`;
+      ${lock === 'update' ? tx`for update` : lock === 'share' ? tx`for share` : tx``}`;
     if (!row) throw unavailable();
     return row;
   }
@@ -120,7 +124,8 @@ export class ContactService {
   async matters(actor: AuthClaims, contactId: string, afterId?: string) {
     return this.database.sql.begin(async (tx) => {
       const firm = await this.scope(tx, actor);
-      await this.contact(tx, firm.id, contactId);
+      // Existence only: matter and grant rows lock first, keeping the D021 order.
+      await this.contact(tx, firm.id, contactId, 'none');
       const rows =
         await tx`select p.id as "partyId", m.id as "matterId", m.title, m.reference, p.role, p.label
         from matter_parties p join matters m on m.firm_id=p.firm_id and m.id=p.matter_id
@@ -256,7 +261,7 @@ export class ContactService {
         code: 'IDEMPOTENCY_CONFLICT',
         message: 'This action key was used for another contact change.',
       });
-    return contactResultSchema.parse(receipt.response);
+    return receiptSchema.parse(receipt.response);
   }
   private async record(
     tx: postgres.TransactionSql,
@@ -271,7 +276,7 @@ export class ContactService {
     after: Record<string, unknown>,
   ) {
     await tx`insert into command_receipts(id,firm_id,created_by,command,idempotency_key,request_id,input_hash,response)
-      values (${value.commandId},${firmId},${actor.sub},${command},${key},${requestId},${hash},${tx.json(value as never)})`;
+      values (${value.commandId},${firmId},${actor.sub},${command},${key},${requestId},${hash},${tx.json({ contact: { id: value.contact.id }, commandId: value.commandId })})`;
     await tx`insert into audit_logs(firm_id,created_by,command_id,request_id,action,record_type,record_id,before,after)
       values (${firmId},${actor.sub},${value.commandId},${requestId},${command},'contact',${value.contact.id},
       ${tx.json(before as never)},${tx.json(after as never)})`;

@@ -148,8 +148,10 @@ async function clickExpression(expression) {
   } finally {
     await send('Runtime.releaseObject', { objectId: target.objectId });
   }
+  // Centre the target so the sticky top bar never covers it on long pages.
   const point = await evaluate(`(() => { const element = ${expression};
-    if (!element) return null; const r = element.getBoundingClientRect();
+    if (!element) return null; element.scrollIntoView({ block: 'center', inline: 'nearest' });
+    const r = element.getBoundingClientRect();
     return {x:r.x+r.width/2,y:r.y+r.height/2}; })()`);
   assert(point, 'Interactive element exists');
   await send('Input.dispatchMouseEvent', {

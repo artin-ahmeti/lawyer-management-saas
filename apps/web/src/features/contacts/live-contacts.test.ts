@@ -144,3 +144,19 @@ it('keeps one party intent and rejects a result for another matter', async () =>
     preparePartyCommand({ kind: 'add', matterId, input: { contactId: id, role: 'other' } }),
   ).toThrow();
 });
+
+it('treats a case-only rename as a change and blank details as cleared', () => {
+  expect(
+    contactChanges(contact, { displayName: 'maria alvarez', email: contact.email, phone: '' }),
+  ).toEqual({ expectedRevision: 2, displayName: 'maria alvarez' });
+  expect(
+    contactChanges(
+      { ...contact, phone: '+1 415 555 0100' },
+      {
+        displayName: contact.displayName,
+        email: '   ',
+        phone: ' \t ',
+      },
+    ),
+  ).toEqual({ expectedRevision: 2, email: null, phone: null });
+});

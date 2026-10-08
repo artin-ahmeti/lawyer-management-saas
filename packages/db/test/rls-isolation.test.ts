@@ -180,6 +180,23 @@ describe('cross-firm read isolation', () => {
       expect(foreign.count).toBe(0);
     }
   });
+  it('keeps ended links as granted history and hides the directory from removed members', async () => {
+    await sql`update matter_parties set deleted_at=clock_timestamp() where matter_id=${MATTER_A} and contact_id=${CONTACT_A}`;
+    const a = await clientFor(USER_A, FIRM_A, 'owner');
+    const history = await a.from('matter_parties').select('matter_id,deleted_at');
+    expect(history.error).toBeNull();
+    expect(history.data).toEqual([{ matter_id: MATTER_A, deleted_at: expect.any(String) }]);
+    await sql`update firm_members set deleted_at=now() where firm_id=${FIRM_A} and user_id=${USER_A}`;
+    try {
+      for (const table of ['contacts', 'matter_parties']) {
+        const removed = await a.from(table).select('id', { count: 'exact' });
+        expect(removed.error).toBeNull();
+        expect(removed.count).toBe(0);
+      }
+    } finally {
+      await sql`update firm_members set deleted_at=null where firm_id=${FIRM_A} and user_id=${USER_A}`;
+    }
+  });
   it('rejects direct contact/party writes and anonymous reads', async () => {
     const a = await clientFor(USER_A, FIRM_A, 'owner');
     const create = await a

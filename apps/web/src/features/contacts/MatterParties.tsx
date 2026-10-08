@@ -30,10 +30,8 @@ export function MatterParties({ id }: { id: string }) {
   const data = !parties.isFetching && !parties.isError ? parties.data : undefined;
   const denied =
     parties.error instanceof ApiError && [401, 403, 404].includes(parties.error.status);
-  const changed = () => {
-    setAfterId(undefined);
-    void parties.refetch();
-  };
+  // Return to the first page after a change; that query key change fetches by itself.
+  const changed = () => (afterId ? setAfterId(undefined) : void parties.refetch());
   return (
     <Card
       className={styles.card}
