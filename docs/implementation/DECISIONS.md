@@ -982,3 +982,81 @@ walls, per-target keys, tied-name paging and removed-member RLS cases. Accepted
 trade-offs: the database `btrim` check is weaker than Zod's Unicode trim (only the
 API writes), and contact archiving (and refusing to archive a contact with current
 links) arrives with a later lifecycle slice.
+
+## D022 — Firm practice profiles with immutable versions; matter values follow grants (M02-S03)
+
+Accepted by the user for the local slice, October 8, 2026 ("approved"). Blueprint p13
+requires configurable practice profiles and typed fields so a firm can add a practice
+area and field set without deploying code, and transactional/advisory matters with no
+court field; p29/pp34–35 call for operational starter profiles across practice families
+with appropriately optional fields; p34 requires packs to be versioned with existing
+matters keeping their selected version. Before this slice practice areas were a closed
+six-value frontend type and the Settings playbooks were fixtures.
+
+A firm profile (`practice_profiles`) is configuration visible to every live staff member
+of the firm, archived ones included, because matters stay pinned to archived versions.
+Each published field set is an immutable `practice_profile_versions` row; changing fields
+publishes version N+1, while renaming, describing, archiving or restoring changes only
+the profile and its revision. A matter pins one version (`matters.profile_version_id`,
+set once, never re-pinned in place) and holds its values in `matters.field_values`, so
+values follow the existing matter grant policy exactly as titles do; owners/admins have
+no bypass. Rejected alternatives: values in a separate table (a second grant policy to
+keep in step) and editable versions (existing matters would silently change shape).
+
+Initial capabilities are server decisions: profile create/revise for live owner/admin;
+every live role reads profiles. Editing a matter's values, or assigning a profile to a
+matter without one, needs a manager grant and an owner/admin/attorney/paralegal role.
+Matter creation keeps D017's owner/admin/attorney rule. New work (creation or a first
+assignment) accepts only the current version of an active profile (`PROFILE_CHANGED`,
+`PROFILE_ARCHIVED`); existing matters keep showing and editing archived versions.
+
+Field types are short text, long text, number, date, yes/no and choice; every field is
+optional unless marked required; keys are stable per version and new keys derive from
+labels. Money and contact-reference fields, matter types, configurable party roles,
+version upgrades for existing matters, jurisdiction/venue references and M18 pack
+versions/coverage records are deferred. Twelve operational starters in `@lawfirm/core`
+(generic, not reviewed for any jurisdiction, no required or money fields; court/docket
+fields kept out of transactional, advisory and agency starters) are copied into a firm
+profile that records `basedOn` provenance; adding a starter needs a deploy, adding a firm
+profile does not.
+
+Shared rules in `@lawfirm/core` validate each value by type, refuse unknown keys, missing
+required values, unstorable text (NUL, unpaired surrogates), value sets over 90000 UTF-8
+bytes and field sets over 90000 bytes, so every accepted payload fits one request under
+the API's 100 KB body limit (an oversized body is a final 413, not a retryable 500). The
+database budgets (400000 bytes of values, checked by a trigger only when values are
+written; 1000000 bytes of definitions) always accept what the rules accept. Published
+field types are locked in the editor and keys of the current version stay reserved, so a
+key keeps one type within a profile's later versions. Receipts keep identifiers
+only and audits keep field keys, the pinned version and revisions, never values. Profile
+names, descriptions and field definitions are firm configuration and appear in audits.
+
+Locks: actor account → firm membership (share) → matter (update) → grant (share) →
+profile (share for new work, update for revisions). The migration is additive: forced
+RLS, select-only for `authenticated`, composite same-firm keys, a deferred key from each
+profile to its current version, provenance/revision triggers, history that refuses
+update, delete and truncate for every role, a `deleted_at is null` rule (profiles are
+archived, never soft-deleted) and a partial index on pinned matters. The rollback refuses
+early without locks, then under a lock and statement timeout refuses with any profile,
+version, pin or command history; operators must mark the migration rows reverted.
+
+Two fresh-context adversarial reviews reproduced and drove fixes before commit: a CHECK
+that re-read large values on every matter update, a value budget narrower than core
+accepted, deletable/truncatable history, soft-deletable profiles breaking pinned matters,
+dangling current versions, NUL/surrogate text reaching the database (and its log),
+required fields keyed like `constructor`, reordered retries conflicting, and rollback
+locking. The closing code review, security audit and test review found and drove fixes for
+editors unmounting or diffing against refetched data (input loss and silent overwrites),
+a matter created without its still-loading profile, `constructor`-keyed fields in the web
+forms, starter checks blocking a committed replay, the 100 KB body limit, and two races
+where a locked join answered 404 instead of `PROFILE_CHANGED` or served a matter revision
+without its profile summary (fixed by locking first and reading joined rows separately).
+Follow-ups: per-field error placement in the profile editor, per-firm profile/version caps
+and a per-route write throttle, and `basedOn` is client-asserted provenance, not proof a
+profile matches a reviewed starter. Accepted trade-offs: case-insensitive name uniqueness uses `lower()` and depends
+on the database locale (no Unicode case folding or normalization); the unsalted receipt
+input hash now covers low-entropy field values (extends D021, pending the retention
+policy, HMAC is the follow-up); the forward migration adds columns, a key, a check and an
+index on `matters` under one lock with a 5s lock timeout, so a large hosted table needs a
+maintenance window; the two migration files apply as separate transactions like earlier
+slices.
