@@ -917,3 +917,68 @@ Accepted trade-offs, each to revisit with its module gate:
 
 The generated API client was regenerated from the built API and verified in sync.
 No dependencies, credentials, providers, deployment or remote services changed.
+
+## D021 — Firm-visible contact directory; party links follow matter grants (M02-S02)
+
+Accepted by the user for the local slice, October 8, 2026 ("keep the recommended
+approach"). Blueprint p13 requires people/organizations, matter-party roles and
+multiple clients, and the scenario "one client in several matters and several
+clients in one matter"; p39 forbids disclosure across firms and ethical walls.
+Before this slice the Contacts screen and every party were fixtures.
+
+Directory entries (`contacts`) are visible to every live staff member of the
+selected firm, including billing/readonly. Conflict search (M07) needs the whole
+firm directory, and hiding entries per matter would fragment the directory and
+invite duplicates. A matter-party link (`matter_parties`) reveals that a contact is
+involved in a matter, so it is readable only with a current matter grant, through
+RLS (`app.has_matter_access`) and the API alike. `GET /contacts/:id/matters` lists
+only granted matters and returns no total; a walled matter's title, ID and count
+never appear in contact reads. Rejected alternative: per-contact visibility derived
+from matter grants, which breaks conflict search and still leaks through names.
+A contact created only for a sensitive matter therefore exposes its name (not its
+matter) to firm staff; restricted contacts are a later policy option.
+
+Initial capabilities are server decisions, not final configurable policy: contact
+create/edit for live owner/admin/attorney/paralegal; billing/readonly read only.
+Adding or ending a party needs a manager grant and an owner/admin/attorney role,
+matching D018 access management; readers see parties without changing them.
+
+Contracts: person/organization kind fixed at creation; display name 1–200; optional
+email and phone (digits/punctuation/extension). Edits send only changed fields with
+`expectedRevision`; a stale revision returns `CONTACT_CHANGED`. Party roles are
+`client`, `adverse_party` and `other` (label required); configurable roles belong to
+practice profiles (M02/M18). At most one current link per contact and matter
+(partial unique index → `PARTY_EXISTS`); ending sets `deleted_at` once and the row
+stays as history; re-linking creates a new row. Every command is keyed, atomic with
+its receipt and audit, and replays the same intent against the current record and
+grants. Audits name changed fields and carry the display name but never email or
+phone values; contact command receipts keep only the contact and command IDs, since
+replays re-read the current record. Personal details therefore stay in the one
+protected, correctable row and out of both append-only tables. Display names in the
+audit log, and the unsalted input hash shared by every command receipt (service-role
+only), are accepted until the retention/erasure policy decision.
+
+Locks: actor account/profile → firm membership (share) → matter → grant → contact or
+party, consistent with D018–D020; contact edits lock the contact row, and the
+contact-matter read checks the contact without a lock so matter and grant rows
+lock first. Directory
+order is `lower(display_name), id` with keyset cursors of at most 20 rows; search is a
+literal case-insensitive substring (LIKE wildcards escaped). Substring search is not
+index-backed; a trigram index is deferred to conflict search (M07). Case folding
+relies on a UTF-8 database ctype (local: en_US.UTF-8); hosted environments must
+match.
+
+The migration is additive: forced RLS, select-only for `authenticated`, composite
+same-firm keys, provenance triggers (contact kind immutable), and a link trigger
+that requires links to start current and end once, after they began. The rollback
+locks both tables, refuses when contacts, links, receipts or audits exist, and
+otherwise drops only the new objects; like earlier rollbacks it leaves
+`supabase_migrations` version rows to the operator. A fresh-context adversarial
+review found a `NULL` label passing the `other` check, born-ended links and an
+unlocked rollback check; all were fixed before commit. The closing code review and
+security audit found personal details in contact receipts and an inverted read lock
+order (fixed); the test review added each grant/role condition alone, owner/admin
+walls, per-target keys, tied-name paging and removed-member RLS cases. Accepted
+trade-offs: the database `btrim` check is weaker than Zod's Unicode trim (only the
+API writes), and contact archiving (and refusing to archive a contact with current
+links) arrives with a later lifecycle slice.
