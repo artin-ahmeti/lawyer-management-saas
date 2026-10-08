@@ -1,32 +1,42 @@
 # Clepso implementation status
 
-Latest locally complete slice (October 8, 2026): **M01-S06a audited staff role changes**.
-Prerequisites: M00 receipt/audit foundation, M01 live account/session/firm context,
-and M01-S05b explicit matter access management. PDF p12/p26/p39/p40.
-Outcome: current owners/admins review live staff and change a role with a reason,
-reviewed membership revision, durable history and same-intent recovery. Owner
-changes require an owner; the last available owner and last eligible matter
-manager remain protected. Restricted matter names/counts are not disclosed by
-firm administration. Membership removal/restoration and exceptional recovery are
-subsequent slices. M01/M15 remain partial; first-five whole completion is 0/5.
+Current slice (planned October 8, 2026, awaiting approval): **M01-S06b audited
+membership removal and restoration**. Latest locally complete slice: M01-S06a
+audited staff role changes ([record](slices/m01-s06a.md)).
+Prerequisites: M00 receipt/audit foundation, M01 live account/session/firm context
+(D016), S05b explicit matter grants (D018) and S06a role changes with firm-first
+policy locks (D019). PDF p12/p26/p39/p40.
+Outcome: current owners/admins remove a staff member or restore a removed one with
+a reason, reviewed membership revision, durable history and same-intent recovery.
+Removal takes effect immediately for the member's live sessions, API and RLS reads
+and revokes their explicit matter grants in the same transaction; restoration
+returns the membership with an explicitly reviewed role and no grants, so walls are
+never silently reopened. Owner targets need an owner; the last available owner and
+the last eligible manager of any matter stay protected, and firm-level responses
+disclose no restricted matter names, IDs or counts. Exceptional recovery (unavailable
+last owner/manager, external Auth bans) is excluded and needs its own recorded
+product decision as M01-S06c. M01/M15 remain partial; first-five completion is 0/5.
 
-Verified slice tasks:
+Planned slice tasks:
 
-1. [x] Establish failing API outcome tests for current roles, cross-firm targets,
-       replay, concurrent review, last-owner/manager protection and live revocation.
-2. [x] Add reversible membership revision/history index; strict shared contracts,
-       bounded server reads/command, atomic membership/receipt/audit and ordered
-       firm-before-membership locks. Verify clean/upgrade/down and isolation.
-3. [x] Connect Settings staff list, role/reason form, durable history and recovery;
-       verify browser loading, errors, denial, keyboard and responsive states.
-4. [x] Run repository checks/integration tests, review against session snapshot,
-       update evidence/decisions/tracker and identify the next dependency-ready slice.
+1. [ ] Establish failing API/RLS outcome tests: remove/restore by current owner/admin,
+       owner-only owner targets, cross-firm/unknown/already-removed targets, replay
+       and concurrent review, last-owner and last-manager refusal without disclosure,
+       a removed member's live session losing API/RLS/matter reads, grants staying
+       revoked after restoration, and invitation acceptance still refusing.
+2. [ ] Add reversible membership-removal provenance/history migration; strict shared
+       contracts and a keyed `firms/current/staff` membership-change command with
+       firm → membership → matter → grant locks, atomic membership/grant/matter-
+       revision/receipt/audit effects, and removed-staff reads. Verify clean/upgrade/
+       down/reapply and tenant isolation.
+3. [ ] Connect Settings remove/restore with reason, removed-staff list, history and
+       same-intent recovery; browser-verify loading, errors, denial, self-removal,
+       keyboard and responsive states with evidence.
+4. [ ] Run the CI baseline and integration suites, run code-reviewer/security-auditor/
+       test-engineer, record evidence, D020 and tracker, and name the next slice.
 
-The slice passes local functional checks. The dependency audit remains a release
-blocker; no whole module or core release is complete. Next: **M01-S06b audited
-membership removal/restoration and explicit restricted-matter recovery**. Preserve
-the no-bypass boundary; exceptional recovery policy needs its own recorded review.
-Then continue M02 contacts/party links and configurable profiles. M22 stays deferred.
+Then M01-S06c exceptional recovery (after the user's policy decision) or M02
+contacts/party links and configurable profiles. M22 stays deferred.
 
 Product authority: `docs/product/clepso-implementation-blueprint.pdf`, v1.1,
 October 1, 2026. All 44 pages were read from that file for this audit on
