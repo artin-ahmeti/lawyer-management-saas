@@ -4,6 +4,11 @@ Law-firm practice management platform (competing with Clio / Litify / MyCase).
 Mobile-first: Expo (iOS + Android) plus the staff web app in apps/web (same data, same
 rules); apps/portal (client app) is reserved and purely additive later. Full plan history: see the approved plan in .claude/plans/.
 
+The implementation workflow shared with Codex (slice discipline, skills, tracker,
+completion checks) lives in AGENTS.md. Run a slice with `/slice`.
+
+@AGENTS.md
+
 ## Layout
 
 - `apps/mobile` — Expo SDK 57 + expo-router + NativeWind, staff app
