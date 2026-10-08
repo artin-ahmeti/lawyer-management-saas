@@ -1,0 +1,83 @@
+{
+  "testedAt": "2026-10-08T22:00:21.759Z",
+  "browser": "151.0.7922.173",
+  "server": "next start, preview configuration, localhost:3200",
+  "cache": "Cold browser cache per sample; local production server shared across runs",
+  "desktop": "1440x1000, DPR 1, no network/CPU throttle",
+  "mobile": "390x844, DPR 1, touch/mobile emulation, 4x CPU, 1.6 Mbps download / 750 Kbps upload, 150 ms latency",
+  "notes": "Local lab samples, not field Core Web Vitals. Desktop uses this container Chromium WebGL support; hardware animation frame rates are not measured.",
+  "samples": [
+    {
+      "profile": "desktop",
+      "run": 1,
+      "lcp": 564,
+      "cls": 0,
+      "lcpElement": "IMG.transition-opacity duration-700",
+      "ttfb": 218.20000000018626,
+      "transferBytes": 419803,
+      "jsBytes": 338975,
+      "height": 8594,
+      "canvasReady": "true"
+    },
+    {
+      "profile": "desktop",
+      "run": 2,
+      "lcp": 268,
+      "cls": 0,
+      "lcpElement": "IMG.transition-opacity duration-700",
+      "ttfb": 47.299999999813735,
+      "transferBytes": 419494,
+      "jsBytes": 338975,
+      "height": 8594,
+      "canvasReady": "true"
+    },
+    {
+      "profile": "desktop",
+      "run": 3,
+      "lcp": 276,
+      "cls": 0,
+      "lcpElement": "IMG.transition-opacity duration-700",
+      "ttfb": 48.40000000037253,
+      "transferBytes": 419494,
+      "jsBytes": 338975,
+      "height": 8594,
+      "canvasReady": "true"
+    },
+    {
+      "profile": "mobile",
+      "run": 1,
+      "lcp": 1460,
+      "cls": 0,
+      "lcpElement": "IMG.transition-opacity duration-700",
+      "ttfb": 45.5,
+      "transferBytes": 282526,
+      "jsBytes": 202007,
+      "height": 11515,
+      "canvasReady": "false"
+    },
+    {
+      "profile": "mobile",
+      "run": 2,
+      "lcp": 1456,
+      "cls": 0,
+      "lcpElement": "IMG.transition-opacity duration-700",
+      "ttfb": 63.39999999944121,
+      "transferBytes": 282526,
+      "jsBytes": 202007,
+      "height": 11515,
+      "canvasReady": "false"
+    },
+    {
+      "profile": "mobile",
+      "run": 3,
+      "lcp": 1620,
+      "cls": 0,
+      "lcpElement": "IMG.transition-opacity duration-700",
+      "ttfb": 41.200000000186265,
+      "transferBytes": 282526,
+      "jsBytes": 202007,
+      "height": 11515,
+      "canvasReady": "false"
+    }
+  ]
+}

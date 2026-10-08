@@ -1,7 +1,14 @@
 'use client';
 
-import { useRef, type KeyboardEvent, type ReactNode } from 'react';
+import { useRef, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
 import { cn } from '@/lib/cn';
+
+const desktopQuery = '(min-width: 1024px)';
+const subscribeDesktop = (callback: () => void) => {
+  const mq = window.matchMedia(desktopQuery);
+  mq.addEventListener('change', callback);
+  return () => mq.removeEventListener('change', callback);
+};
 
 export interface TabItem<T extends string> {
   id: T;
@@ -28,10 +35,17 @@ export function Tabs<T extends string>({
   onSelect: (id: T) => void;
   label: string;
   idBase: string;
-  orientation?: 'horizontal' | 'vertical';
+  orientation?: 'horizontal' | 'vertical' | 'responsive';
   className?: string;
   tabClassName?: (active: boolean) => string;
 }) {
+  const desktop = useSyncExternalStore(
+    subscribeDesktop,
+    () => window.matchMedia(desktopQuery).matches,
+    () => false,
+  );
+  const resolvedOrientation =
+    orientation === 'responsive' ? (desktop ? 'vertical' : 'horizontal') : orientation;
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
     // Both axes: the same tablist is horizontal on phones and vertical on desktop.
@@ -50,7 +64,12 @@ export function Tabs<T extends string>({
     refs.current[target]?.focus();
   };
   return (
-    <div role="tablist" aria-label={label} aria-orientation={orientation} className={className}>
+    <div
+      role="tablist"
+      aria-label={label}
+      aria-orientation={resolvedOrientation}
+      className={className}
+    >
       {items.map((item, i) => {
         const active = item.id === selected;
         return (

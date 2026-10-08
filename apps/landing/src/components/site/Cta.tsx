@@ -55,11 +55,7 @@ export function CtaProvider({ children }: { children: ReactNode }) {
           configured, so this button goes nowhere yet. Nothing was created and no account exists.
         </p>
         <p className="mt-3 text-body-sm text-ink-3">
-          For the team: set{' '}
-          <code className="text-mono-id text-ink-2">
-            {handoff === 'login' ? 'NEXT_PUBLIC_LOGIN_URL' : 'NEXT_PUBLIC_SIGN_UP_URL'}
-          </code>{' '}
-          to the Clepso web app before launch.
+          You can explore the interactive product and AI demos while access is being prepared.
         </p>
         <button
           type="button"

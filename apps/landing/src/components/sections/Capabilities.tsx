@@ -2,18 +2,18 @@ import { statusOf, type FeatureKey, FEATURES } from '@/config/features';
 import { DOCUMENT_VERSIONS, MATTER, PEOPLE, REQUESTED_DATE } from '@/content/sample-matter';
 import { cn } from '@/lib/cn';
 import { Avatar } from '../ui/Avatar';
-import { Icon } from '../ui/Icon';
+import { Icon, type IconName } from '../ui/Icon';
 import { Reveal } from '../ui/Reveal';
 import { SectionLabel } from '../ui/SectionLabel';
 import { StatusBadge } from '../ui/StatusBadge';
 
-const detail = 'rounded-lg border border-hairline bg-surface p-4 shadow-sm';
+const detail = '';
 
 const ROWS: { feature: FeatureKey; outcome: string; detail: React.ReactNode }[] = [
   {
     feature: 'matters',
     outcome:
-      'Each matter holds its client, the other side, the people working on it and its stage. New parties are checked against every matter before work starts.',
+      'The people, parties and progress of every matter, together. Check new parties against existing matters before work starts.',
     detail: (
       <div className={detail}>
         <p className="text-overline text-ink-3">Conflict check · {MATTER.opened}</p>
@@ -36,7 +36,7 @@ const ROWS: { feature: FeatureKey; outcome: string; detail: React.ReactNode }[] 
   {
     feature: 'tasks',
     outcome:
-      'Every task has an owner. Every date says where it came from: a client’s request, your own target, or a rule someone entered and a colleague checked.',
+      'Clear owners. Visible next steps. Dates that show their source, from a client’s request to your firm’s internal target.',
     detail: (
       <div className={cn(detail, 'grid gap-3')}>
         <div className="flex items-start gap-3">
@@ -88,7 +88,7 @@ const ROWS: { feature: FeatureKey; outcome: string; detail: React.ReactNode }[] 
   {
     feature: 'communication',
     outcome:
-      'Client updates in plain language that name the next step and its date, drafted from the matter and sent only after you approve them.',
+      'Clear updates, drafted from the matter. The next step and its date, sent only after your approval.',
     detail: (
       <div className={detail}>
         <p className="text-caption text-ink-3">To {PEOPLE.dana.name} · draft</p>
@@ -105,7 +105,7 @@ const ROWS: { feature: FeatureKey; outcome: string; detail: React.ReactNode }[] 
   {
     feature: 'timeBilling',
     outcome:
-      'Capture time when the work happens, from a timer, a voice note or the day’s activity, and review it before it reaches an invoice.',
+      'Capture work while it’s fresh, with a timer, voice note or matter activity. Review each entry before invoicing.',
     detail: (
       <div className={cn(detail, 'grid gap-3')}>
         <div className="flex items-baseline justify-between gap-3">
@@ -121,51 +121,42 @@ const ROWS: { feature: FeatureKey; outcome: string; detail: React.ReactNode }[] 
   },
 ];
 
+const ICONS: IconName[] = ['folder', 'calendar', 'file', 'message', 'clock'];
+
 export function Capabilities() {
   return (
-    <section aria-labelledby="caps-title" className="section-y relative bg-deep">
+    <section aria-labelledby="caps-title" className="section-y capabilities-section">
       <div className="container-mk">
-        <div className="grid grid-cols-12 gap-x-6 gap-y-6">
-          <div className="col-span-12 lg:col-span-8">
-            <SectionLabel index="04">The workspace</SectionLabel>
-            <h2 id="caps-title" className="text-h2 mt-6 text-ink">
-              <span className="block">Built around the work.</span>
-              <span className="block text-ink-2">Not another workaround.</span>
-            </h2>
-          </div>
-          <p className="text-lede col-span-12 self-end text-ink-2 lg:col-span-4">
-            Five parts of the practice that usually live in five places. In Clepso they share one
-            matter.
+        <div className="section-heading">
+          <SectionLabel index="04">Made for the whole practice</SectionLabel>
+          <h2 id="caps-title" className="text-h2 text-ink">
+            Less switching.
+            <br />
+            <span className="heading-accent">More moving forward.</span>
+          </h2>
+          <p className="text-lede text-ink-2">
+            Five parts of your practice. One connected matter. A workspace that keeps the context
+            with the work.
           </p>
         </div>
-
-        <ol className="mt-16 border-t border-hairline lg:mt-20">
+        <ol className="capability-grid">
           {ROWS.map((row, i) => (
-            <Reveal
-              as="li"
-              key={row.feature}
-              className="grid grid-cols-12 gap-x-6 gap-y-5 border-b border-hairline py-10 lg:py-12"
-            >
-              <div className="col-span-12 md:col-span-6 lg:col-span-4">
-                <p className="text-mono-id text-ink-3">{String(i + 1).padStart(2, '0')}</p>
-                <h3 className="text-h3 mt-3 text-ink">{FEATURES[row.feature].name}</h3>
-                <StatusBadge status={statusOf(row.feature)} className="mt-3" />
+            <Reveal as="li" key={row.feature} className="capability-card">
+              <div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="capability-icon">
+                    <Icon name={ICONS[i]!} size={20} />
+                  </span>
+                  <StatusBadge status={statusOf(row.feature)} />
+                </div>
+                <h3 className="mt-5 text-h3 text-ink">{FEATURES[row.feature].name}</h3>
+                <p className="mt-3 text-body text-ink-2">{row.outcome}</p>
               </div>
-              <p className="col-span-12 max-w-[42ch] text-body text-ink-2 md:col-span-6 lg:col-span-4">
-                {row.outcome}
-              </p>
-              <div
-                className={cn(
-                  'col-span-12 md:col-span-8 md:col-start-5 lg:col-span-4 lg:col-start-auto',
-                  i % 2 === 1 && 'lg:translate-y-4',
-                )}
-              >
-                {row.detail}
-              </div>
+              <div className="capability-detail">{row.detail}</div>
             </Reveal>
           ))}
         </ol>
-        <p className="mt-8 text-caption text-ink-3">
+        <p className="mt-6 text-center text-caption text-ink-3">
           Examples use sample data from one fictional matter.
         </p>
       </div>

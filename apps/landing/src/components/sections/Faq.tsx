@@ -51,12 +51,12 @@ const FAQ: { id: string; q: string; a: React.ReactNode }[] = [
 
 export function Faq() {
   return (
-    <section id="faq" aria-labelledby="faq-title" className="section-y relative bg-deep">
+    <section id="faq" aria-labelledby="faq-title" className="section-y faq-section">
       <div className="container-mk grid grid-cols-12 gap-x-6 gap-y-10">
         <div className="col-span-12 lg:col-span-4">
           <SectionLabel index="06">FAQ</SectionLabel>
           <h2 id="faq-title" className="text-h2 mt-6 text-ink">
-            Questions, answered plainly.
+            A little more clarity.
           </h2>
         </div>
         <div className="col-span-12 lg:col-span-7 lg:col-start-6">

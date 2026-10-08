@@ -1,6 +1,5 @@
 'use client';
 
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useState } from 'react';
 import { statusOf } from '@/config/features';
 import {
@@ -46,7 +45,6 @@ const VIEWS = [
 
 export function ProductReveal() {
   const [view, setView] = useState<View>('overview');
-  const reduce = useReducedMotion();
 
   const select = (v: View) => {
     setView(v);
@@ -54,104 +52,94 @@ export function ProductReveal() {
   };
 
   return (
-    <section id="product" aria-labelledby="product-title" className="section-y relative bg-deep">
+    <section id="product" aria-labelledby="product-title" className="product-section">
       <div className="container-mk">
-        <div className="grid grid-cols-12 gap-x-6 gap-y-6">
-          <div className="col-span-12 lg:col-span-8">
-            <SectionLabel index="02">Product</SectionLabel>
-            <h2 id="product-title" className="text-h2 mt-6 text-ink">
-              Everything connected
-              <br className="hidden sm:block" /> to the matter.
-            </h2>
-          </div>
-          <div className="col-span-12 self-end lg:col-span-4">
-            <p className="text-lede text-ink-2">
-              See what changed, what’s due, and who owns the next step.
-            </p>
-            <StatusBadge status={statusOf('matters')} className="mt-4" detail="sample data" />
-          </div>
+        <div className="section-heading">
+          <SectionLabel index="02">Meet your new workspace</SectionLabel>
+          <h2 id="product-title" className="text-h2 text-ink">
+            Everything connected.
+            <br />
+            <span className="heading-accent">Nothing lost in between.</span>
+          </h2>
+          <p className="text-lede text-ink-2">
+            See what changed, what’s due, and who owns the next step. The whole matter, in one clear
+            view.
+          </p>
         </div>
-
-        <div className="mt-14 grid grid-cols-12 gap-x-6 gap-y-6 lg:mt-20">
-          <div className="col-span-12 lg:col-span-4">
-            <div className="lg:sticky lg:top-28">
-              <Tabs
-                items={VIEWS.map((v) => ({
-                  id: v.id,
-                  label: <span className="block text-title-3">{v.label}</span>,
-                  description: (
-                    <span className="mt-1 hidden text-body-sm text-ink-2 lg:block">{v.text}</span>
-                  ),
-                }))}
-                selected={view}
-                onSelect={select}
-                label="Matter views"
-                idBase="product"
-                className="no-scrollbar -mx-[var(--mk-gutter)] flex gap-2 overflow-x-auto px-[var(--mk-gutter)] lg:mx-0 lg:grid lg:gap-0 lg:overflow-visible lg:border-l lg:border-hairline lg:px-0"
-                tabClassName={(active) =>
-                  cn(
-                    'min-h-11 shrink-0 rounded-md border px-4 py-2 transition-colors duration-200 lg:rounded-none lg:border-0 lg:border-l-2 lg:-ml-px lg:px-6 lg:py-5',
-                    active
-                      ? 'border-accent/50 bg-accent-tint/60 text-ink lg:border-accent lg:bg-transparent'
-                      : 'border-hairline text-ink-2 hover:text-ink lg:border-transparent',
-                  )
-                }
-              />
-              <p className="mt-4 text-body-sm text-ink-2 lg:hidden">
-                {VIEWS.find((v) => v.id === view)?.text}
+        <Tabs
+          items={VIEWS.map((v) => ({ id: v.id, label: v.label }))}
+          selected={view}
+          onSelect={select}
+          label="Matter views"
+          idBase="product"
+          className="product-tabs"
+          tabClassName={() => 'product-tab'}
+        />
+        <p className="product-view-description">{VIEWS.find((v) => v.id === view)?.text}</p>
+        <PreviewFrame
+          title={
+            <span>
+              Workspace <span className="text-ink-3">/</span>{' '}
+              <span className="text-mono-id">{MATTER.id}</span>
+            </span>
+          }
+        >
+          <div className="product-workspace">
+            <aside className="product-sidebar" aria-label="Sample workspace navigation">
+              <p className="product-sidebar-title">
+                Clepso <span className="text-accent">/</span> Studio
               </p>
-              <div className="mt-8 hidden lg:block">
-                <a href="#ai" className={buttonClass('secondary', 'md')}>
-                  Explore the AI workflow <Icon name="arrow-right" size={18} />
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-span-12 lg:col-span-8">
-            <PreviewFrame
-              title={
-                <span>
-                  Matters <span className="text-ink-3">/</span>{' '}
-                  <span className="text-mono-id text-ink-2">{MATTER.id}</span>
-                </span>
-              }
-            >
+              <ul>
+                {(
+                  [
+                    ['folder', 'Matters'],
+                    ['calendar', 'Tasks & dates'],
+                    ['file', 'Documents'],
+                    ['message', 'Messages'],
+                    ['clock', 'Time & billing'],
+                  ] as const
+                ).map(([icon, label]) => (
+                  <li key={label}>
+                    <Icon name={icon} size={16} />
+                    {label}
+                  </li>
+                ))}
+              </ul>
+              <p className="product-sidebar-note">
+                Illustrative navigation
+                <br />
+                Try the views above to explore.
+              </p>
+            </aside>
+            <div className="product-body">
               <MatterHeader />
-              <div className="min-h-[520px] p-4 sm:p-6">
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.div
-                    key={view}
-                    {...tabPanelProps('product', view)}
-                    initial={reduce ? false : { opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={reduce ? undefined : { opacity: 0, y: -6 }}
-                    transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
-                    className="outline-none"
+              <div className="min-h-[440px] p-4 sm:p-6">
+                {VIEWS.map((v) => (
+                  <div
+                    key={v.id}
+                    {...tabPanelProps('product', v.id)}
+                    hidden={view !== v.id}
+                    className="workflow-panel focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
                   >
-                    {view === 'overview' ? (
+                    {v.id === 'overview' ? (
                       <Overview />
-                    ) : view === 'actions' ? (
+                    ) : v.id === 'actions' ? (
                       <NextActions />
                     ) : (
                       <Activity />
                     )}
-                  </motion.div>
-                </AnimatePresence>
+                  </div>
+                ))}
               </div>
-            </PreviewFrame>
-            <div className="mt-6 flex flex-wrap items-center gap-3 lg:hidden">
-              <a href="#ai" className={buttonClass('secondary', 'md')}>
-                Explore the AI workflow <Icon name="arrow-right" size={18} />
-              </a>
-            </div>
-            <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-hairline pt-6">
-              <p className="text-body text-ink-2">
-                One place for the matter, from the first email to the final bill.
-              </p>
-              <CtaButton location="product" />
             </div>
           </div>
+        </PreviewFrame>
+        <div className="product-footnote">
+          <StatusBadge status={statusOf('matters')} detail="sample data" />
+          <a href="#ai" className={buttonClass('quiet')}>
+            Try the AI workflows <Icon name="arrow-right" size={16} />
+          </a>
+          <CtaButton location="product" />
         </div>
       </div>
     </section>

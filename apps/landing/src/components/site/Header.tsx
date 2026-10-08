@@ -6,6 +6,7 @@ import { cn } from '@/lib/cn';
 import { Icon } from '../ui/Icon';
 import { CtaButton, LoginLink } from './Cta';
 import { Wordmark } from './Wordmark';
+import { ThemeToggle } from './ThemeProvider';
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -20,10 +21,25 @@ export function Header() {
   }, []);
 
   useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 768px)');
+    const closeOnDesktop = () => {
+      if (desktop.matches) setMenuOpen(false);
+    };
+    desktop.addEventListener('change', closeOnDesktop);
+    return () => desktop.removeEventListener('change', closeOnDesktop);
+  }, []);
+
+  useEffect(() => {
     const el = menu.current;
     if (!el) return;
     if (menuOpen && !el.open) el.showModal();
     if (!menuOpen && el.open) el.close();
+    if (!menuOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
   }, [menuOpen]);
 
   return (
@@ -53,11 +69,12 @@ export function Header() {
           </ul>
         </nav>
         <div className="ml-auto flex items-center gap-1 md:ml-0">
+          <ThemeToggle />
           <LoginLink
             location="header"
             className="hidden whitespace-nowrap min-[400px]:inline-flex"
           />
-          <CtaButton location="header" className="ml-1 h-10 px-3.5 sm:ml-2 sm:h-11 sm:px-4" />
+          <CtaButton location="header" className="header-cta ml-1 sm:ml-2 sm:h-11 sm:px-4" />
           <button
             type="button"
             className="grid size-11 place-items-center rounded-md text-ink hover:bg-surface md:hidden"
@@ -85,6 +102,9 @@ export function Header() {
           style={{ marginTop: 'env(safe-area-inset-top)' }}
         >
           <Wordmark onNavigate={() => setMenuOpen(false)} />
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
           <button
             type="button"
             className="grid size-11 place-items-center rounded-md hover:bg-surface"

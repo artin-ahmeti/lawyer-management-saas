@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start --port 3200",
     "typecheck": "next typegen && tsc --noEmit",
-    "render:vessel": "node scripts/render-vessel.mjs"
+    "render:vessel": "node scripts/render-vessel.mjs",
+    "verify:browser": "node scripts/verify-redesign.mjs"
   },
   "dependencies": {
     "@lawfirm/ui-web": "workspace:*",

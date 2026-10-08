@@ -23,7 +23,7 @@ Status on 2026-10-01: a working, responsive marketing page in `apps/landing`, ru
 | Dates are the biggest risk              | Finding: administrative errors are ~25% of malpractice claims and document preparation/filing is the top claim activity (ABA 2020–2023 via ALPS); insurers expect a named, double-checked docket | Every date has a source and an owner; a requested date is never passed off as a legal deadline       | Email → next actions (explicit "not a calculated deadline" note); Capabilities row 02; FAQ | Product CTA        |
 | Clients feel ignored                    | Finding: neglect (1,219) and failure to communicate (630) lead Illinois grievances (ARDC 2024)                                                                                                   | Plain-language updates with the next date, approved by a person                                      | Client-update draft                                                                        | CTA after the demo |
 | Work is spread across tools             | Finding: Outlook is the most-named "practice management" tool (ABA 2023); PM adoption is 37% of solos in ABA data vs 79% in Clio data                                                            | One matter holds documents, tasks, messages and time                                                 | Product reveal (Overview / Next actions / Activity)                                        | Product CTA        |
-| Which version is current                | Assumption (not measured)                                                                                                                                                                        | One latest version, history kept, changed clauses listed                                             | Recognition artefact 2; Capabilities row 03; Overview card                                 | —                  |
+| Which version is current                | Assumption (not measured)                                                                                                                                                                        | One latest version, history kept, changed clauses listed                                             | Hero document fragment; Capabilities document card; Overview card                          | —                  |
 | Unclear owner of the next action        | Partly supported (insurer docketing guidance names an owner and a backup)                                                                                                                        | Named owner on every task                                                                            | Next actions view                                                                          | —                  |
 | Fear of AI and of moving sensitive work | Finding: AI concerns are accuracy 75%, reliability 56%, privacy 47% (ABA 2024); 57% of solos have no AI policy (Clio 2026); ABA Opinion 512 requires verification and informed consent           | Sources on every answer, "not enough information" instead of guessing, review before anything leaves | Matter brief (citations open the real excerpt), Trust section                              | FAQ                |
 
@@ -33,9 +33,9 @@ Status on 2026-10-01: a working, responsive marketing page in `apps/landing`, ru
 
 **Objections the page answers.** AI autonomy, AI accuracy, deadlines. Objections it deliberately does not answer yet are in section 7.
 
-## 3. Token mapping
+## 3. Token mapping (initial implementation; updated palette below)
 
-The page imports `@lawfirm/ui-web/clepso.tokens.css` (new export: tokens only, generated from `design/src`) and pins the dark set with `<html data-theme="dark">`. Tailwind's `@theme` in `src/app/globals.css` maps utilities onto those tokens and defines no colours of its own (`--color-*: initial`).
+The page imports `@lawfirm/ui-web/clepso.tokens.css` (new export: tokens only, generated from `design/src`) and selects dark by default, or light from the saved landing preference (`clepso-landing-theme`). Tailwind's `@theme` in `src/app/globals.css` maps utilities onto those tokens and defines no colours of its own (`--color-*: initial`).
 
 | Tailwind                                                                                              | Token (dark value)                                                                                   |
 | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
@@ -74,7 +74,7 @@ The design system has no final logo, and its README says the cobalt "C" tile is 
 | tailwindcss 4.3              | npm                                                                                                                                                         | MIT           |
 | zod 4 (server route only)    | npm                                                                                                                                                         | MIT           |
 
-No component was imported from 21st.dev or React Bits. Reimplemented patterns: a CSS line reveal for headings (in the spirit of React Bits' Split Text, but no per-letter splitting and no JavaScript), WAI-ARIA tabs with roving focus, a native `<dialog>` for modals and the mobile menu, and CSS scroll-driven reveals as progressive enhancement.
+No component was imported from 21st.dev or React Bits. Reimplemented patterns: short CSS reveals for headings (real text, no per-letter splitting), WAI-ARIA tabs with roving focus, a native `<dialog>` for modals and the mobile menu, and CSS scroll-driven reveals as progressive enhancement.
 
 ## 6. Feature status (central config: `src/config/features.ts`)
 
@@ -108,7 +108,7 @@ Questions deliberately left off the public page until they have confirmed answer
 
 Events: `cta_click` (location, mode, destination), `login_click`, `product_view_select`, `ai_workflow_select`, `ai_review_complete` (workflow, outcome), `source_open`, `hero_replay`, `motion_toggle`, `faq_open`, `early_access_submit` (result only). No form values or sample content are sent. Delivery is a `clepso:analytics` DOM event plus `window.dataLayer` if a tag manager exists; nothing is sent by default. A CTA click is not a signup; measure completed signups in the web app.
 
-## 9. What was tested (2026-10-01)
+## 9. Original verification (2026-10-01; historical baseline)
 
 Local machine, Chromium via Playwright, production build (`next build` + `next start`).
 
@@ -144,3 +144,17 @@ Local machine, Chromium via Playwright, production build (`next build` + `next s
 ## 10. Regenerating the vessel images
 
 Change the profile in `vessel-profile.ts` or the materials in `vessel-scene.ts`, start the dev server, then run `PLAYWRIGHT=<path to playwright> pnpm --filter @lawfirm/landing render:vessel`. The dev-only route `/dev/vessel` returns 404 in production builds.
+
+## 11. October 8, 2026 redesign
+
+The current implementation is described in [SPEC-redesign.md](SPEC-redesign.md), [README.md](README.md), and [the slice record](../../docs/implementation/slices/landing-redesign.md). Earlier token values and performance figures above document the original implementation; they are not the current palette or benchmark.
+
+The page now uses the order hero → product → compact research → AI workflows → capabilities → control → FAQ → closing. Dropship informed the centered hierarchy and widening funnel transition. Its screenshots are research evidence only; no reference assets or scripts are shipped.
+
+The new landing-only palette is in `src/app/theme.css`. Dark canvas/surface/raised are `#0B0E14` / `#131821` / `#1A202C`, with text `#F3F5FC` / `#ADB7CA` / `#929DB2`. Light uses `#FAFBFF` / `#FFFFFF` / `#F6F8FF`, with text `#172137` / `#536078` / `#616E84`. Semantic utilities still resolve through Clepso token names; generated/shared design files are untouched. Marketing width is 1280px, section spacing 64–96px, hero type 42–92px, and section headings 32–54px.
+
+A server-rendered cookie preference avoids wrong-theme first paint and hydration workarounds. The route is intentionally rendered on demand rather than statically cached. The cookie stores a non-sensitive preference, is separate from staff app preferences, and uses SameSite=Lax with Secure on HTTPS. Unknown values fall back to dark.
+
+The vessel keeps its original project-owned geometry, with polished cobalt/silver materials, lower mesh resolution and deterministic grain phases. Six matching WebPs cover dark/light at three sizes. Native scrolling, finite CSS entrances, paused motion, live reduced-motion changes, lazy loading and static fallbacks keep the enhancement optional.
+
+The final wordmark/favicon and production site/signup/login/legal/contact destinations remain the existing launch configuration work. Browser screenshots and lab performance do not establish real-device GPU performance or field Core Web Vitals. Safari, Firefox, assistive-technology sessions and real mobile devices remain unverified.

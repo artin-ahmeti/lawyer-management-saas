@@ -1,0 +1,143 @@
+/* Landing-only palette. Product tokens remain unchanged outside this app. */
+:root[data-theme] {
+  --mk-content: 1280px;
+  --mk-section: clamp(64px, 7vw, 96px);
+  --mk-glow: #5278ff;
+  --mk-grid: color-mix(in srgb, var(--ink) 4%, transparent);
+  --mk-panel-shadow: 0 24px 80px -24px #0005;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0b0e14;
+  --surface: #131821;
+  --surface-2: #0e121a;
+  --surface-3: #1a202c;
+  --ink: #f3f5fc;
+  --ink-2: #adb7ca;
+  --ink-3: #929db2;
+  --hairline: #252c3a;
+  --border: #354057;
+  --mk-heading-accent: #8faaff;
+  --mk-hero-glow: #244cff;
+  --mk-canopy: #192e78;
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #fafbff;
+  --surface: #fff;
+  --surface-2: #f1f4fb;
+  --surface-3: #f6f8ff;
+  --ink: #172137;
+  --ink-2: #536078;
+  --ink-3: #616e84;
+  --hairline: #dde3f0;
+  --border: #c8d2e6;
+  --mk-heading-accent: #2b52d9;
+  --mk-hero-glow: #8ba9ff;
+  --mk-canopy: #c3d2ff;
+  --mk-panel-shadow: 0 24px 80px -24px #25489826;
+}
+body {
+  background: var(--bg);
+  transition:
+    background-color 220ms,
+    color 220ms;
+}
+header,
+.preview-frame,
+.product-sidebar,
+.capability-card,
+.capability-detail,
+.trust-panel,
+.faq-section,
+.recognition-section,
+.hero-artifact,
+.closing-card,
+.site-footer {
+  transition:
+    background-color 220ms,
+    color 220ms,
+    border-color 220ms;
+}
+.text-h2 {
+  font-size: clamp(2rem, 1.3rem + 2.6vw, 3.375rem);
+  line-height: 1.08;
+}
+.theme-toggle {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition:
+    background-color 180ms,
+    color 180ms,
+    border-color 180ms;
+}
+.theme-toggle:hover {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--hairline);
+}
+.mk-button {
+  border-radius: 10px;
+}
+.mk-button.bg-cobalt {
+  box-shadow:
+    inset 0 1px 0 #ffffff24,
+    0 4px 16px #2b52d924;
+}
+.mk-button svg {
+  transition: transform 180ms var(--ease-standard);
+}
+.mk-button:hover svg {
+  transform: translateX(2px);
+}
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 11px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: 0.015em;
+  color: var(--ink-2);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+.section-label-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.section-heading {
+  max-width: 740px;
+  margin-inline: auto;
+  text-align: center;
+}
+.section-heading h2 {
+  margin-top: 24px;
+}
+.section-heading > p:last-child {
+  max-width: 610px;
+  margin: 20px auto 0;
+}
+.heading-accent {
+  color: var(--mk-heading-accent);
+}
+.preview-frame {
+  border-radius: 18px;
+  box-shadow:
+    var(--mk-panel-shadow),
+    0 0 0 5px color-mix(in srgb, var(--surface) 65%, transparent);
+}
+.preview-frame > div:first-child {
+  background: color-mix(in srgb, var(--surface-3) 55%, var(--surface));
+  min-height: 48px;
+}

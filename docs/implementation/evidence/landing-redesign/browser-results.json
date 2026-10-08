@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-10-08T22:09:30.710Z",
+  "results": [
+    "Server-rendered dark default and saved light without JavaScript",
+    "Responsive dark/light layouts and complete static imagery",
+    "Theme persistence, product keyboard tabs and task state",
+    "All four AI review/edit/reset flows and state across tabs/themes",
+    "FAQ disclosure and CTA dialog focus restoration",
+    "Mobile menu keyboard, theme, scroll lock and navigation",
+    "WCAG 2.1 A/AA automated audit, desktop/mobile in both themes",
+    "Desktop canvas, pause before load, freeze, resume and live reduced motion",
+    "Data saver and no WebGL retain the static hero"
+  ],
+  "runtimeErrors": []
+}
