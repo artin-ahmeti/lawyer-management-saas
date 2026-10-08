@@ -10,6 +10,7 @@ import { StaffInvitationModule } from './modules/staff-invitations/staff-invitat
 import { MatterModule } from './modules/matters/matter.module';
 import { ContactModule } from './modules/contacts/contact.module';
 import { PracticeProfileModule } from './modules/practice-profiles/practice-profile.module';
+import { JurisdictionModule } from './modules/jurisdictions/jurisdiction.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PracticeProfileModule } from './modules/practice-profiles/practice-prof
     MatterModule,
     ContactModule,
     PracticeProfileModule,
+    JurisdictionModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

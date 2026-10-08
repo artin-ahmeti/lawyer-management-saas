@@ -32,6 +32,9 @@ const PROFILE_A = randomUUID(),
   PROFILE_B = randomUUID(),
   VERSION_A = randomUUID(),
   VERSION_B = randomUUID();
+const FORUM_A = randomUUID(),
+  FORUM_ARCHIVED = randomUUID(),
+  FORUM_B = randomUUID();
 
 async function signToken(claims: Record<string, unknown>): Promise<string> {
   return new SignJWT({ aud: 'authenticated', iss: `${SUPABASE_URL}/auth/v1`, ...claims })
@@ -101,6 +104,14 @@ beforeAll(async () => {
     (${FIRM_A},${MATTER_A},${CONTACT_A},'client',${USER_A}),
     (${FIRM_A},${MATTER_RESTRICTED},${CONTACT_A},'client',${USER_A}),
     (${FIRM_B},${MATTER_B},${CONTACT_B},'client',${USER_B})`;
+  await sql`insert into public.forums(id,firm_id,name,kind,jurisdiction,archived_at,created_by) values
+    (${FORUM_A},${FIRM_A},'Superior Court','court','CA',null,${USER_A}),
+    (${FORUM_ARCHIVED},${FIRM_A},'Labor Board','agency','CA',now(),${USER_A}),
+    (${FORUM_B},${FIRM_B},'Superior Court','court','CA',null,${USER_B})`;
+  await sql`insert into public.matter_jurisdictions(firm_id,matter_id,purpose,jurisdiction,forum_id,docket_number,created_by) values
+    (${FIRM_A},${MATTER_A},'venue','CA',${FORUM_A},'GRANTED-1',${USER_A}),
+    (${FIRM_A},${MATTER_RESTRICTED},'venue','CA',${FORUM_A},'RESTRICTED-1',${USER_A}),
+    (${FIRM_B},${MATTER_B},'venue','CA',${FORUM_B},'OTHER-1',${USER_B})`;
 }, 30_000);
 
 afterAll(async () => {
@@ -109,6 +120,13 @@ afterAll(async () => {
 });
 
 async function cleanup(): Promise<void> {
+  // Forums and references are history that refuses deletion; remove fixtures without triggers.
+  if ((await sql`select to_regclass('public.forums') is not null as present`)[0]?.present)
+    await sql.begin(async (tx) => {
+      await tx`set local session_replication_role=replica`;
+      await tx`delete from public.matter_jurisdictions where firm_id in (${FIRM_A}, ${FIRM_B})`;
+      await tx`delete from public.forums where firm_id in (${FIRM_A}, ${FIRM_B})`;
+    });
   await sql`delete from public.matter_parties where firm_id in (${FIRM_A}, ${FIRM_B})`;
   await sql`delete from public.contacts where firm_id in (${FIRM_A}, ${FIRM_B})`;
   await sql`delete from public.matter_access where firm_id in (${FIRM_A}, ${FIRM_B})`;
@@ -299,6 +317,65 @@ describe('cross-firm read isolation', () => {
       auth: { persistSession: false },
     });
     for (const table of ['practice_profiles', 'practice_profile_versions'])
+      expect((await anon.from(table).select('id')).error?.code).toBe('42501');
+  });
+  it('scopes forums to the firm and jurisdiction references to granted matters', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'readonly');
+    const forums = await a.from('forums').select('id', { count: 'exact' }).order('name');
+    expect(forums.error).toBeNull();
+    expect(forums.data).toEqual([{ id: FORUM_ARCHIVED }, { id: FORUM_A }]);
+    const references = await a.from('matter_jurisdictions').select('matter_id,docket_number');
+    expect(references.error).toBeNull();
+    expect(references.data).toEqual([{ matter_id: MATTER_A, docket_number: 'GRANTED-1' }]);
+    const forged = await clientFor(USER_A, FIRM_B, 'owner');
+    for (const table of ['forums', 'matter_jurisdictions']) {
+      const foreign = await forged.from(table).select('id', { count: 'exact' });
+      expect(foreign.error).toBeNull();
+      expect(foreign.count).toBe(0);
+    }
+    await sql`update firm_members set deleted_at=now() where firm_id=${FIRM_A} and user_id=${USER_A}`;
+    try {
+      for (const table of ['forums', 'matter_jurisdictions']) {
+        const removed = await a.from(table).select('id', { count: 'exact' });
+        expect(removed.error).toBeNull();
+        expect(removed.count).toBe(0);
+      }
+    } finally {
+      await sql`update firm_members set deleted_at=null where firm_id=${FIRM_A} and user_id=${USER_A}`;
+    }
+  });
+  it('rejects direct forum/reference writes and anonymous reads', async () => {
+    const a = await clientFor(USER_A, FIRM_A, 'owner');
+    const create = await a.from('forums').insert({
+      firm_id: FIRM_A,
+      name: 'Forbidden',
+      kind: 'agency',
+      jurisdiction: 'NY',
+      created_by: USER_A,
+    });
+    expect(create.error?.code).toBe('42501');
+    const archive = await a
+      .from('forums')
+      .update({ archived_at: new Date().toISOString() })
+      .eq('id', FORUM_A);
+    expect(archive.error?.code).toBe('42501');
+    const add = await a.from('matter_jurisdictions').insert({
+      firm_id: FIRM_A,
+      matter_id: MATTER_A,
+      purpose: 'governing_law',
+      jurisdiction: 'NY',
+      created_by: USER_A,
+    });
+    expect(add.error?.code).toBe('42501');
+    const end = await a
+      .from('matter_jurisdictions')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('matter_id', MATTER_A);
+    expect(end.error?.code).toBe('42501');
+    const anon = createClient(SUPABASE_URL, await signToken({ role: 'anon' }), {
+      auth: { persistSession: false },
+    });
+    for (const table of ['forums', 'matter_jurisdictions'])
       expect((await anon.from(table).select('id')).error?.code).toBe('42501');
   });
   it('keeps invitation identities and membership writes behind the API for members and anonymous clients', async () => {

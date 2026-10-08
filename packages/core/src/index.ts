@@ -16,3 +16,4 @@ export * from './schemas/staff-invitation.js';
 export * from './schemas/readiness.js';
 export * from './schemas/practice-profile.js';
 export * from './schemas/practice-profile-starters.js';
+export * from './schemas/jurisdiction.js';

@@ -1,6 +1,6 @@
 # Clepso implementation status
 
-Current slice (planned October 8, 2026, awaiting approval): **M02-S04 jurisdiction,
+Current slice (approved October 8, 2026, in progress): **M02-S04 jurisdiction,
 venue and governing-law references**. Latest locally complete slice: M02-S03
 configurable practice profiles and typed matter fields ([record](slices/m02-s03.md),
 D022). M01-S06c exceptional recovery stays parked until the user records a recovery
@@ -20,7 +20,7 @@ jurisdiction-specific automation is available for it (p36 explicit unsupported
 behavior); manual entry stays possible. This meets the p13 "multiple jurisdiction/venue
 references; optional court and docket fields" and p39 "multi-jurisdiction matter" and
 "agency work" scenarios.
-Proposed boundary (D023, needs approval): the jurisdiction catalog is code (a deploy
+Approved boundary (D023, user-approved): the jurisdiction catalog is code (a deploy
 adds one, like starters); forums are firm-visible configuration that owner/admin/
 attorney/paralegal add and owner/admin rename/archive; references live on the matter
 and follow its grants (no owner/admin bypass); adding or ending a reference needs a
@@ -30,9 +30,10 @@ and forum id, never docket numbers. Firm address, lawyer admissions, procedural
 rulesets (M06), coverage records and reviewed packs (M18) stay later. M02/M15 remain
 partial; first-five completion is 0/5.
 
-Planned slice tasks:
+Slice tasks (references carry no matter revision: add/end refuse duplicates and
+repeated endings instead, like parties; see the slice record):
 
-1. [ ] Establish failing core/API/RLS outcome tests: catalog covers 50 states, DC,
+1. [x] Establish failing core/API/RLS outcome tests: catalog covers 50 states, DC,
        five territories and federal with stable codes; forum create by
        owner/admin/attorney/paralegal and rename/archive by owner/admin, refused for
        billing/readonly and other firms; matter references added and ended with
@@ -42,7 +43,7 @@ Planned slice tasks:
        another firm or archived refused for new references but still shown on
        existing ones; references and docket numbers unreadable without a matter
        grant or across firms.
-2. [ ] Add reversible `forums`/`matter_jurisdiction_refs` migration (same-firm
+2. [x] Add reversible `forums`/`matter_jurisdictions` migration (same-firm
        composite keys, forced RLS, select-only client role, catalog-code checks,
        soft end with immutable provenance); strict shared contracts and catalog in
        `@lawfirm/core`; keyed forum create/edit/archive and list, matter reference

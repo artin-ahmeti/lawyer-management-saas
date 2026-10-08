@@ -91,6 +91,30 @@ export type UpdateMatterFields = NonNullable<
 >['content']['application/json'];
 export type MatterFieldsResult =
   paths['/matters/{matterId}/fields']['patch']['responses'][200]['content']['application/json'];
+export type ForumList = paths['/forums']['get']['responses'][200]['content']['application/json'];
+export type ForumListQuery = {
+  status?: 'active' | 'archived';
+  jurisdiction?: string;
+  afterName?: string;
+  afterId?: string;
+};
+export type CreateForum = NonNullable<
+  paths['/forums']['post']['requestBody']
+>['content']['application/json'];
+export type UpdateForum = NonNullable<
+  paths['/forums/{forumId}']['patch']['requestBody']
+>['content']['application/json'];
+export type ForumResult = paths['/forums']['post']['responses'][201]['content']['application/json'];
+export type MatterJurisdictionList =
+  paths['/matters/{matterId}/jurisdictions']['get']['responses'][200]['content']['application/json'];
+export type AddMatterJurisdiction = NonNullable<
+  paths['/matters/{matterId}/jurisdictions']['post']['requestBody']
+>['content']['application/json'];
+export type EndMatterJurisdiction = NonNullable<
+  paths['/matters/{matterId}/jurisdiction-endings']['post']['requestBody']
+>['content']['application/json'];
+export type MatterJurisdictionResult =
+  paths['/matters/{matterId}/jurisdictions']['post']['responses'][201]['content']['application/json'];
 export type StaffInvitationList =
   paths['/firms/current/staff-invitations']['get']['responses'][200]['content']['application/json'];
 export type ReceivedInvitationList =
@@ -366,6 +390,34 @@ export function createApiClient(options: ClientOptions) {
       keyed<MatterFieldsResult>(
         `/matters/${encodeURIComponent(id)}/fields`,
         'PATCH',
+        input,
+        action,
+      ),
+    forums: (query: ForumListQuery = {}, signal?: AbortSignal) => {
+      const params = new URLSearchParams(
+        Object.entries(query).filter((entry): entry is [string, string] => Boolean(entry[1])),
+      );
+      return request<ForumList>(`/forums${params.size ? `?${params}` : ''}`, { signal });
+    },
+    createForum: (input: CreateForum, action: Action) =>
+      keyed<ForumResult>('/forums', 'POST', input, action),
+    updateForum: (id: string, input: UpdateForum, action: Action) =>
+      keyed<ForumResult>(`/forums/${encodeURIComponent(id)}`, 'PATCH', input, action),
+    matterJurisdictions: (id: string, signal?: AbortSignal) =>
+      request<MatterJurisdictionList>(`/matters/${encodeURIComponent(id)}/jurisdictions`, {
+        signal,
+      }),
+    addMatterJurisdiction: (id: string, input: AddMatterJurisdiction, action: Action) =>
+      keyed<MatterJurisdictionResult>(
+        `/matters/${encodeURIComponent(id)}/jurisdictions`,
+        'POST',
+        input,
+        action,
+      ),
+    endMatterJurisdiction: (id: string, input: EndMatterJurisdiction, action: Action) =>
+      keyed<MatterJurisdictionResult>(
+        `/matters/${encodeURIComponent(id)}/jurisdiction-endings`,
+        'POST',
         input,
         action,
       ),

@@ -11,3 +11,4 @@ export * from './staff-session-contexts.js';
 export * from './practice-profiles.js';
 export * from './matters.js';
 export * from './contacts.js';
+export * from './jurisdictions.js';
