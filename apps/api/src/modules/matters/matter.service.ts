@@ -40,6 +40,7 @@ const view = (r: MatterRow) =>
     revision: r.revision,
     createdAt: r.created_at.toISOString(),
     accessRole: r.role,
+    profile: null,
   });
 
 @Injectable()

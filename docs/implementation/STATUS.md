@@ -1,6 +1,6 @@
 # Clepso implementation status
 
-Current slice (planned October 8, 2026, awaiting approval): **M02-S03 configurable
+Current slice (approved October 8, 2026, in progress): **M02-S03 configurable
 practice profiles and typed matter fields**. Latest locally complete slice: M02-S02
 universal contacts and matter-party links ([record](slices/m02-s02.md), D021).
 M01-S06c exceptional recovery stays parked until the user records a recovery policy.
@@ -16,7 +16,7 @@ profile-less matter, and fill its fields. The matter pins that version: revising
 profile publishes version N+1 while existing matters keep version N and their
 values. This meets the p13 scenarios "add a new practice area and field set without
 deploying application code" and transactional/advisory matters with no court field.
-Proposed boundary (D022, needs approval): profiles and versions are firm-visible
+Approved boundary (D022, user-approved): profiles and versions are firm-visible
 configuration for live staff; field values live on the matter and follow its grants;
 profile administration is owner/admin; editing a matter's values needs a manager
 grant and owner/admin/attorney/paralegal; audits and receipts name changed field
@@ -26,9 +26,9 @@ pack versions/coverage stay later. The unused scaffold `practice_areas` table is
 left untouched for a reviewed removal. M02/M15 remain partial; first-five completion
 is 0/5.
 
-Planned slice tasks:
+Slice tasks:
 
-1. [ ] Establish failing core/API/RLS outcome tests: profile create/revise/archive by
+1. [x] Establish failing core/API/RLS outcome tests: profile create/revise/archive by
        owner/admin and refusal for other roles and firms; each field type's validation
        (unknown key, wrong type, missing required, choice outside options, duplicate
        keys, over 50 fields); transactional and advisory profiles with no court

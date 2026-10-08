@@ -16,6 +16,7 @@ const matter = {
   revision: 1,
   createdAt: new Date().toISOString(),
   accessRole: 'manager' as const,
+  profile: null,
 };
 it('binds read results to the requested workspace and matter rather than accepting foreign data', async () => {
   await expect(

@@ -14,3 +14,5 @@ export * from './schemas/staff-lifecycle.js';
 export * from './schemas/firm-provision.js';
 export * from './schemas/staff-invitation.js';
 export * from './schemas/readiness.js';
+export * from './schemas/practice-profile.js';
+export * from './schemas/practice-profile-starters.js';
