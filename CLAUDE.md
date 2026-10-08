@@ -12,6 +12,8 @@ rules); apps/portal (client app) is reserved and purely additive later. Full pla
 - `apps/web` — Next.js 16 staff web app over `@lawfirm/ui-web`; feature slices in `src/features`,
   data hooks in `src/lib/data` (mock source until the API grows the domain endpoints), session
   gate in `src/proxy.ts`; `NEXT_PUBLIC_PREVIEW=1` opens it on mock data without sign-in
+- `apps/landing` — Next.js 16 + Tailwind v4 marketing site on the Clepso dark tokens; sample data only,
+  destinations/launch mode/feature status in `src/config`; see `apps/landing/HANDOFF.md`
 - `apps/portal` — reserved, do not scaffold without being asked
 - `packages/core` — domain logic + Zod schemas shared by every app (ESM)
 - `packages/db` — Drizzle schema; `db:generate` emits SQL into `supabase/migrations/`
@@ -53,6 +55,7 @@ Never add a Supabase write from any client app, and never put
 - `pnpm --filter @lawfirm/api dev` — API on :3000
 - `pnpm --filter @lawfirm/mobile start` — Expo dev client
 - `pnpm --filter @lawfirm/web dev` — web app on :3100 (`NEXT_PUBLIC_PREVIEW=1` for mock data)
+- `pnpm --filter @lawfirm/landing dev` — marketing site on :3200
 - `pnpm --filter @lawfirm/worker dev` — worker
 - `pnpm supabase start` — local stack (Postgres :54322)
 - `pnpm db:generate` — Drizzle → supabase/migrations

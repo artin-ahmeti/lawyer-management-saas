@@ -28,3 +28,5 @@ apps/mobile/expo-env.d.ts
 design/handoff
 apps/web/next-env.d.ts
 apps/web/.next
+apps/landing/next-env.d.ts
+apps/landing/.next
