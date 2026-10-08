@@ -1,57 +1,62 @@
 # Clepso implementation status
 
-Latest locally complete slice (October 8, 2026): **M02-S03 configurable practice
-profiles and typed matter fields** ([record](slices/m02-s03.md), D022).
+Current slice (planned October 8, 2026, awaiting approval): **M02-S04 jurisdiction,
+venue and governing-law references**. Latest locally complete slice: M02-S03
+configurable practice profiles and typed matter fields ([record](slices/m02-s03.md),
+D022). M01-S06c exceptional recovery stays parked until the user records a recovery
+policy.
 Prerequisites: M01 live firm/session context and firm-first policy locks
 (D016/D019/D020), durable matters with explicit grants (D017/D018), contacts and
-parties (D021). PDF p13 (M02), p29 (M18), pp34–36 (practice/jurisdiction coverage).
-Outcome: owners/admins add a firm practice profile, blank or from one of twelve labelled
-operational starters (generic, not jurisdiction-reviewed), with up to 50 typed fields
-and publish it without deploying code; each field change publishes an immutable
-version. Staff pick an active profile when creating a matter, or assign one once to a
-matter without one, and fill its fields; the matter keeps its pinned version when the
-profile is revised or archived. Profiles are firm-visible configuration; values live on
-the matter and follow its grants; profile admin is owner/admin; editing values needs a
-manager grant and owner/admin/attorney/paralegal; receipts and audits hold field keys,
-never values (D022, user-approved). M02/M15/M18 remain partial; first-five completion
-is 0/5.
+parties (D021), profiles and pinned fields (D022). PDF p13 (M02 step 4, data
+additions), p36 (jurisdiction coverage), p39 (nationwide-model acceptance).
+Outcome: a matter carries zero, one or several jurisdiction references, each with a
+purpose (governing law, venue/proceeding, agency, other) and a jurisdiction from a
+fixed US catalog in `@lawfirm/core`: the 50 states, DC, the five inhabited territories
+and federal. A reference may name a firm forum record (court, agency, tribunal or other
+body under one catalog jurisdiction) and carry an optional docket/case number; neither
+is required, so transactional, advisory and agency matters need no court. References
+never derive from the firm address or lawyer admissions. Each reference states that no
+jurisdiction-specific automation is available for it (p36 explicit unsupported
+behavior); manual entry stays possible. This meets the p13 "multiple jurisdiction/venue
+references; optional court and docket fields" and p39 "multi-jurisdiction matter" and
+"agency work" scenarios.
+Proposed boundary (D023, needs approval): the jurisdiction catalog is code (a deploy
+adds one, like starters); forums are firm-visible configuration that owner/admin/
+attorney/paralegal add and owner/admin rename/archive; references live on the matter
+and follow its grants (no owner/admin bypass); adding or ending a reference needs a
+manager grant and owner/admin/attorney/paralegal; ending keeps history (soft end, like
+parties); receipts hold identifiers only and audits hold purpose, jurisdiction code
+and forum id, never docket numbers. Firm address, lawyer admissions, procedural
+rulesets (M06), coverage records and reviewed packs (M18) stay later. M02/M15 remain
+partial; first-five completion is 0/5.
 
-Verified slice tasks:
+Planned slice tasks:
 
-1. [x] Establish failing core/API/RLS outcome tests: profile create/revise/archive by
-       owner/admin and refusal for other roles and firms; each field type's validation
-       (unknown key, wrong type, missing required, choice outside options, duplicate
-       keys, over 50 fields); transactional and advisory profiles with no court
-       fields; revising publishes version 2 while an existing matter keeps version 1
-       and its values; keyed matter create-with-fields and field edits with expected
-       revision, replay and stale refusal; values unreadable without a matter grant
-       or across firms; archived profiles refused for new matters but still shown on
-       existing ones.
-2. [x] Add reversible `practice_profiles`/`practice_profile_versions` migration and
-       matter profile-version/field-value columns (same-firm composite keys, forced
-       RLS, select-only client role, immutable versions); shared Zod field
-       definitions, value-schema builder and starter catalog in `@lawfirm/core`;
-       keyed profile create/revise/archive, profile list/detail, matter creation with
-       a profile and field-value edits with firm → matter → grant → profile locks and
-       atomic receipt/audit; regenerate the API client. Verify clean/upgrade/down/
-       reapply and tenant isolation.
-3. [x] Add live Settings practice profiles (list, create blank or from a starter,
-       field editor, publish, archive) beside the preview playbooks; a profile picker
-       with typed inputs in the matter create form; a fields panel on matter detail
-       showing the pinned version with reviewed-revision edits and same-intent
-       recovery. Explicit preview keeps fixtures. Browser-verify loading, empty,
-       error, denial, keyboard and responsive states with evidence.
-4. [x] Run the CI baseline and integration suites, run code-reviewer/security-auditor/
-       test-engineer, record evidence, D022 and tracker, and name the next slice.
-
-The slice passes local functional checks. The dependency audit remains a release
-blocker. Next dependency-ready slice: **M02-S04 jurisdiction, venue and governing-law
-references** (p13 step 4, p36: configurable jurisdiction records for states, DC,
-federal forums, agencies and territories; several references per matter, or none;
-court and docket optional; independent of firm address and lawyer admissions), then
-matter types/configurable party roles and assignment history. **M01-S06c exceptional
-recovery** stays parked until the user records a policy for an unavailable last
-owner/manager and external Auth bans. M22 stays deferred.
+1. [ ] Establish failing core/API/RLS outcome tests: catalog covers 50 states, DC,
+       five territories and federal with stable codes; forum create by
+       owner/admin/attorney/paralegal and rename/archive by owner/admin, refused for
+       billing/readonly and other firms; matter references added and ended with
+       expected matter revision, replay and stale refusal; a matter with no
+       reference, one with governing law only (no court), one with an agency
+       reference, and one with two venues in different jurisdictions; forum from
+       another firm or archived refused for new references but still shown on
+       existing ones; references and docket numbers unreadable without a matter
+       grant or across firms.
+2. [ ] Add reversible `forums`/`matter_jurisdiction_refs` migration (same-firm
+       composite keys, forced RLS, select-only client role, catalog-code checks,
+       soft end with immutable provenance); strict shared contracts and catalog in
+       `@lawfirm/core`; keyed forum create/edit/archive and list, matter reference
+       add/end/list with firm → matter → grant → forum locks and atomic
+       receipt/audit; regenerate the API client. Verify clean/upgrade/down/reapply
+       and tenant isolation.
+3. [ ] Add live Settings forums (list, add, rename, archive) and a Jurisdictions
+       panel on live matter detail (add with purpose, catalog jurisdiction, optional
+       forum or new forum, optional docket; end; the "no jurisdiction-specific
+       automation" notice), with same-intent recovery. Explicit preview keeps
+       fixtures. Browser-verify loading, empty, error, denial, keyboard and
+       responsive states with evidence.
+4. [ ] Run the CI baseline and integration suites, run code-reviewer/security-auditor/
+       test-engineer, record evidence, D023 and tracker, and name the next slice.
 
 Product authority: `docs/product/clepso-implementation-blueprint.pdf`, v1.1,
 October 1, 2026. All 44 pages were read from that file for this audit on
