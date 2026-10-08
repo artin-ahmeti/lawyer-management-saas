@@ -855,3 +855,65 @@ installed PostgreSQL 17.6, ORM 0.45.2 and Kit 0.31.10. NestJS 11.2.1, Swagger
 `use-client.md` guide was read before UI edits. No new dependencies, provider
 contracts, credentials, voice architecture, commercial terms or release dates
 were introduced.
+
+## D020 — Membership removal revokes access; restoration never re-grants (M01-S06b)
+
+Accepted for the local slice, October 8, 2026. Blueprint p12 requires membership
+changes, effective revocation and audit; p39 forbids disclosure across firms and
+ethical walls. Before this slice a removed membership kept its matter grants, so
+any out-of-band restoration silently reopened walls.
+
+Removal and restoration are separate keyed commands under `/firms/current/staff`
+with distinct contracts. Owner/admin hold `firm.staff.memberships.manage`, read
+from the live role. Owner memberships stay an owner decision in every direction:
+removing an owner, restoring a membership that was an owner, and restoring with the
+owner role all need a current owner. This matches D019 role changes.
+
+Removal revokes every active matter grant and the member's pending invitations in
+the same transaction as the membership, receipt and audit. Each revoked grant
+increments its revision and its matter's `access_revision` and writes a matter
+history row whose reason is fixed text; the firm-level reason stays in firm staff
+history, readable only by owners/admins. Restoration requires an available account
+and an explicitly chosen role, revokes any grant left by an out-of-band removal and
+returns no grants. Matter managers grant access again through D018. Keeping dormant
+grants for restoration was rejected: it would reopen walls without matter review.
+
+The last available owner and the last eligible manager of a live matter stay
+protected through checks now shared with role changes (`staff-policy.ts`). An
+unavailable target is not an eligible manager, so a banned or deleted sole manager
+can be removed; the matter remains without an eligible manager either way, and
+removal stops the grant returning if the ban lifts. Recovering such matters is the
+exceptional-recovery decision deferred to M01-S06c; no owner bypass is added.
+
+Locks follow D019: actor account/profile, Auth session, exclusive firm row, target
+membership, matter rows in ID order, then grants and invitations. Receipts are
+judged before the target so a reused key with different input always conflicts.
+Audit rows are stamped with `clock_timestamp()` after the firm lock, so history
+cursors follow commit order rather than transaction start.
+
+Accepted trade-offs, each to revisit with its module gate:
+
+- Self-removal commits once; its replay is denied because the actor no longer
+  has access (as D018). The web treats the result as a firm-access change.
+- Saved Auth sessions regain access after restoration without signing in again.
+  Device/session policy and MFA remain M01 gates; a compromised account also needs
+  an Auth-level ban.
+- The worker invitation check locks membership before firm, the reverse of policy
+  commands. This predates the slice (role changes share it); Postgres aborts one
+  side of a deadlock with no partial effect. Align when the worker is next changed.
+- Removing someone with very many grants does set-based work under the 5 s
+  statement timeout while holding the firm lock; the 50-lawyer load gate (M21)
+  will measure it.
+- The partial history index is created non-concurrently, matching existing
+  migrations; `audit_logs` is small before launch. Its rollback only drops the index.
+- Clients parse capabilities strictly, so an older bundle rejects the new
+  capability until reload. Tolerant capability parsing is a M15 compatibility item.
+- The matter-access service still has its own eligibility query; consolidating it
+  into `staff-policy.ts` is follow-up work.
+- A soft-deleted matter can lose its last manager on removal; matter restoration
+  does not exist yet and must re-check managers when added.
+- The staff shell shows the previous firm/role until the Auth token refreshes; the
+  Settings page and server reads already reflect the removal.
+
+The generated API client was regenerated from the built API and verified in sync.
+No dependencies, credentials, providers, deployment or remote services changed.
