@@ -1,48 +1,58 @@
 # Clepso implementation status
 
-Latest locally complete slice (October 8, 2026): **M02-S02 universal contacts and
-matter-party links** ([record](slices/m02-s02.md), D021).
-Prerequisites: M00 receipt/audit foundation, M01 live firm/session context (D016),
-durable matters with explicit grants (D017/D018) and firm-first policy locks
-(D019/D020). PDF p13 (M02), p26 (M15), pp34–36 (practice/jurisdiction coverage).
-Outcome: live staff keep a firm directory of people and organizations, find them by
-literal name search, and link one contact to several matters or several contacts to
-one matter as client, adverse party or a labelled other party, with keyed commands,
-reviewed-revision edits, receipts and audits that hold no email/phone. The directory
-is firm-visible to live staff; party links follow matter grants, so a contact never
-reveals a walled matter, its title or a count (D021, user-approved). M02/M15 remain
-partial; first-five completion is 0/5.
+Current slice (planned October 8, 2026, awaiting approval): **M02-S03 configurable
+practice profiles and typed matter fields**. Latest locally complete slice: M02-S02
+universal contacts and matter-party links ([record](slices/m02-s02.md), D021).
+M01-S06c exceptional recovery stays parked until the user records a recovery policy.
+Prerequisites: M01 live firm/session context and firm-first policy locks
+(D016/D019/D020), durable matters with explicit grants (D017/D018), contacts and
+parties (D021). PDF p13 (M02), p29 (M18), pp34–36 (practice/jurisdiction coverage).
+Outcome: owners/admins add a firm practice profile, blank or copied from a labelled
+operational starter (generic, not jurisdiction-reviewed) for the pp34–35 families,
+with up to 50 typed fields (text, long text, number, date, yes/no, choice; optional
+unless marked required) and publish it as an immutable version without deploying
+code. Staff pick an active profile when creating a matter, or assign one to a
+profile-less matter, and fill its fields. The matter pins that version: revising a
+profile publishes version N+1 while existing matters keep version N and their
+values. This meets the p13 scenarios "add a new practice area and field set without
+deploying application code" and transactional/advisory matters with no court field.
+Proposed boundary (D022, needs approval): profiles and versions are firm-visible
+configuration for live staff; field values live on the matter and follow its grants;
+profile administration is owner/admin; editing a matter's values needs a manager
+grant and owner/admin/attorney/paralegal; audits and receipts name changed field
+keys, never values. Matter types, money/contact fields, configurable party roles,
+upgrading existing matters to a newer version, jurisdiction/venue references and M18
+pack versions/coverage stay later. The unused scaffold `practice_areas` table is
+left untouched for a reviewed removal. M02/M15 remain partial; first-five completion
+is 0/5.
 
-Verified slice tasks:
+Planned slice tasks:
 
-1. [x] Establish failing API/RLS outcome tests: create/edit person and organization
-       contacts by allowed roles and refusal for billing/readonly and other firms;
-       reviewed-revision edits, replay and concurrent review; bounded name search;
-       link/unlink party roles needing a manager grant; one contact in two matters
-       and two clients in one matter; an ungranted reader seeing neither the link,
-       the matter nor its count from contact reads; removed members losing access.
-2. [x] Add reversible `contacts`/`matter_parties` migration (same-firm composite
-       keys, forced RLS, select-only client role, immutable provenance, link
-       history through soft end); strict shared contracts; keyed contact create
-       and edit, keyset contact list with name search, contact detail, and
-       matter party add/end/list with firm → matter → grant → contact locks and
+1. [ ] Establish failing core/API/RLS outcome tests: profile create/revise/archive by
+       owner/admin and refusal for other roles and firms; each field type's validation
+       (unknown key, wrong type, missing required, choice outside options, duplicate
+       keys, over 50 fields); transactional and advisory profiles with no court
+       fields; revising publishes version 2 while an existing matter keeps version 1
+       and its values; keyed matter create-with-fields and field edits with expected
+       revision, replay and stale refusal; values unreadable without a matter grant
+       or across firms; archived profiles refused for new matters but still shown on
+       existing ones.
+2. [ ] Add reversible `practice_profiles`/`practice_profile_versions` migration and
+       matter profile-version/field-value columns (same-firm composite keys, forced
+       RLS, select-only client role, immutable versions); shared Zod field
+       definitions, value-schema builder and starter catalog in `@lawfirm/core`;
+       keyed profile create/revise/archive, profile list/detail, matter creation with
+       a profile and field-value edits with firm → matter → grant → profile locks and
        atomic receipt/audit; regenerate the API client. Verify clean/upgrade/down/
        reapply and tenant isolation.
-3. [x] Replace the live Contacts preview with the durable directory (list, search,
-       create/edit with same-intent recovery, detail with authorized matters) and add
-       a Parties panel to live matter detail (add existing or new contact, role,
-       end link). Explicit preview keeps fixtures. Browser-verify loading, empty,
+3. [ ] Add live Settings practice profiles (list, create blank or from a starter,
+       field editor, publish, archive) beside the preview playbooks; a profile picker
+       with typed inputs in the matter create form; a fields panel on matter detail
+       showing the pinned version with reviewed-revision edits and same-intent
+       recovery. Explicit preview keeps fixtures. Browser-verify loading, empty,
        error, denial, keyboard and responsive states with evidence.
-4. [x] Run the CI baseline and integration suites, run code-reviewer/security-auditor/
-       test-engineer, record evidence, D021 and tracker, and name the next slice.
-
-The slice passes local functional checks. The dependency audit remains a release
-blocker. Next dependency-ready slice: **M02-S03 configurable practice profiles and
-typed matter fields** (p13: add a practice area and field set without deploying
-code; p29/pp34–35 starter profiles, transactional/agency fields optional), then
-jurisdiction/venue references and assignment history. **M01-S06c exceptional
-recovery** stays parked until the user records a policy for an unavailable last
-owner/manager and external Auth bans. M22 stays deferred.
+4. [ ] Run the CI baseline and integration suites, run code-reviewer/security-auditor/
+       test-engineer, record evidence, D022 and tracker, and name the next slice.
 
 Product authority: `docs/product/clepso-implementation-blueprint.pdf`, v1.1,
 October 1, 2026. All 44 pages were read from that file for this audit on
