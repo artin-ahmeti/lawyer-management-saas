@@ -2,7 +2,10 @@
 import { ApiError, type createApiClient } from '@lawfirm/api-client';
 import { Banner, Button, Card, Field, Input } from '@lawfirm/ui-web';
 import { useEffect, useRef, useState } from 'react';
-import { createMatterSchema } from '@lawfirm/core';
+import { applyFieldValues, createMatterSchema, type PracticeProfileRecord } from '@lawfirm/core';
+import { FieldValueInputs } from '@/features/practice-profiles/FieldValueInputs';
+import { ProfilePicker } from '@/features/practice-profiles/ProfilePicker';
+import { fieldPatch, type FieldForm } from '@/features/practice-profiles/live-profiles';
 import {
   prepareMatterCreation,
   submitMatterCreation,
@@ -12,11 +15,13 @@ import styles from './LiveMatters.module.css';
 
 export function CreateMatterForm({
   client,
+  context,
   firmId,
   onSaved,
   onCancel,
 }: {
   client: ReturnType<typeof createApiClient>;
+  context: string;
   firmId: string;
   onSaved: (id: string) => void;
   onCancel: () => void;
@@ -26,6 +31,9 @@ export function CreateMatterForm({
   const [intent, setIntent] = useState<MatterCreationIntent>(),
     [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [profile, setProfile] = useState<PracticeProfileRecord>(),
+    [values, setValues] = useState<FieldForm>({}),
+    [issues, setIssues] = useState<Record<string, string>>({});
   const [terminal, setTerminal] = useState(false);
   const active = useRef(false),
     running = useRef(false),
@@ -40,9 +48,24 @@ export function CreateMatterForm({
   }, []);
   const submit = async () => {
     if (running.current || terminal) return;
+    // The shared field rules run here first, so each problem is shown beside its field.
+    let fieldValues: Record<string, unknown> | undefined;
+    if (profile && !intent) {
+      const fields = profile.currentVersion.fields;
+      const checked = applyFieldValues(fields, {}, fieldPatch(fields, {}, values));
+      if (!checked.ok) {
+        setIssues(Object.fromEntries(checked.issues.map((i) => [i.key, i.message])));
+        setError(checked.issues[0]!.message);
+        return;
+      }
+      setIssues({});
+      if (Object.keys(checked.values).length) fieldValues = checked.values;
+    }
     const parsed = createMatterSchema.safeParse({
       title,
       ...(reference.trim() ? { reference } : {}),
+      ...(profile ? { profileVersionId: profile.currentVersion.id } : {}),
+      ...(fieldValues ? { fieldValues } : {}),
     });
     if (!parsed.success) {
       setError('Enter a matter title of 1–200 characters and a reference of up to 80 characters.');
@@ -61,10 +84,15 @@ export function CreateMatterForm({
       if (!active.current) return;
       const denied = e instanceof ApiError && [401, 403, 404, 409, 422].includes(e.status);
       setTerminal(denied);
+      const code = e instanceof ApiError ? e.code : '';
       setError(
-        denied
-          ? 'The matter request is unavailable. Refresh matters to review current access.'
-          : 'The result could not be confirmed. Check the same request to recover it safely.',
+        code === 'PROFILE_CHANGED' || code === 'PROFILE_ARCHIVED'
+          ? 'The practice profile changed while you were filling it in. Start again to use its current fields.'
+          : code === 'FIELD_VALUES_INVALID' && e instanceof ApiError
+            ? e.message
+            : denied
+              ? 'The matter request is unavailable. Refresh matters to review current access.'
+              : 'The result could not be confirmed. Check the same request to recover it safely.',
       );
     } finally {
       running.current = false;
@@ -79,6 +107,8 @@ export function CreateMatterForm({
     >
       <form
         className="cl-stack cl-stack--md"
+        // The shared field rules report problems beside each field instead of native bubbles.
+        noValidate
         aria-busy={busy}
         onSubmit={(e) => {
           e.preventDefault();
@@ -113,6 +143,28 @@ export function CreateMatterForm({
             disabled={!!intent}
           />
         </Field>
+        <ProfilePicker
+          client={client}
+          context={context}
+          firmId={firmId}
+          idPrefix="matter-create"
+          disabled={!!intent}
+          onProfile={(next) => {
+            setProfile(next);
+            setValues({});
+            setIssues({});
+          }}
+        />
+        {profile && (
+          <FieldValueInputs
+            fields={profile.currentVersion.fields}
+            form={values}
+            onChange={setValues}
+            idPrefix="matter-create-field"
+            disabled={!!intent}
+            issues={issues}
+          />
+        )}
         {error && (
           <div id="matter-create-error">
             <Banner role="alert" tone="warning" title={error} />

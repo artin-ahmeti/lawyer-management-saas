@@ -10,6 +10,7 @@ import { useLiveMatterClient } from './use-live-matter-client';
 import styles from './LiveMatters.module.css';
 import { MatterStaffAccess } from './MatterStaffAccess';
 import { MatterParties } from '@/features/contacts/MatterParties';
+import { MatterFields } from '@/features/practice-profiles/MatterFields';
 
 export function LiveMatterPage({ id }: { id: string }) {
   const { client, context, firmId } = useLiveMatterClient(),
@@ -78,6 +79,14 @@ export function LiveMatterPage({ id }: { id: string }) {
                   <dd>{matter.reference ?? 'No reference'}</dd>
                 </div>
                 <div>
+                  <dt className="cl-muted">Practice profile</dt>
+                  <dd>
+                    {matter.profile
+                      ? `${matter.profile.name} · version ${matter.profile.version}`
+                      : 'None'}
+                  </dd>
+                </div>
+                <div>
                   <dt className="cl-muted">Your access</dt>
                   <dd>{matter.accessRole === 'manager' ? 'Matter manager' : 'Read access'}</dd>
                 </div>
@@ -90,8 +99,9 @@ export function LiveMatterPage({ id }: { id: string }) {
             <Card
               className={styles.card}
               title={<h2 className="cl-t-title-2">Matter workspace</h2>}
-              subtitle="Practice profiles, documents, tasks and billing will become available as those services are connected."
+              subtitle="Documents, tasks and billing will become available as those services are connected."
             />
+            <MatterFields key={`${id}:fields`} id={id} onChanged={refreshMatter} />
             <MatterParties key={id} id={id} />
           </>
         )

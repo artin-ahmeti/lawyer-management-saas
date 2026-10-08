@@ -45,7 +45,7 @@ Slice tasks:
        a profile and field-value edits with firm → matter → grant → profile locks and
        atomic receipt/audit; regenerate the API client. Verify clean/upgrade/down/
        reapply and tenant isolation.
-3. [ ] Add live Settings practice profiles (list, create blank or from a starter,
+3. [x] Add live Settings practice profiles (list, create blank or from a starter,
        field editor, publish, archive) beside the preview playbooks; a profile picker
        with typed inputs in the matter create form; a fields panel on matter detail
        showing the pinned version with reviewed-revision edits and same-intent

@@ -52,6 +52,7 @@ export function LiveMattersPage() {
         <div hidden={!data?.canCreate}>
           <CreateMatterForm
             client={client}
+            context={context}
             firmId={firmId}
             onCancel={closeCreation}
             onSaved={(id) => router.push(`/matters/${id}`)}

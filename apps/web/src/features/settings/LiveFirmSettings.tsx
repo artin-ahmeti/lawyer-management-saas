@@ -24,6 +24,7 @@ import { WorkspaceMemberships } from './WorkspaceMemberships';
 import { StaffSessionActions } from './StaffSessionActions';
 import { StaffLifecycle } from './StaffLifecycle';
 import { StaffRoles } from './StaffRoles';
+import { PracticeProfiles } from '@/features/practice-profiles/PracticeProfiles';
 
 const queryNamespace = ['server-firm'] as const;
 
@@ -237,6 +238,7 @@ function AuthorizedFirmSettings({ context, userId }: { context: string; userId: 
         onAccessChanged={recheckAccess}
         onAccessDenied={denyAccess}
       />
+      <PracticeProfiles client={client} context={context} firmId={firm.id} />
       {firm.canRename && (
         <>
           <StaffRoles

@@ -37,6 +37,7 @@ const sessionOnly = process.env.RUN_SESSION_ONLY === '1';
 const selectionOnly = process.env.RUN_SELECTION_ONLY === '1';
 const matterOnly = process.env.RUN_MATTER_ONLY === '1';
 const contactOnly = process.env.RUN_CONTACT_ONLY === '1';
+const profileOnly = process.env.RUN_PROFILE_ONLY === '1';
 const matterAccessOnly = process.env.RUN_MATTER_ACCESS_ONLY === '1';
 const staffRolesOnly = process.env.RUN_STAFF_ROLES_ONLY === '1';
 const staffLifecycleOnly = process.env.RUN_STAFF_LIFECYCLE_ONLY === '1';
@@ -400,6 +401,27 @@ try {
     assert.deepEqual(errors, [], 'No unexpected runtime exceptions during access management');
     console.log(
       'PASS: audited staff grants/revocation, lost-response recovery, last manager, live roles, protected reads, responsive and keyboard/accessibility states.',
+    );
+  } else if (profileOnly) {
+    await waitFor(valueIs('Browser firm LLP'), 'authenticated firm read');
+    const { verifyPracticeProfiles } = await import('./practice-profile.browser.mjs');
+    await verifyPracticeProfiles({
+      sql,
+      firm,
+      user,
+      send,
+      evaluate,
+      waitFor,
+      button,
+      type,
+      hasText,
+      screenshot,
+      listeners,
+      clickExpression,
+    });
+    assert.deepEqual(errors, [], 'No unexpected runtime exceptions during profile flow');
+    console.log(
+      'PASS: starter profile with response-loss replay, typed matter fields with required values, pinned version after revision, stale edit refusal, archive, assignment, responsive, named controls and live role/membership.',
     );
   } else if (contactOnly) {
     await waitFor(valueIs('Browser firm LLP'), 'authenticated firm read');
@@ -1164,7 +1186,7 @@ try {
     ),
   ]);
   for (const ownedFirm of ownedFirms) {
-    if (matterAccessOnly || staffRolesOnly || staffLifecycleOnly || contactOnly) {
+    if (matterAccessOnly || staffRolesOnly || staffLifecycleOnly || contactOnly || profileOnly) {
       await sql.begin(async (tx) => {
         await tx`set local session_replication_role=replica`;
         await tx`delete from audit_logs where firm_id=${ownedFirm}`;
@@ -1186,6 +1208,12 @@ try {
     ]) {
       await sql`delete from ${sql(table)} where firm_id = ${ownedFirm}`;
     }
+    // Profile history refuses deletion; remove test-owned profiles with triggers suspended.
+    await sql.begin(async (tx) => {
+      await tx`set local session_replication_role=replica`;
+      await tx`delete from practice_profile_versions where firm_id=${ownedFirm}`;
+      await tx`delete from practice_profiles where firm_id=${ownedFirm}`;
+    });
     await sql`delete from firms where id = ${ownedFirm}`;
   }
   for (const ownedUser of [...ownedUsers, ...(user ? [user] : [])])
