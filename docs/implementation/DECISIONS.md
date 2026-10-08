@@ -1060,3 +1060,92 @@ policy, HMAC is the follow-up); the forward migration adds columns, a key, a che
 index on `matters` under one lock with a 5s lock timeout, so a large hosted table needs a
 maintenance window; the two migration files apply as separate transactions like earlier
 slices.
+
+## D023 — Catalog jurisdictions, firm forums and grant-scoped matter references (M02-S04)
+
+Accepted by the user for the local slice, October 8, 2026 ("approved"). Blueprint p13 step 4
+requires firm location, lawyer admissions, governing law, venue, agency and procedural
+ruleset references to stay separate, with several jurisdiction/venue references per matter
+and optional court and docket fields; p36 requires states, DC, federal forums, agencies and
+territories as configurable jurisdiction records, several references or no court at all,
+and an explicit statement of which behavior is supported; p39 requires multi-jurisdiction,
+agency and non-court matters without California or litigation assumptions.
+
+The jurisdiction catalog is code in `@lawfirm/core`: the 50 states, DC, the five inhabited
+territories (AS, GU, MP, PR, VI) and federal (`US`), with stable codes. Two database checks
+hold the same 57 codes, and the API integration suite compares them, so adding a
+jurisdiction is a deploy with a migration. Tribal, foreign and international forums are not
+in the catalog; a firm can record such a body only as an `other` reference under the
+closest catalog jurisdiction until a reviewed extension.
+
+A forum (`forums`) is a court, agency, tribunal or other body under one catalog
+jurisdiction. Forums are firm configuration readable by every live staff member, archived
+ones included because existing references keep naming them. Owners, admins, attorneys and
+paralegals create forums (staff who open matters add the body they appear before); only
+owners and admins rename, archive or restore them with an expected revision. Kind and
+jurisdiction never change, so a reference never changes meaning; active names are unique per
+firm and jurisdiction (`lower()`, as D022). Forums are archived, never deleted. Forum names, docket numbers and labels are single-line
+display text: control characters, bidi overrides/isolates and zero-width characters are
+refused (they reorder a rendered line or let lookalike names pass the uniqueness rule), and
+the web isolates each user-entered part with `<bdi>`.
+
+A matter reference (`matter_jurisdictions`) has a purpose (governing law, venue or
+proceeding, agency, other), a catalog jurisdiction, an optional forum of the same firm and
+the same jurisdiction (a composite key enforces both), an optional docket or case number,
+and a label only and always for `other`. Governing law never has a forum or docket. A
+matter may hold none or up to 50 current references and 500 in all, ended ones included, so
+history stays bounded; identical current references are refused, ignoring letter case in
+docket numbers and labels. References live beside the matter and follow its grants exactly as parties do
+(D021); owners and admins have no bypass. Adding or ending needs a manager grant and an
+owner/admin/attorney/paralegal role (as D022 field edits). Ending is a soft end recorded
+once; history is never rewritten, deleted or truncated while triggers run. References do
+not carry a matter revision: add and end refuse duplicates and repeated endings instead,
+because neither overwrites another person's edit. References are never derived from the
+firm address or lawyer admissions, which stay out of scope. Each reference reports
+`automation: 'none'` and the matter panel says no jurisdiction-specific deadlines or rules
+are applied; manual entry stays possible (p36 unsupported behavior).
+
+Receipts keep identifiers only; audits keep purpose, jurisdiction code, forum id and end
+time, never docket numbers or labels. Locks: account → firm membership → matter (no-key
+update for adds, so the cap is counted without a race; share for reads and ends) → grant →
+forum (share, so an archive waits) or reference. The database also refuses, if the API is
+bypassed by the service writer, a forum or reference that does not start fresh (a forum at
+revision 1 and active; both stamped by the transaction clock, by a live member of the firm),
+a reference on a deleted matter or naming an archived forum, end or archive times after the
+database clock, and a forum change that does not advance the revision by exactly one. Clients
+get column-level `select` grants, not table grants, because PostgREST otherwise exposes
+row-lock system columns (`xmax`) that reveal when a walled matter used a firm-visible forum. The migration adds foreign keys under a 5s lock timeout; the
+rollback refuses early without locks, then locks firms, profiles and matters before the
+slice's tables and the receipt/audit tables (the order API commands use), reads with row
+security off and refuses with any forum, reference, receipt or audit; it needs a
+maintenance window and a migration-history repair.
+
+Rejected alternatives: a firm-editable jurisdiction table (codes are national reference data
+and the DB checks keep them exact), forum text on each reference (no shared records for
+p36), deriving jurisdiction from the firm address or admissions (p13 keeps them separate),
+and a matter revision on reference changes (would make every field editor stale).
+
+A fresh-context adversarial review reproduced and drove fixes before commit: a rollback that
+deadlocked with ordinary API traffic, a forward migration without a lock timeout, triggers
+that accepted future times, archived forums, deleted matters and unversioned forum changes,
+an end path that blocked matter reads, and retries that changed UUID case conflicting.
+The closing security audit reproduced the `xmax` side channel and found lookalike/bidi text,
+insert-time provenance gaps and unbounded ended history; the code review found a forum rename
+lost on refetch, a stale inline forum picker, archived forums that could not be renamed back
+into use, case-sensitive duplicates and focus dropped after changes; the test review added 46
+edge cases (roles alone, replays after access changes, key reuse, races, paging ties,
+identical answers for foreign and missing ids, unstorable text, 413) and found no defect. All
+findings were fixed with tests.
+Accepted trade-offs: the unsalted receipt input hash now also covers docket numbers and
+labels (extends D021/D022; HMAC with a server-held key is the follow-up, pending the
+retention policy); replays return the current row with the original command id, as D022;
+a forum created while working on a walled matter is visible firm-wide with its creator and
+time, like D021 contact names; there is no per-firm forum cap or write throttle yet; the API
+connects as the table owner, so grants to `service_role` do not restrict it; ended
+references stay readable through RLS to granted staff (history follows the grant); audit rows
+for references use `record_type='matter'`, so any future firm-wide audit view must filter them
+by matter grant; other firm-visible tables still grant whole-table `select` and need the same
+column-grant review for system columns (follow-up); the matter page hides its panels while it
+refetches, so keyboard focus in any panel drops on returning to the window (pre-existing,
+follow-up); invalid UTF-8 bodies are decoded with replacement characters by the body parser
+(pre-existing).
